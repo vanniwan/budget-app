@@ -136,6 +136,7 @@ function App() {
   const [goals, setGoals]     = useState(INIT_GOALS);
   const [alloc, setAlloc]     = useState(INIT_ALLOC);
 
+  const [touchStartX, setTouchStartX] = useState(null);
   const [showAdd,     setShowAdd]     = useState(false);
   const [showAlloc,   setShowAlloc]   = useState(false);
   const [showArchived,setShowArchived]= useState(false);
@@ -150,6 +151,19 @@ function App() {
 
   const inp = S.inp;
   const dInp = x => ({ ...inp, paddingLeft: 22, ...x });
+
+  const VIEWS = ["month","yearly","recurring","goals","categories"];
+  function handleTouchStart(e) { setTouchStartX(e.touches[0].clientX); }
+  function handleTouchEnd(e) {
+    if (touchStartX === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 55) {
+      const idx = VIEWS.indexOf(view);
+      if (dx < 0 && idx < VIEWS.length - 1) setView(VIEWS[idx + 1]);
+      if (dx > 0 && idx > 0) setView(VIEWS[idx - 1]);
+    }
+    setTouchStartX(null);
+  }
 
   function bud(idx) {
     const base = n(incomes[idx]);
@@ -302,7 +316,16 @@ function App() {
     return (
       <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
 
-        {/* Bucket cards */}
+        {/* Month settings row */}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+          <button className="tbtn" onClick={()=>{ setEditAlloc({...alloc}); setShowAlloc(true); }} style={{ padding:"6px 12px", background:"white", color:"#777", borderRadius:8, fontSize:12, border:"1px solid #eee" }}>⚙️ Edit allocation</button>
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <span style={{ fontSize:12, color:"#999" }}>{MONTHS[mi]} income</span>
+            <div style={{ position:"relative" }}><DS/>
+              <input style={dInp({ width:120, fontSize:13 })} placeholder="0.00" value={incomes[mi]} onChange={e=>setIncomes(p=>p.map((v,i)=>i===mi?e.target.value:v))}/>
+            </div>
+          </div>
+        </div>
         <div style={{ display:"grid", gridTemplateColumns: mob ? "repeat(3,1fr)" : "repeat(5,1fr)", gap:10 }}>
           {BUCKET_CONFIGS.map(cfg => {
             const bv = B[cfg.key];
@@ -329,49 +352,7 @@ function App() {
           })}
         </div>
 
-        {/* Action row */}
-        <div style={{ display:"flex", justifyContent:"flex-end", gap:8, alignItems:"center", flexWrap:"wrap" }}>
-          {!recApplied && recur.length>0 && (
-            <button className="tbtn" onClick={applyRecur} style={{ padding:"7px 12px", background:"white", color:"#c97c3a", border:"1.5px solid #f5c6a0", borderRadius:9, fontSize:12 }}>
-              🔁 Apply recurring ({recur.length})
-            </button>
-          )}
-          {recApplied && <span style={{ fontSize:11, color:"#3a8c5e" }}>✓ Recurring applied</span>}
-          <button className="tbtn" onClick={()=>setShowAdd(p=>!p)} style={{ padding:"7px 16px", background:"#7c6fd4", color:"white", borderRadius:9, fontSize:12 }}>
-            {showAdd?"✕ Cancel":"+ Add transaction"}
-          </button>
-        </div>
-
-        {/* Add txn panel */}
-        {showAdd && (
-          <div style={{ ...S.card, border:"1.5px solid #b5a9f5" }}>
-            <div style={{ fontSize:11, color:"#7c6fd4", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14 }}>New Transaction</div>
-            <div style={{ display:"flex", gap:6, marginBottom:14 }}>
-              {[["expense","💸 Expense"],["income","💰 Income"]].map(([k,l])=>(
-                <button key={k} onClick={()=>setNewTxn(p=>({...p,kind:k}))}
-                  style={{ border:"1.5px solid "+(newTxn.kind===k?"#7c6fd4":"#eee"), borderRadius:8, padding:"6px 14px", fontSize:12, cursor:"pointer", fontFamily:"inherit", background:newTxn.kind===k?"#f0eeff":"white", color:newTxn.kind===k?"#7c6fd4":"#aaa", fontWeight:newTxn.kind===k?600:400 }}>{l}
-                </button>
-              ))}
-            </div>
-            <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"flex-end" }}>
-              <div style={{ flex:"2 1 140px" }}><FL>Description</FL><input style={inp} placeholder="e.g. Loblaws run" autoFocus value={newTxn.desc} onChange={e=>setNewTxn(p=>({...p,desc:e.target.value}))}/></div>
-              <div style={{ flex:"1 1 100px" }}><FL>Amount</FL><div style={{ position:"relative" }}><DS/><input style={dInp({})} placeholder="0.00" value={newTxn.amount} onChange={e=>setNewTxn(p=>({...p,amount:e.target.value}))}/></div></div>
-              {newTxn.kind==="expense" && <>
-                <div style={{ flex:"1 1 100px" }}><FL>Type</FL><select style={{ ...inp, cursor:"pointer" }} value={newTxn.txnType} onChange={e=>setNewTxn(p=>({...p,txnType:e.target.value}))}><option>Need</option><option>Want</option><option>Saving</option></select></div>
-                <div style={{ flex:"2 1 130px" }}><FL>Category</FL><select style={{ ...inp, cursor:"pointer" }} value={newTxn.catId} onChange={e=>setNewTxn(p=>({...p,catId:e.target.value}))}><option value="">Select…</option><optgroup label="Needs">{cats.filter(c=>c.type==="Need").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup><optgroup label="Wants">{cats.filter(c=>c.type==="Want").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup></select></div>
-              </>}
-              <div style={{ flex:"1 1 120px" }}><FL>Date</FL><input type="date" style={inp} value={newTxn.date} onChange={e=>setNewTxn(p=>({...p,date:e.target.value}))}/></div>
-              {newTxn.kind==="expense" && (
-                <label style={{ display:"flex", alignItems:"center", gap:5, fontSize:12, color:"#888", cursor:"pointer", paddingBottom:8 }}>
-                  <input type="checkbox" style={{ accentColor:"#b5a9f5" }} checked={newTxn.recurring} onChange={e=>setNewTxn(p=>({...p,recurring:e.target.checked}))}/>Recurring
-                </label>
-              )}
-              <button className="tbtn" onClick={addTxn} style={{ padding:"8px 20px", background:"#7c6fd4", color:"white", borderRadius:8, flexShrink:0 }}>Add</button>
-            </div>
-          </div>
-        )}
-
-        {/* Pie charts: side by side always, but stacked on mobile */}
+        {/* Goals + Transactions */}
         <div style={{ display:"grid", gridTemplateColumns: mob?"1fr":"1fr 1fr", gap:14 }}>
           {/* Spending Breakdown */}
           <div style={S.card}>
@@ -451,6 +432,47 @@ function App() {
           </div>
 
           {/* Transactions */}
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+            {/* Action buttons row */}
+            <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
+              {!recApplied && recur.length>0 && (
+                <button className="tbtn" onClick={applyRecur} style={{ padding:"7px 12px", background:"white", color:"#c97c3a", border:"1.5px solid #f5c6a0", borderRadius:9, fontSize:12 }}>
+                  🔁 Apply recurring ({recur.length})
+                </button>
+              )}
+              {recApplied && <span style={{ fontSize:11, color:"#3a8c5e" }}>✓ Recurring applied</span>}
+              <button className="tbtn" onClick={()=>setShowAdd(p=>!p)} style={{ padding:"7px 16px", background:"#7c6fd4", color:"white", borderRadius:9, fontSize:12, marginLeft:"auto" }}>
+                {showAdd?"✕ Cancel":"+ Add transaction"}
+              </button>
+            </div>
+            {/* Add txn panel */}
+            {showAdd && (
+              <div style={{ ...S.card, border:"1.5px solid #b5a9f5" }}>
+                <div style={{ fontSize:11, color:"#7c6fd4", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14 }}>New Transaction</div>
+                <div style={{ display:"flex", gap:6, marginBottom:14 }}>
+                  {[["expense","💸 Expense"],["income","💰 Income"]].map(([k,l])=>(
+                    <button key={k} onClick={()=>setNewTxn(p=>({...p,kind:k}))}
+                      style={{ border:"1.5px solid "+(newTxn.kind===k?"#7c6fd4":"#eee"), borderRadius:8, padding:"6px 14px", fontSize:12, cursor:"pointer", fontFamily:"inherit", background:newTxn.kind===k?"#f0eeff":"white", color:newTxn.kind===k?"#7c6fd4":"#aaa", fontWeight:newTxn.kind===k?600:400 }}>{l}
+                    </button>
+                  ))}
+                </div>
+                <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"flex-end" }}>
+                  <div style={{ flex:"2 1 140px" }}><FL>Description</FL><input style={inp} placeholder="e.g. Loblaws run" autoFocus value={newTxn.desc} onChange={e=>setNewTxn(p=>({...p,desc:e.target.value}))}/></div>
+                  <div style={{ flex:"1 1 100px" }}><FL>Amount</FL><div style={{ position:"relative" }}><DS/><input style={dInp({})} placeholder="0.00" value={newTxn.amount} onChange={e=>setNewTxn(p=>({...p,amount:e.target.value}))}/></div></div>
+                  {newTxn.kind==="expense" && <>
+                    <div style={{ flex:"1 1 100px" }}><FL>Type</FL><select style={{ ...inp, cursor:"pointer" }} value={newTxn.txnType} onChange={e=>setNewTxn(p=>({...p,txnType:e.target.value}))}><option>Need</option><option>Want</option><option>Saving</option></select></div>
+                    <div style={{ flex:"2 1 130px" }}><FL>Category</FL><select style={{ ...inp, cursor:"pointer" }} value={newTxn.catId} onChange={e=>setNewTxn(p=>({...p,catId:e.target.value}))}><option value="">Select…</option><optgroup label="Needs">{cats.filter(c=>c.type==="Need").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup><optgroup label="Wants">{cats.filter(c=>c.type==="Want").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup></select></div>
+                  </>}
+                  <div style={{ flex:"1 1 120px" }}><FL>Date</FL><input type="date" style={inp} value={newTxn.date} onChange={e=>setNewTxn(p=>({...p,date:e.target.value}))}/></div>
+                  {newTxn.kind==="expense" && (
+                    <label style={{ display:"flex", alignItems:"center", gap:5, fontSize:12, color:"#888", cursor:"pointer", paddingBottom:8 }}>
+                      <input type="checkbox" style={{ accentColor:"#b5a9f5" }} checked={newTxn.recurring} onChange={e=>setNewTxn(p=>({...p,recurring:e.target.checked}))}/>Recurring
+                    </label>
+                  )}
+                  <button className="tbtn" onClick={addTxn} style={{ padding:"8px 20px", background:"#7c6fd4", color:"white", borderRadius:8, flexShrink:0 }}>Add</button>
+                </div>
+              </div>
+            )}
           <div style={S.card}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14, flexWrap:"wrap", gap:8 }}>
               <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em" }}>Transactions {mTxns.length>0&&"· "+mTxns.length}</div>
@@ -540,6 +562,7 @@ function App() {
                 </div>
               </>
             )}
+          </div>
           </div>
         </div>
       </div>
@@ -652,19 +675,10 @@ function App() {
       <div style={{ maxWidth:1100, margin:"0 auto" }}>
 
         {/* Header */}
-        <div style={{ marginBottom:16, display:"flex", justifyContent:"space-between", alignItems: mob?"flex-start":"flex-end", flexDirection: mob?"column":"row", gap:12 }}>
+        <div style={{ marginBottom:16, display:"flex", justifyContent:"space-between", alignItems:"flex-end" }}>
           <div>
             <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?22:27, fontWeight:600 }}>budget.</h1>
             <p style={{ fontSize:12, color:"#bbb", fontWeight:300 }}>Vanni · 2026</p>
-          </div>
-          <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
-            <button className="tbtn" onClick={()=>{ setEditAlloc({...alloc}); setShowAlloc(true); }} style={{ padding:"6px 12px", background:"white", color:"#777", borderRadius:8, fontSize:12, border:"1px solid #eee" }}>⚙️ Edit allocation</button>
-            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              <span style={{ fontSize:12, color:"#999" }}>{MONTHS[mi]} income</span>
-              <div style={{ position:"relative" }}><DS/>
-                <input style={dInp({ width:120, fontSize:13 })} placeholder="0.00" value={incomes[mi]} onChange={e=>setIncomes(p=>p.map((v,i)=>i===mi?e.target.value:v))}/>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -689,10 +703,12 @@ function App() {
           </div>
         )}
 
-        {view==="month"      && <MonthView/>}
-        {view==="yearly"     && <YearlyView/>}
+        {/* View content — swipeable */}
+        <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} style={{ userSelect:"none" }}>
+          {view==="month"      && <MonthView/>}
+          {view==="yearly"     && <YearlyView/>}
 
-        {view==="recurring" && (
+          {view==="recurring" && (
           <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
             <div style={{ ...S.card, background:"#fff8f0", border:"1px solid #f5c6a0", boxShadow:"none" }}>
               <div style={{ fontSize:12, color:"#c97c3a", fontWeight:500, marginBottom:4 }}>🔁 How recurring works</div>
@@ -835,6 +851,14 @@ function App() {
             </div>
           </div>
         )}
+
+          {/* Swipe dots indicator */}
+          <div style={{ display:"flex", justifyContent:"center", gap:6, marginTop:22, paddingBottom:8 }}>
+            {VIEWS.map(v=>(
+              <div key={v} onClick={()=>setView(v)} style={{ width: v===view?18:6, height:6, borderRadius:99, background: v===view?"#7c6fd4":"#ddd", transition:"all 0.2s", cursor:"pointer" }}/>
+            ))}
+          </div>
+        </div>
 
       </div>
     </div>
