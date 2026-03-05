@@ -172,7 +172,7 @@ function App() {
   const mob = useIsMobile();
   const [year, setYear_]      = useState(() => load('bud_year', CURRENT_YEAR));
   function setYear(y) { save('bud_year', y); setYear_(y); }
-  const [view, setView_]      = useState(() => load('bud_view', 'month'));
+  const [view, setView_]      = useState(() => load('bud_view', 'home'));
   const [mi, setMi_]          = useState(() => { const v = load('bud_mi', CURRENT_MONTH); return typeof v === 'number' ? v : CURRENT_MONTH; });
   // Synchronous wrappers — save immediately before React re-renders
   function setView(v) { save('bud_view', v); setView_(v); }
@@ -321,7 +321,7 @@ function App() {
   const inp = S.inp;
   const dInp = x => ({ ...inp, paddingLeft: 22, ...x });
 
-  const VIEWS = ["month","yearly","recurring","goals","investments","categories"];
+  const VIEWS = ["home","month","yearly","recurring","goals","investments","categories"];
   function handleTouchStart(e) {
     // Only track single-finger swipes — ignore pinch/zoom
     if (e.touches.length !== 1) { setSwipeCancelled(true); return; }
@@ -386,6 +386,30 @@ function App() {
   }, [mTxns, filter]);
 
   const yrData = useMemo(() => MONTHS.map((_,i)=>({ month:MONTHS[i], b:bud(i), s:spent(i) })), [incomes,allTxns,alloc]);
+
+  // Load summary data for ALL years for the homepage
+  const allYearsData = useMemo(() => {
+    const years = Array.from({length: Math.max(year, CURRENT_YEAR) - 2024 + 3}, (_,i) => 2024+i);
+    return years.map(y => {
+      const yIncomes   = y===year ? incomes   : load(`bud_incomes_${y}`,   INIT_INCOMES);
+      const yAllTxns   = y===year ? allTxns   : load(`bud_allTxns_${y}`,   []);
+      const yPaychecks = y===year ? paychecks : load(`bud_paychecks_${y}`, INIT_PAYCHECKS);
+      const hasData = yIncomes.some(v=>n(v)>0) || yAllTxns.some(m=>m&&m.length>0);
+      let totalInc=0, totalSpent=0, totalJoint=0, totalMom=0;
+      MONTHS.forEach((_, mi) => {
+        const base = n(yIncomes[mi]);
+        const bonus = ((yAllTxns[mi]||[]).filter(t=>t.kind==="income")).reduce((s,t)=>s+n(t.amount),0);
+        const inc = base+bonus;
+        const pc = (yPaychecks[mi]||2);
+        totalInc   += inc;
+        totalJoint += alloc.joint * pc;
+        totalMom   += alloc.mom * pc;
+        totalSpent += (yAllTxns[mi]||[]).filter(t=>t.kind==="expense").reduce((s,t)=>s+n(t.amount),0);
+      });
+      const net = totalInc - totalSpent - totalJoint - totalMom;
+      return { year:y, totalInc, totalSpent, totalJoint, totalMom, net, hasData };
+    }).filter(d=>d.hasData || d.year===year);
+  }, [year, incomes, allTxns, paychecks, alloc]);
   const activeGoals = goals.filter(g=>!g.archived);
   const archGoals   = goals.filter(g=>g.archived);
 
@@ -949,7 +973,7 @@ function App() {
         {/* Nav — horizontally scrollable on mobile */}
         <div className="hscroll" style={{ marginBottom:18 }}>
           <div style={{ display:"flex", gap:4, background:"#f0f0f0", borderRadius:12, padding:4, width:"fit-content" }}>
-            {[["month","📅 Month"],["yearly","📊 Yearly"],["recurring","🔁 Recurring"],["goals","🎯 Goals"],["investments","📈 Invest"],["categories","🏷️ Categories"]].map(([k,l])=>(
+            {[["home","🏠 Home"],["month","📅 Month"],["yearly","📊 Yearly"],["recurring","🔁 Recurring"],["goals","🎯 Goals"],["investments","📈 Invest"],["categories","🏷️ Categories"]].map(([k,l])=>(
               <button key={k} onClick={()=>setView(k)} style={{ border:"none", cursor:"pointer", padding: mob?"7px 10px":"7px 14px", borderRadius:9, fontSize: mob?11:12, fontFamily:"inherit", whiteSpace:"nowrap", background:view===k?"white":"transparent", color:view===k?"#1a1a1a":"#888", fontWeight:view===k?600:400, boxShadow:view===k?"0 1px 3px rgba(0,0,0,0.1)":"none" }}>{l}</button>
             ))}
           </div>
@@ -969,6 +993,142 @@ function App() {
 
         {/* View content — swipeable */}
         <div onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} style={{ WebkitUserSelect:"none", userSelect:"none" }}>
+
+        {view==="home" && (() => {
+          const totalInvested = investments.reduce((s,inv)=>s+(inv.entries&&inv.entries.length>0?inv.entries[inv.entries.length-1].value:0),0);
+          const activeGoals = goals.filter(g=>!g.archived);
+          const totalSaved  = activeGoals.reduce((s,g)=>s+g.saved,0);
+          const netWorth    = totalInvested + totalSaved;
+          const thisYear    = allYearsData.find(d=>d.year===year) || {};
+          return (
+          <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+
+            {/* Net worth hero */}
+            <div style={{ background:"linear-gradient(135deg,#7c6fd4,#5b82bf)", borderRadius:20, padding: mob?"20px 18px":"28px 28px 24px", boxShadow:"0 6px 24px rgba(124,111,212,0.3)" }}>
+              <div style={{ fontSize:10, color:"rgba(255,255,255,0.7)", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:6 }}>Total Net Worth</div>
+              <div style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?32:42, fontWeight:600, color:"white", marginBottom:4 }}>{moneyS(netWorth)}</div>
+              <div style={{ display:"flex", gap:16, flexWrap:"wrap", marginTop:12 }}>
+                {[{l:"Investments",v:totalInvested,c:"rgba(255,255,255,0.9)"},{l:"Goal Savings",v:totalSaved,c:"rgba(255,255,255,0.9)"}].map(s=>(
+                  <div key={s.l}>
+                    <div style={{ fontSize:9, color:"rgba(255,255,255,0.6)", textTransform:"uppercase", letterSpacing:"0.08em" }}>{s.l}</div>
+                    <div style={{ fontSize: mob?16:20, fontWeight:600, color:s.c, fontFamily:"'Playfair Display',serif" }}>{moneyS(s.v)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* This year snapshot */}
+            {thisYear.hasData && (
+              <div style={S.card}>
+                <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14 }}>{year} at a glance</div>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
+                  {[
+                    {l:"Income",    v:thisYear.totalInc,   c:"#3a7ca5"},
+                    {l:"Spent",     v:thisYear.totalSpent,  c:"#e8834a"},
+                    {l:"Net",       v:thisYear.net,         c:thisYear.net>=0?"#3a8c5e":"#c04040"},
+                  ].map(s=>(
+                    <div key={s.l} style={{ textAlign:"center", padding:"12px 8px", background:"#fafafa", borderRadius:12 }}>
+                      <div style={{ fontSize:10, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:6 }}>{s.l}</div>
+                      <div style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?15:19, fontWeight:600, color:s.c }}>{s.v<0?"-":""}{moneyS(Math.abs(s.v))}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Investment accounts */}
+            {investments.length>0 && (
+              <div style={S.card}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+                  <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em" }}>Investments</div>
+                  <button className="tbtn" onClick={()=>setView("investments")} style={{ fontSize:11, color:"#bbb", background:"none", padding:0 }}>Manage →</button>
+                </div>
+                {investments.map(inv=>{
+                  const latest = inv.entries&&inv.entries.length>0?inv.entries[inv.entries.length-1].value:0;
+                  const first  = inv.entries&&inv.entries.length>0?inv.entries[0].value:0;
+                  const gain   = latest-first;
+                  const pct    = first>0?(gain/first*100):0;
+                  return (
+                    <div key={inv.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 0", borderBottom:"1px solid #f8f8f8" }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                        <div style={{ width:10, height:10, borderRadius:"50%", background:inv.color, flexShrink:0 }}/>
+                        <div>
+                          <div style={{ fontSize:13, fontWeight:500 }}>{inv.name}</div>
+                          <div style={{ fontSize:10, color:"#bbb" }}>{inv.type}</div>
+                        </div>
+                      </div>
+                      <div style={{ textAlign:"right" }}>
+                        <div style={{ fontSize:14, fontWeight:600, fontFamily:"'Playfair Display',serif" }}>{moneyS(latest)}</div>
+                        {gain!==0&&<div style={{ fontSize:10, color:gain>0?"#3a8c5e":"#c04040", fontWeight:500 }}>{gain>0?"▲":"▼"} {moneyS(Math.abs(gain))} {pct!==0&&`(${pct.toFixed(1)}%)`}</div>}
+                      </div>
+                    </div>
+                  );
+                })}
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", paddingTop:10, marginTop:4 }}>
+                  <span style={{ fontSize:12, color:"#888", fontWeight:500 }}>Total</span>
+                  <span style={{ fontSize:16, fontWeight:700, fontFamily:"'Playfair Display',serif", color:"#7c6fd4" }}>{moneyS(totalInvested)}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Goals summary */}
+            {activeGoals.length>0 && (
+              <div style={S.card}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+                  <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em" }}>Goals</div>
+                  <button className="tbtn" onClick={()=>setView("goals")} style={{ fontSize:11, color:"#bbb", background:"none", padding:0 }}>Manage →</button>
+                </div>
+                {activeGoals.map(g=>{
+                  const pct = n(g.target)>0?Math.min(g.saved/n(g.target)*100,100):0;
+                  const done = pct>=100;
+                  return (
+                    <div key={g.id} style={{ marginBottom:14 }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                        <span style={{ fontSize:13, fontWeight:500 }}>{g.name}</span>
+                        <span style={{ fontSize:12, fontWeight:600, color:done?"#3a8c5e":"#7c6fd4" }}>{moneyS(g.saved)} / {moneyS(g.target)}</span>
+                      </div>
+                      <div style={{ background:"#f0f0f0", borderRadius:99, height:6, overflow:"hidden" }}>
+                        <div style={{ width:pct+"%", height:"100%", borderRadius:99, background:done?"#3a8c5e":"#b5a9f5", transition:"width 0.4s" }}/>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Year-by-year table */}
+            {allYearsData.length>0 && (
+              <div style={S.card}>
+                <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14 }}>Year by Year</div>
+                {allYearsData.map(d=>(
+                  <div key={d.year} className="row" onClick={()=>{ switchYear(d.year); setView("yearly"); }}
+                    style={{ display:"grid", gridTemplateColumns: mob?"60px 1fr 1fr 80px":"80px 1fr 1fr 1fr 90px", gap:"0 12px", padding:"10px 5px", alignItems:"center", cursor:"pointer", background:d.year===year?"#f8f7ff":"transparent", borderRadius:8, borderBottom:"1px solid #f8f8f8" }}>
+                    <span style={{ fontSize:13, fontWeight:d.year===year?600:400, color:d.year===year?"#7c6fd4":"#333" }}>{d.year}</span>
+                    <div>
+                      <div style={{ fontSize:10, color:"#bbb" }}>Income</div>
+                      <div style={{ fontSize:12, fontWeight:500 }}>{d.totalInc>0?moneyS(d.totalInc):"—"}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize:10, color:"#bbb" }}>Spent</div>
+                      <div style={{ fontSize:12, fontWeight:500 }}>{d.totalSpent>0?moneyS(d.totalSpent):"—"}</div>
+                    </div>
+                    {!mob && <div>
+                      <div style={{ fontSize:10, color:"#bbb" }}>Fixed</div>
+                      <div style={{ fontSize:12 }}>{moneyS(d.totalJoint+d.totalMom)}</div>
+                    </div>}
+                    <div style={{ textAlign:"right" }}>
+                      <div style={{ fontSize:10, color:"#bbb" }}>Net</div>
+                      <div style={{ fontSize:13, fontWeight:700, color:d.net>=0?"#3a8c5e":"#c04040" }}>{d.net>=0?"+":""}{moneyS(d.net)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+          </div>
+          );
+        })()}
+
           {view==="month"      && MonthView()}
           {view==="yearly"     && YearlyView()}
 
@@ -1100,7 +1260,6 @@ function App() {
           </div>
         )}
 
-
         {view==="investments" && (
           <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
 
@@ -1208,6 +1367,7 @@ function App() {
 
           </div>
         )}
+
 
         {view==="categories" && (
           <div style={S.card}>
