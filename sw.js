@@ -1,4 +1,4 @@
-const CACHE = 'budget-v3';
+const CACHE = 'budget-v4';
 
 // On install: cache the main page and local assets only
 self.addEventListener('install', e => {

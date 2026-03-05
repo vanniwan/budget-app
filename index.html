@@ -204,7 +204,14 @@ function App() {
   useEffect(() => save('bud_paychecks',      paychecks),      [paychecks]);
   useEffect(() => save('bud_recurOverrides', recurOverrides), [recurOverrides]);
   useEffect(() => save('bud_view', view), [view]);
-  useEffect(() => save('bud_mi',   mi),   [mi]);
+  useEffect(() => save('bud_mi', mi), [mi]);
+  // Also save synchronously on unload as a safety net
+  useEffect(() => {
+    const handler = () => { save('bud_mi', mi); save('bud_view', view); };
+    window.addEventListener('pagehide', handler);
+    window.addEventListener('visibilitychange', () => { if(document.visibilityState==='hidden') handler(); });
+    return () => { window.removeEventListener('pagehide', handler); };
+  }, [mi, view]);
 
   // ── Firebase sync ──────────────────────────────
   const [syncStatus, setSyncStatus] = useState("synced"); // "synced" | "syncing" | "offline"
@@ -228,6 +235,7 @@ function App() {
         if (d.alloc)          setAlloc(d.alloc);
         if (d.paychecks)      setPaychecks(d.paychecks);
         if (d.recurOverrides) setRecurOverrides(d.recurOverrides);
+        // Don't restore view/mi from Firebase — keep them local per-device
       }
       setSyncStatus("synced");
     }).catch(() => setSyncStatus("offline"));
