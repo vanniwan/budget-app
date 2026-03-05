@@ -10,13 +10,16 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap');
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { -webkit-tap-highlight-color: transparent; }
+    button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    input, select { touch-action: manipulation; }
+    body { -webkit-tap-highlight-color: transparent; touch-action: pan-y; }
     input:focus, select:focus { border-color: #b5a9f5 !important; outline: none; }
     .row:hover { background: #faf9f7; border-radius: 8px; }
-    .xbtn { border: none; background: none; cursor: pointer; color: #ddd; font-size: 15px; padding: 2px 5px; line-height: 1; transition: color 0.15s; }
+    .xbtn { border: none; background: none; cursor: pointer; color: #ddd; font-size: 15px; padding: 8px 10px; line-height: 1; transition: color 0.15s; }
     .xbtn:hover { color: #e07070; }
     .tbtn { border: none; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 500; transition: opacity 0.15s; }
     .tbtn:hover { opacity: 0.82; }
+    .tbtn:active { opacity: 0.6; transform: scale(0.97); }
     .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; }
     .bucket-card { transition: transform 0.15s, box-shadow 0.15s; }
     .bucket-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.13) !important; }
@@ -94,7 +97,7 @@ function makeSeedTxns() {
 
 const S = {
   card: { background: "white", borderRadius: 16, padding: "16px 18px", boxShadow: "0 1px 6px rgba(0,0,0,0.06)" },
-  inp:  { border: "1.5px solid #eee", borderRadius: 8, padding: "8px 10px", fontSize: 14, fontFamily: "inherit", outline: "none", background: "white", color: "#1a1a1a", width: "100%", boxSizing: "border-box" },
+  inp:  { border: "1.5px solid #eee", borderRadius: 8, padding: "8px 10px", fontSize: 16, fontFamily: "inherit", outline: "none", background: "white", color: "#1a1a1a", width: "100%", boxSizing: "border-box" },
   lbl:  { fontSize: 10, color: "#bbb", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4, display: "block" },
 };
 
@@ -139,6 +142,8 @@ function App() {
   const [paychecks, setPaychecks] = useState(INIT_PAYCHECKS);
 
   const [touchStartX, setTouchStartX] = useState(null);
+  const [touchStartY, setTouchStartY] = useState(null);
+  const [swipeCancelled, setSwipeCancelled] = useState(false);
   const [showAdd,     setShowAdd]     = useState(false);
   const [showAlloc,   setShowAlloc]   = useState(false);
   const [showArchived,setShowArchived]= useState(false);
@@ -156,16 +161,34 @@ function App() {
   const dInp = x => ({ ...inp, paddingLeft: 22, ...x });
 
   const VIEWS = ["month","yearly","recurring","goals","categories"];
-  function handleTouchStart(e) { setTouchStartX(e.touches[0].clientX); }
+  function handleTouchStart(e) {
+    // Only track single-finger swipes — ignore pinch/zoom
+    if (e.touches.length !== 1) { setSwipeCancelled(true); return; }
+    // Don't intercept touches on buttons, inputs, selects, labels, or textareas
+    const tag = e.target.tagName.toLowerCase();
+    if (['button','input','select','textarea','label','a'].includes(tag)) {
+      setSwipeCancelled(true); return;
+    }
+    setTouchStartX(e.touches[0].clientX);
+    setTouchStartY(e.touches[0].clientY);
+    setSwipeCancelled(false);
+  }
+  function handleTouchMove(e) {
+    // Cancel swipe if a second finger appears (pinch-to-zoom)
+    if (e.touches.length > 1) { setSwipeCancelled(true); }
+  }
   function handleTouchEnd(e) {
-    if (touchStartX === null) return;
+    if (touchStartX === null || swipeCancelled) { setTouchStartX(null); return; }
     const dx = e.changedTouches[0].clientX - touchStartX;
-    if (Math.abs(dx) > 55) {
+    const dy = e.changedTouches[0].clientY - (touchStartY || 0);
+    // Must be more horizontal than vertical, and exceed 90px threshold
+    if (Math.abs(dx) > 90 && Math.abs(dx) > Math.abs(dy) * 2) {
       const idx = VIEWS.indexOf(view);
       if (dx < 0 && idx < VIEWS.length - 1) setView(VIEWS[idx + 1]);
       if (dx > 0 && idx > 0) setView(VIEWS[idx - 1]);
     }
     setTouchStartX(null);
+    setTouchStartY(null);
   }
 
   function bud(idx) {
@@ -447,7 +470,7 @@ function App() {
                     <span style={{ fontSize:12, color:"#555" }}>{t.desc}</span>
                     <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                       <span style={{ fontSize:13, fontWeight:600, color:"#3a7ca5" }}>+{money(t.amount)}</span>
-                      <button className="xbtn" onClick={()=>delTxn(t.id)}>×</button>
+                      <button className="xbtn" onPointerDown={e=>{e.preventDefault();delTxn(t.id)}}>×</button>
                     </div>
                   </div>
                 ))}
@@ -539,7 +562,7 @@ function App() {
                       </div>
                       <div style={{ display:"flex", alignItems:"center", gap:8, marginLeft:10, flexShrink:0 }}>
                         <span style={{ fontSize:14, fontWeight:600, color:t.kind==="income"?"#3a7ca5":"#1a1a1a" }}>{t.kind==="income"?"+":""}{money(t.amount)}</span>
-                        <button className="xbtn" onClick={()=>delTxn(t.id)}>×</button>
+                        <button className="xbtn" onPointerDown={e=>{e.preventDefault();delTxn(t.id)}}>×</button>
                       </div>
                     </div>
                   );
@@ -576,7 +599,7 @@ function App() {
                       <div style={{ display:"flex", alignItems:"center", gap:3 }}>
                         {t.kind==="expense" && <><div style={{ width:20,height:4,background:"#f5f5f5",borderRadius:3,overflow:"hidden" }}><div style={{ width:pct+"%",height:"100%",background:ts.accent }}/></div><span style={{ fontSize:9,color:"#bbb" }}>{pct}%</span></>}
                       </div>
-                      <button className="xbtn" onClick={()=>delTxn(t.id)}>×</button>
+                      <button className="xbtn" onPointerDown={e=>{e.preventDefault();delTxn(t.id)}}>×</button>
                     </div>
                   );
                 })}
@@ -776,7 +799,7 @@ function App() {
         )}
 
         {/* View content — swipeable */}
-        <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} style={{ userSelect:"none" }}>
+        <div onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} style={{ WebkitUserSelect:"none", userSelect:"none" }}>
           {view==="month"      && MonthView()}
           {view==="yearly"     && YearlyView()}
 
@@ -816,10 +839,10 @@ function App() {
                             const val = e.target.value;
                             setRecurOverrides(p=>({ ...p, [overKey]: val===''?undefined:val }));
                           }}/></div>
-                          {hasOverride && <button className="xbtn" style={{ fontSize:12 }} onClick={()=>setRecurOverrides(p=>{ const n={...p}; delete n[overKey]; return n; })}>×</button>}
+                          {hasOverride && <button className="xbtn" style={{ fontSize:12 }} onPointerDown={e=>{e.preventDefault();setRecurOverrides(p=>{ const n2={...p}; delete n2[overKey]; return n2; })}}>×</button>}
                         </div>
                       </div>
-                      <button className="xbtn" onClick={()=>setRecur(p=>p.filter(x=>x.id!==r.id))}>×</button>
+                      <button className="xbtn" onPointerDown={e=>{e.preventDefault();setRecur(p=>p.filter(x=>x.id!==r.id))}}>×</button>
                     </div>
                   </div>
                 );
@@ -851,7 +874,7 @@ function App() {
                     <div><div style={{ fontSize:15, fontWeight:500, marginBottom:2 }}>{goal.name}</div><div style={{ fontSize:11, color:"#bbb" }}>{done?"🎉 Goal reached!":money(rem)+" to go"}</div></div>
                     <div style={{ display:"flex", gap:8, alignItems:"center" }}>
                       {done && <button onClick={()=>archGoal(goal.id)} style={{ fontSize:11, padding:"4px 12px", borderRadius:99, background:"#edf7f2", color:"#3a8c5e", border:"1px solid #a0d4b5", cursor:"pointer", fontFamily:"inherit", fontWeight:500 }}>✓ Archive</button>}
-                      <button className="xbtn" style={{ fontSize:18 }} onClick={()=>delGoal(goal.id)}>×</button>
+                      <button className="xbtn" style={{ fontSize:18 }} onPointerDown={e=>{e.preventDefault();delGoal(goal.id)}}>×</button>
                     </div>
                   </div>
                   <div style={{ display:"flex", gap:16, alignItems:"center", marginBottom:16, flexWrap:"wrap" }}>
@@ -897,8 +920,8 @@ function App() {
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                       <div><div style={{ fontSize:14, fontWeight:500, color:"#888" }}>{goal.name}</div><div style={{ fontSize:11, color:"#bbb" }}>🎉 Completed · {money(goal.saved)} saved</div></div>
                       <div style={{ display:"flex", gap:8 }}>
-                        <button onClick={()=>restoreGoal(goal.id)} style={{ fontSize:11, padding:"4px 10px", borderRadius:99, background:"#f5f5f5", color:"#888", border:"1px solid #eee", cursor:"pointer", fontFamily:"inherit" }}>Restore</button>
-                        <button className="xbtn" onClick={()=>delGoal(goal.id)}>×</button>
+                        <button onPointerDown={e=>{e.preventDefault();restoreGoal(goal.id)}} style={{ fontSize:11, padding:"4px 10px", borderRadius:99, background:"#f5f5f5", color:"#888", border:"1px solid #eee", cursor:"pointer", fontFamily:"inherit" }}>Restore</button>
+                        <button className="xbtn" onPointerDown={e=>{e.preventDefault();delGoal(goal.id)}}>×</button>
                       </div>
                     </div>
                   </div>
@@ -918,7 +941,7 @@ function App() {
                   {cats.filter(c=>c.type===type).map(cat=>(
                     <div key={cat.id} style={{ display:"flex", alignItems:"center", gap:6, background:bg, border:"1.5px solid "+accent, borderRadius:99, padding:"5px 12px 5px 14px" }}>
                       <span style={{ fontSize:13, color:text }}>{cat.name}</span>
-                      <button className="xbtn" style={{ fontSize:14 }} onClick={()=>setCats(p=>p.filter(c=>c.id!==cat.id))}>×</button>
+                      <button className="xbtn" style={{ fontSize:14 }} onPointerDown={e=>{e.preventDefault();setCats(p=>p.filter(c=>c.id!==cat.id))}}>×</button>
                     </div>
                   ))}
                 </div>
