@@ -120,10 +120,10 @@ const INIT_INVESTMENTS = [
   { id: 2, name: "RRSP", type: "RRSP", color: "#7CBD8F", entries: [{ date: "2026-01-01", value: 0 }] },
 ];
 const INV_TYPES = ["TFSA","RRSP","FHSA","Stocks","ETF","Crypto","Savings","Other"];
-const INV_COLORS = ["#7CBD8F","#7CBD8F","#E87FA0","#7DB8D4","#D4849E","#c97c3a","#6AABDA","#888"];
+const INV_COLORS = ["#7CBD8F","#7CBD8F","#E87FA0","#7DB8D4","#D4849E","#D4826A","#6AABDA","#888"];
 
 const BUCKET_CONFIGS = [
-  { key: "needs",   label: "Needs",   bg: "#9B8FD8", sub: a => a.needs + "% of income" },
+  { key: "needs",   label: "Needs",   bg: "#9BB5E8", sub: a => a.needs + "% of income" },
   { key: "wants",   label: "Wants",   bg: "#E87FA0", sub: a => a.wants + "% of income" },
   { key: "savings", label: "Savings", bg: "#7CBD8F", sub: a => a.savings + "% of income" },
   { key: "joint",   label: "Joint",   bg: "#7DB8D4", sub: () => "per paycheque" },
@@ -513,7 +513,6 @@ function App() {
     );
   }
 
-  // ── Goal mini-card ────────────────────────────
   function GoalMini({ goal }) {
     const rem = Math.max(n(goal.target)-goal.saved, 0);
     const pct = n(goal.target)>0 ? Math.min(goal.saved/n(goal.target)*100,100) : 0;
@@ -688,7 +687,7 @@ function App() {
             {/* Action buttons row */}
             <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
               {!recApplied && recur.length>0 && (
-                <button className="tbtn" onClick={applyRecur} style={{ padding:"7px 12px", background:"white", color:"#c97c3a", border:"1.5px solid #F5C9A8", borderRadius:9, fontSize:12 }}>
+                <button className="tbtn" onClick={applyRecur} style={{ padding:"7px 12px", background:"white", color:"#D4826A", border:"1.5px solid #F5C9A8", borderRadius:9, fontSize:12 }}>
                   🔁 Apply recurring ({recur.length})
                 </button>
               )}
@@ -740,7 +739,7 @@ function App() {
                 <div style={{ fontSize:28, marginBottom:8 }}>💸</div>
                 <p style={{ fontSize:13, color:"#ccc" }}>{mTxns.length===0?"No transactions yet":"No transactions match this filter"}</p>
                 {mTxns.length===0&&recur.length>0&&!recApplied && (
-                  <button className="tbtn" onClick={applyRecur} style={{ marginTop:12, padding:"8px 18px", background:"#fff5ed", color:"#c97c3a", border:"1.5px solid #F5C9A8", borderRadius:8 }}>
+                  <button className="tbtn" onClick={applyRecur} style={{ marginTop:12, padding:"8px 18px", background:"#fff5ed", color:"#D4826A", border:"1.5px solid #F5C9A8", borderRadius:8 }}>
                     🔁 Apply {recur.length} recurring transactions
                   </button>
                 )}
@@ -833,14 +832,14 @@ function App() {
       mom: yrData.reduce((s,m)=>s+m.b.mom,0),
     };
     totals.out = totals.needs+totals.wants+totals.joint+totals.mom;
-    const colMap = { total:"#9B8FD8",needs:"#9B8FD8",wants:"#E87FA0",savings:"#7CBD8F",joint:"#7DB8D4",mom:"#D4849E" };
+    const colMap = { total:"#9BB5E8",needs:"#9BB5E8",wants:"#E87FA0",savings:"#7CBD8F",joint:"#7DB8D4",mom:"#D4849E" };
     const vals = yrData.map(m => yMetric==="needs"?m.s.needs:yMetric==="wants"?m.s.wants:yMetric==="savings"?m.b.savings:yMetric==="joint"?m.b.joint:yMetric==="mom"?m.b.mom:m.s.total);
     const buds = yrData.map(m => yMetric==="needs"?m.b.needs:yMetric==="wants"?m.b.wants:yMetric==="savings"?m.b.savings:yMetric==="joint"?m.b.joint:yMetric==="mom"?m.b.mom:m.b.needs+m.b.wants);
     const maxV = Math.max(...vals,...buds,1);
     return (
       <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
         <div style={{ display:"grid", gridTemplateColumns: mob?"repeat(4,1fr)":"repeat(7,1fr)", gap:10 }}>
-          {[{l:"Income",v:totals.inc,bg:"#6AABDA"},{l:"Needs",v:totals.needs,bg:"#7CBD8F"},{l:"Wants",v:totals.wants,bg:"#E87FA0"},{l:"Savings",v:totals.savings,bg:"#7CBD8F"},{l:"Joint",v:totals.joint,bg:"#7DB8D4"},{l:"Mom",v:totals.mom,bg:"#D4849E"},{l:"Total Out",v:totals.out,bg:"#9E8E85"}].map(col=>(
+          {[{l:"Income",v:totals.inc,bg:"#6AABDA"},{l:"Needs",v:totals.needs,bg:"#7CBD8F"},{l:"Wants",v:totals.wants,bg:"#E87FA0"},{l:"Savings",v:totals.savings,bg:"#7CBD8F"},{l:"Joint",v:totals.joint,bg:"#7DB8D4"},{l:"Mom",v:totals.mom,bg:"#D4849E"},{l:"Total Out",v:totals.out,bg:"#7DB8E8"}].map(col=>(
             <div key={col.l} className="bucket-card" style={{ background:col.bg, borderRadius:14, padding: mob?"11px 9px":"14px", boxShadow:"0 4px 14px rgba(0,0,0,0.1)" }}>
               <div style={{ fontSize:9, color:"rgba(255,255,255,0.65)", textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:4 }}>{col.l}</div>
               <div style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?13:17, fontWeight:600, color:"white" }}>{moneyS(col.v)}</div>
@@ -1000,7 +999,7 @@ function App() {
         </div>
 
         {/* Month pills — browser tab style */}
-        {view!=="yearly" && view!=="home" && view!=="investments" && (
+        {view==="month" && (
           <div style={{ marginBottom:0, paddingBottom:0, overflowX:"auto", display:"flex", WebkitOverflowScrolling:"touch" }}>
             <div style={{ display:"flex", gap:0, minWidth:"max-content" }}>
               {(() => {
@@ -1037,7 +1036,7 @@ function App() {
           </div>
         )}
         {/* Tab underline connector */}
-        {view!=="yearly" && view!=="home" && view!=="investments" && (
+        {view==="month" && (
           <div style={{ height:3, background:"#EEF0F4", marginBottom:18, borderRadius:"0 0 4px 4px" }}/>
         )}
 
@@ -1192,14 +1191,14 @@ function App() {
           {view==="recurring" && (
           <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
             <div style={{ ...S.card, background:"#fff8f0", border:"1px solid #F5C9A8", boxShadow:"none" }}>
-              <div style={{ fontSize:12, color:"#c97c3a", fontWeight:500, marginBottom:4 }}>🔁 How recurring works</div>
+              <div style={{ fontSize:12, color:"#D4826A", fontWeight:500, marginBottom:4 }}>🔁 How recurring works</div>
               <p style={{ fontSize:12, color:"#888", lineHeight:1.7 }}>Set these up once. At the start of each month, hit <strong>"Apply recurring"</strong> in the Month tab.</p>
             </div>
             <div style={S.card}>
               <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:6 }}>
                 Recurring {recur.length>0 && <span style={{ marginLeft:8, fontSize:12 }}>· {money(recur.reduce((s,r)=>s+n(r.amount),0))}/mo base</span>}
               </div>
-              <div style={{ fontSize:11, color:"#c97c3a", marginBottom:14 }}>Set a "{MONTHS[mi]} override" below to use a different amount this month only.</div>
+              <div style={{ fontSize:11, color:"#D4826A", marginBottom:14 }}>Set a "{MONTHS[mi]} override" below to use a different amount this month only.</div>
               {recur.length===0 ? <p style={{ fontSize:13, color:"#ccc", textAlign:"center", padding:"20px 0" }}>None set up yet</p> : recur.map(r=>{
                 const cat=cats.find(c=>c.id===r.catId);
                 const tc={ Need:{bg:"#EDEAF8",text:"#7CBD8F"},Want:{bg:"#FDF0E8",text:"#E87FA0"},Saving:{bg:"#EDEAF8",text:"#7CBD8F"} };
@@ -1220,7 +1219,7 @@ function App() {
                       <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:3 }}>
                         <span style={{ fontSize:11, color:"#bbb" }}>Base: {money(r.amount)}</span>
                         <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-                          <span style={{ fontSize:10, color:"#c97c3a" }}>{MONTHS[mi]}:</span>
+                          <span style={{ fontSize:10, color:"#D4826A" }}>{MONTHS[mi]}:</span>
                           <div style={{ position:"relative", width:90 }}><DS/><input style={{ ...dInp({ fontSize:16, width:90 }), borderColor: hasOverride?"#FDEAA0":"#eee" }} placeholder={r.amount} value={recurOverrides[overKey]||""} onChange={e=>{
                             const val = e.target.value;
                             setRecurOverrides(p=>({ ...p, [overKey]: val===''?undefined:val }));
@@ -1249,56 +1248,70 @@ function App() {
         )}
 
         {view==="goals" && (
-          <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
-            {activeGoals.map(goal=>{
-              const rem=Math.max(n(goal.target)-goal.saved,0);
-              const pct=n(goal.target)>0?Math.min(goal.saved/n(goal.target)*100,100):0;
-              const done=rem===0;
-              return (
-                <div key={goal.id} style={{ ...S.card, borderLeft:"4px solid "+(done?"#7CBD8F":"#7CBD8F") }}>
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:16 }}>
-                    <div><div style={{ fontSize:15, fontWeight:500, marginBottom:2 }}>{goal.name}</div><div style={{ fontSize:11, color:"#bbb" }}>{done?"🎉 Goal reached!":money(rem)+" to go"}</div></div>
-                    <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-                      {done && <button onClick={()=>archGoal(goal.id)} style={{ fontSize:11, padding:"4px 12px", borderRadius:99, background:"#EDEAF8", color:"#7CBD8F", border:"1px solid #BDB8E8", cursor:"pointer", fontFamily:"inherit", fontWeight:500 }}>✓ Archive</button>}
-                      <button className="xbtn" style={{ fontSize:18 }} onPointerDown={e=>{e.preventDefault();delGoal(goal.id)}}>×</button>
-                    </div>
-                  </div>
-                  <div style={{ display:"flex", gap:16, alignItems:"center", marginBottom:16, flexWrap:"wrap" }}>
-                    <div style={{ position:"relative", flexShrink:0 }}>
-                      <DonutChart segments={[{ value:goal.saved, color:done?"#7CBD8F":"#7CBD8F" },{ value:Math.max(n(goal.target)-goal.saved,0), color:"#f0f0f0" }]} size={80} thickness={14}/>
-                      <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:14, fontWeight:600, color:done?"#7CBD8F":"#7CBD8F" }}>{Math.round(pct)}%</div>
+          <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+
+            {/* Goals grid — color-blocked cards */}
+            {activeGoals.length>0 && (
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:12 }}>
+                {activeGoals.map((goal, gi)=>{
+                  const GCOLS = ["#FFD6E0","#C8E4F5","#C8EAD3","#FFE8A3","#F5C0D2","#A8D8F0","#FDEAA0","#B8E8C8"];
+                  const col = GCOLS[gi % GCOLS.length];
+                  const rem = Math.max(n(goal.target)-goal.saved,0);
+                  const pct = n(goal.target)>0?Math.min(goal.saved/n(goal.target)*100,100):0;
+                  const done = rem===0;
+                  const textCol = "#2C3E50";
+                  return (
+                    <div key={goal.id} style={{ background:col, borderRadius:20, padding:"18px 16px 14px", position:"relative", overflow:"hidden", boxShadow:"0 4px 16px rgba(0,0,0,0.08)" }}>
+                      {/* Decorative circle */}
+                      <div style={{ position:"absolute", bottom:-20, right:-20, width:80, height:80, borderRadius:"50%", background:"rgba(255,255,255,0.25)", pointerEvents:"none" }}/>
+                      {/* Delete */}
+                      <button className="xbtn" onPointerDown={e=>{e.preventDefault();delGoal(goal.id)}} style={{ position:"absolute", top:10, right:10, fontSize:16, color:"rgba(0,0,0,0.3)" }}>×</button>
+                      {/* Name */}
+                      <div style={{ fontSize:13, fontWeight:700, color:textCol, marginBottom:2, paddingRight:20 }}>{goal.name}</div>
+                      <div style={{ fontSize:10, color:"rgba(0,0,0,0.45)", marginBottom:12 }}>{done?"🎉 Complete!":money(rem)+" to go"}</div>
+                      {/* Big percentage */}
+                      <div style={{ fontFamily:"'Playfair Display',serif", fontSize:32, fontWeight:700, color:textCol, lineHeight:1, marginBottom:8 }}>{Math.round(pct)}<span style={{ fontSize:16 }}>%</span></div>
+                      {/* Progress bar */}
+                      <div style={{ background:"rgba(255,255,255,0.5)", borderRadius:99, height:6, overflow:"hidden", marginBottom:10 }}>
+                        <div style={{ width:pct+"%", height:"100%", borderRadius:99, background:"rgba(0,0,0,0.2)", transition:"width 0.4s" }}/>
                       </div>
+                      {/* Saved / Target */}
+                      <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, color:"rgba(0,0,0,0.55)", marginBottom: done?0:10 }}>
+                        <span><b style={{ color:textCol }}>{moneyS(goal.saved)}</b> saved</span>
+                        <span>of <b style={{ color:textCol }}>{moneyS(goal.target)}</b></span>
+                      </div>
+                      {/* Add savings input */}
+                      {!done && (
+                        <div style={{ display:"flex", gap:6, alignItems:"center" }}>
+                          <div style={{ position:"relative", flex:1 }}>
+                            <span style={{ position:"absolute", left:9, top:"50%", transform:"translateY(-50%)", fontSize:12, color:"rgba(0,0,0,0.4)" }}>$</span>
+                            <input style={{ border:"none", background:"rgba(255,255,255,0.6)", borderRadius:8, padding:"7px 8px 7px 20px", fontSize:13, fontFamily:"inherit", outline:"none", width:"100%", boxSizing:"border-box", color:textCol }} placeholder="0.00" value={addSav[goal.id]||""} onChange={e=>setAddSav(p=>({...p,[goal.id]:e.target.value}))}/>
+                          </div>
+                          <button className="tbtn" onClick={()=>saveGoal(goal.id)} style={{ padding:"7px 12px", background:"rgba(255,255,255,0.7)", color:textCol, border:"none", borderRadius:8, fontWeight:600, fontSize:12 }}>+ Save</button>
+                        </div>
+                      )}
+                      {done && <button onClick={()=>archGoal(goal.id)} style={{ fontSize:11, padding:"5px 14px", borderRadius:99, background:"rgba(255,255,255,0.6)", color:textCol, border:"none", cursor:"pointer", fontFamily:"inherit", fontWeight:600 }}>Archive ✓</button>}
                     </div>
-                    <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, flex:1 }}>
-                      {[{l:"Target",v:money(goal.target),c:"#7CBD8F"},{l:"Saved",v:money(goal.saved),c:"#7CBD8F"},{l:"Remaining",v:money(rem),c:done?"#7CBD8F":"#E87FA0"}].map(s=>(
-                        <div key={s.l}><div style={{ fontSize:10, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:3 }}>{s.l}</div><div style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?14:17, fontWeight:600, color:s.c }}>{s.v}</div></div>
-                      ))}
-                    </div>
-                  </div>
-                  <Bar value={goal.saved} max={n(goal.target)} color={done?"#B2D8BF":"#B2D8BF"} h={8}/>
-                  {!done && (
-                    <div style={{ display:"flex", gap:8, alignItems:"center", marginTop:14 }}>
-                      <span style={{ fontSize:12, color:"#bbb" }}>Add:</span>
-                      <div style={{ position:"relative", flex:1, maxWidth:140 }}><DS/><input style={dInp({ fontSize:16 })} placeholder="0.00" value={addSav[goal.id]||""} onChange={e=>setAddSav(p=>({...p,[goal.id]:e.target.value}))}/></div>
-                      <button className="tbtn" onClick={()=>saveGoal(goal.id)} style={{ padding:"7px 16px", background:"#EDEAF8", color:"#7CBD8F", border:"1.5px solid #BDB8E8", borderRadius:8 }}>+ Save</button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-            <div style={{ ...S.card, border:"2px dashed #eee", boxShadow:"none" }}>
-              <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14 }}>New Goal</div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Add new goal */}
+            <div style={{ ...S.card, border:"2px dashed #D0D8E8", boxShadow:"none" }}>
+              <div style={{ fontSize:11, color:"#B0B8C0", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14 }}>New Goal</div>
               <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"flex-end" }}>
-                <div style={{ flex:"2 1 140px" }}><FL>Name</FL><input style={inp} placeholder="e.g. New Car" value={newGoal.name} onChange={e=>setNewGoal(p=>({...p,name:e.target.value}))}/></div>
+                <div style={{ flex:"2 1 140px" }}><FL>Name</FL><input style={inp} placeholder="e.g. Europe Trip" value={newGoal.name} onChange={e=>setNewGoal(p=>({...p,name:e.target.value}))}/></div>
                 <div style={{ flex:"1 1 100px" }}><FL>Target</FL><div style={{ position:"relative" }}><DS/><input style={dInp({fontSize:16})} placeholder="5000" value={newGoal.target} onChange={e=>setNewGoal(p=>({...p,target:e.target.value}))}/></div></div>
                 <div style={{ flex:"1 1 100px" }}><FL>Already saved</FL><div style={{ position:"relative" }}><DS/><input style={dInp({fontSize:16})} placeholder="0" value={newGoal.saved} onChange={e=>setNewGoal(p=>({...p,saved:e.target.value}))}/></div></div>
-                <button className="tbtn" onClick={()=>{ if(!newGoal.name.trim()||!newGoal.target) return; setGoals(p=>[...p,{...newGoal,id:Date.now(),saved:n(newGoal.saved),archived:false}]); setNewGoal({name:"",target:"",saved:""}); }} style={{ padding:"8px 18px", background:"#7CBD8F", color:"white", borderRadius:8 }}>+ Add Goal</button>
+                <button className="tbtn" onClick={()=>{ if(!newGoal.name.trim()||!newGoal.target) return; setGoals(p=>[...p,{...newGoal,id:Date.now(),saved:n(newGoal.saved),archived:false}]); setNewGoal({name:"",target:"",saved:""}); }} style={{ padding:"8px 20px", background:"#7CBD8F", color:"white", borderRadius:10 }}>+ Add Goal</button>
               </div>
             </div>
+
+            {/* Archived */}
             {archGoals.length>0 && (
               <div>
-                <button className="tbtn" onClick={()=>setShowArchived(p=>!p)} style={{ fontSize:12, color:"#bbb", background:"none", padding:"6px 0", marginBottom:8 }}>
+                <button className="tbtn" onClick={()=>setShowArchived(p=>!p)} style={{ fontSize:12, color:"#B0B8C0", background:"none", padding:"6px 0", marginBottom:8 }}>
                   {showArchived?"▾":"▸"} {archGoals.length} archived goal{archGoals.length!==1?"s":""}
                 </button>
                 {showArchived && archGoals.map(goal=>(
@@ -1337,7 +1350,7 @@ function App() {
                   );
                 })}
                 {/* Total card */}
-                <div className="bucket-card" style={{ background:"#9E8E85", borderRadius:16, padding: mob?"13px 11px":"17px 17px 15px", boxShadow:"0 4px 16px rgba(0,0,0,0.1)" }}>
+                <div className="bucket-card" style={{ background:"#7DB8E8", borderRadius:16, padding: mob?"13px 11px":"17px 17px 15px", boxShadow:"0 4px 16px rgba(0,0,0,0.1)" }}>
                   <div style={{ fontSize:9, color:"rgba(255,255,255,0.75)", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:4, fontWeight:600 }}>Total</div>
                   <div style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?15:20, fontWeight:600, color:"white" }}>
                     {moneyS(investments.reduce((s,inv)=>s+(inv.entries&&inv.entries.length>0?inv.entries[inv.entries.length-1].value:0),0))}
