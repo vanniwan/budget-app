@@ -2,8 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>budget. · Vanni 2026</title>
+
+  <!-- PWA: iPhone home screen -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="budget." />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#f5f4f2" />
+
+  <!-- PWA manifest -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- App icons (we'll generate these as inline SVG data URIs) -->
+  <link rel="apple-touch-icon" href="icon-192.png" />
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -12,7 +25,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
     input, select { touch-action: manipulation; }
-    body { -webkit-tap-highlight-color: transparent; touch-action: pan-y; }
+    body { -webkit-tap-highlight-color: transparent; touch-action: pan-y; padding-bottom: env(safe-area-inset-bottom); background: #f5f4f2; }
     input:focus, select:focus { border-color: #b5a9f5 !important; outline: none; }
     .row:hover { background: #faf9f7; border-radius: 8px; }
     .xbtn { border: none; background: none; cursor: pointer; color: #ddd; font-size: 15px; padding: 8px 10px; line-height: 1; transition: color 0.15s; }
@@ -133,13 +146,22 @@ function App() {
   const mob = useIsMobile();
   const [view, setView]       = useState("month");
   const [mi, setMi]           = useState(CURRENT_MONTH);
-  const [incomes, setIncomes] = useState(INIT_INCOMES);
-  const [cats, setCats]       = useState(INIT_CATS);
-  const [allTxns, setAllTxns] = useState(makeSeedTxns);
-  const [recur, setRecur]     = useState(INIT_RECURRING);
-  const [goals, setGoals]     = useState(INIT_GOALS);
-  const [alloc, setAlloc]     = useState(INIT_ALLOC);
-  const [paychecks, setPaychecks] = useState(INIT_PAYCHECKS);
+  // ── localStorage helpers ──
+  function load(key, fallback) {
+    try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+    catch(e) { return fallback; }
+  }
+  function save(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+  }
+
+  const [incomes,  setIncomes]  = useState(() => load('bud_incomes',  INIT_INCOMES));
+  const [cats,     setCats]     = useState(() => load('bud_cats',     INIT_CATS));
+  const [allTxns,  setAllTxns]  = useState(() => load('bud_allTxns',  makeSeedTxns()));
+  const [recur,    setRecur]    = useState(() => load('bud_recur',    INIT_RECURRING));
+  const [goals,    setGoals]    = useState(() => load('bud_goals',    INIT_GOALS));
+  const [alloc,    setAlloc]    = useState(() => load('bud_alloc',    INIT_ALLOC));
+  const [paychecks,setPaychecks]= useState(() => load('bud_paychecks',INIT_PAYCHECKS));
 
   const [touchStartX, setTouchStartX] = useState(null);
   const [touchStartY, setTouchStartY] = useState(null);
@@ -151,11 +173,21 @@ function App() {
   const [yMetric,     setYMetric]     = useState("total");
   const [editAlloc,   setEditAlloc]   = useState(INIT_ALLOC);
   const [addSav,      setAddSav]      = useState({});
-  const [recurOverrides, setRecurOverrides] = useState({}); // { "mi-recurId": amountStr }
+  const [recurOverrides, setRecurOverrides] = useState(() => load('bud_recurOverrides', {}));
   const [newTxn,      setNewTxn]      = useState({ desc:"", amount:"", catId:"", txnType:"Need", date:todayStr(), recurring:false, kind:"expense" });
   const [newRec,      setNewRec]      = useState({ desc:"", amount:"", catId:"", txnType:"Need", day:"1" });
   const [newGoal,     setNewGoal]     = useState({ name:"", target:"", saved:"" });
   const [newCat,      setNewCat]      = useState({ name:"", type:"Need" });
+
+  // ── Auto-save to localStorage on every change ──
+  useEffect(() => save('bud_incomes',        incomes),        [incomes]);
+  useEffect(() => save('bud_cats',           cats),           [cats]);
+  useEffect(() => save('bud_allTxns',        allTxns),        [allTxns]);
+  useEffect(() => save('bud_recur',          recur),          [recur]);
+  useEffect(() => save('bud_goals',          goals),          [goals]);
+  useEffect(() => save('bud_alloc',          alloc),          [alloc]);
+  useEffect(() => save('bud_paychecks',      paychecks),      [paychecks]);
+  useEffect(() => save('bud_recurOverrides', recurOverrides), [recurOverrides]);
 
   const inp = S.inp;
   const dInp = x => ({ ...inp, paddingLeft: 22, ...x });
@@ -286,7 +318,7 @@ function App() {
               <div style={{ width:8, height:8, borderRadius:2, background:c, flexShrink:0 }}/>
               <span style={{ fontSize:13, flex:1 }}>{l}</span>
               <div style={{ position:"relative", width:80 }}>
-                <input style={{ ...inp, width:80, textAlign:"right", paddingRight:22 }} value={editAlloc[k]} onChange={e=>setEditAlloc(p=>({...p,[k]:e.target.value}))}/>
+                <input style={{ ...inp, width:80, textAlign:"right", paddingRight:22, fontSize:16 }} value={editAlloc[k]} onChange={e=>setEditAlloc(p=>({...p,[k]:e.target.value}))}/>
                 <span style={{ position:"absolute", right:9, top:"50%", transform:"translateY(-50%)", color:"#bbb", fontSize:12 }}>%</span>
               </div>
             </div>
@@ -298,7 +330,7 @@ function App() {
             <div key={k} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
               <div style={{ width:8, height:8, borderRadius:2, background:c, flexShrink:0 }}/>
               <span style={{ fontSize:13, flex:1 }}>{l}</span>
-              <div style={{ position:"relative", width:100 }}><DS/><input style={dInp({ width:100 })} value={editAlloc[k]} onChange={e=>setEditAlloc(p=>({...p,[k]:e.target.value}))}/></div>
+              <div style={{ position:"relative", width:100 }}><DS/><input style={dInp({ width:100, fontSize:16 })} value={editAlloc[k]} onChange={e=>setEditAlloc(p=>({...p,[k]:e.target.value}))}/></div>
             </div>
           ))}
           <div style={{ display:"flex", gap:8, marginTop:20 }}>
@@ -338,7 +370,7 @@ function App() {
         </div>
         {!done && (
           <div style={{ display:"flex", gap:5, marginTop:8 }}>
-            <div style={{ position:"relative", flex:1 }}><DS/><input style={dInp({ fontSize:12 })} placeholder="Add…" value={addSav[goal.id]||""} onChange={e=>setAddSav(p=>({...p,[goal.id]:e.target.value}))}/></div>
+            <div style={{ position:"relative", flex:1 }}><DS/><input style={dInp({ fontSize:16 })} placeholder="Add…" value={addSav[goal.id]||""} onChange={e=>setAddSav(p=>({...p,[goal.id]:e.target.value}))}/></div>
             <button className="tbtn" onClick={()=>saveGoal(goal.id)} style={{ padding:"7px 10px", background:"#edf7f2", color:"#3a8c5e", border:"1.5px solid #a0d4b5", borderRadius:8, whiteSpace:"nowrap", fontSize:12 }}>+ Save</button>
           </div>
         )}
@@ -366,7 +398,7 @@ function App() {
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
               <span style={{ fontSize:12, color:"#999" }}>{MONTHS[mi]} income</span>
               <div style={{ position:"relative" }}><DS/>
-                <input style={dInp({ width:120, fontSize:13 })} placeholder="0.00" value={incomes[mi]} onChange={e=>setIncomes(p=>p.map((v,i)=>i===mi?e.target.value:v))}/>
+                <input style={dInp({ width:120, fontSize:16 })} placeholder="0.00" value={incomes[mi]} onChange={e=>setIncomes(p=>p.map((v,i)=>i===mi?e.target.value:v))}/>
               </div>
             </div>
           </div>
@@ -505,10 +537,10 @@ function App() {
                 </div>
                 <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"flex-end" }}>
                   <div style={{ flex:"2 1 140px" }}><FL>Description</FL><input style={inp} placeholder="e.g. Loblaws run" autoFocus value={newTxn.desc} onChange={e=>setNewTxn(p=>({...p,desc:e.target.value}))}/></div>
-                  <div style={{ flex:"1 1 100px" }}><FL>Amount</FL><div style={{ position:"relative" }}><DS/><input style={dInp({})} placeholder="0.00" value={newTxn.amount} onChange={e=>setNewTxn(p=>({...p,amount:e.target.value}))}/></div></div>
+                  <div style={{ flex:"1 1 100px" }}><FL>Amount</FL><div style={{ position:"relative" }}><DS/><input style={dInp({fontSize:16})} placeholder="0.00" value={newTxn.amount} onChange={e=>setNewTxn(p=>({...p,amount:e.target.value}))}/></div></div>
                   {newTxn.kind==="expense" && <>
-                    <div style={{ flex:"1 1 100px" }}><FL>Type</FL><select style={{ ...inp, cursor:"pointer" }} value={newTxn.txnType} onChange={e=>setNewTxn(p=>({...p,txnType:e.target.value}))}><option>Need</option><option>Want</option><option>Saving</option></select></div>
-                    <div style={{ flex:"2 1 130px" }}><FL>Category</FL><select style={{ ...inp, cursor:"pointer" }} value={newTxn.catId} onChange={e=>setNewTxn(p=>({...p,catId:e.target.value}))}><option value="">Select…</option><optgroup label="Needs">{cats.filter(c=>c.type==="Need").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup><optgroup label="Wants">{cats.filter(c=>c.type==="Want").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup></select></div>
+                    <div style={{ flex:"1 1 100px" }}><FL>Type</FL><select style={{ ...inp, cursor:"pointer", fontSize:16 }} value={newTxn.txnType} onChange={e=>setNewTxn(p=>({...p,txnType:e.target.value}))}><option>Need</option><option>Want</option><option>Saving</option></select></div>
+                    <div style={{ flex:"2 1 130px" }}><FL>Category</FL><select style={{ ...inp, cursor:"pointer", fontSize:16 }} value={newTxn.catId} onChange={e=>setNewTxn(p=>({...p,catId:e.target.value}))}><option value="">Select…</option><optgroup label="Needs">{cats.filter(c=>c.type==="Need").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup><optgroup label="Wants">{cats.filter(c=>c.type==="Want").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup></select></div>
                   </>}
                   <div style={{ flex:"1 1 120px" }}><FL>Date</FL><input type="date" style={inp} value={newTxn.date} onChange={e=>setNewTxn(p=>({...p,date:e.target.value}))}/></div>
                   {newTxn.kind==="expense" && (
@@ -835,7 +867,7 @@ function App() {
                         <span style={{ fontSize:11, color:"#bbb" }}>Base: {money(r.amount)}</span>
                         <div style={{ display:"flex", alignItems:"center", gap:5 }}>
                           <span style={{ fontSize:10, color:"#c97c3a" }}>{MONTHS[mi]}:</span>
-                          <div style={{ position:"relative", width:90 }}><DS/><input style={{ ...dInp({ fontSize:12, width:90 }), borderColor: hasOverride?"#f5c6a0":"#eee" }} placeholder={r.amount} value={recurOverrides[overKey]||""} onChange={e=>{
+                          <div style={{ position:"relative", width:90 }}><DS/><input style={{ ...dInp({ fontSize:16, width:90 }), borderColor: hasOverride?"#f5c6a0":"#eee" }} placeholder={r.amount} value={recurOverrides[overKey]||""} onChange={e=>{
                             const val = e.target.value;
                             setRecurOverrides(p=>({ ...p, [overKey]: val===''?undefined:val }));
                           }}/></div>
@@ -852,10 +884,10 @@ function App() {
               <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14 }}>Add Recurring</div>
               <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"flex-end" }}>
                 <div style={{ flex:"2 1 140px" }}><FL>Description</FL><input style={inp} placeholder="e.g. Spotify" value={newRec.desc} onChange={e=>setNewRec(p=>({...p,desc:e.target.value}))}/></div>
-                <div style={{ flex:"1 1 90px" }}><FL>Amount</FL><div style={{ position:"relative" }}><DS/><input style={dInp({})} placeholder="0.00" value={newRec.amount} onChange={e=>setNewRec(p=>({...p,amount:e.target.value}))}/></div></div>
-                <div style={{ flex:"1 1 90px" }}><FL>Type</FL><select style={{ ...inp, cursor:"pointer" }} value={newRec.txnType} onChange={e=>setNewRec(p=>({...p,txnType:e.target.value}))}><option>Need</option><option>Want</option><option>Saving</option></select></div>
-                <div style={{ flex:"2 1 120px" }}><FL>Category</FL><select style={{ ...inp, cursor:"pointer" }} value={newRec.catId} onChange={e=>setNewRec(p=>({...p,catId:Number(e.target.value)}))}><option value="">Select…</option><optgroup label="Needs">{cats.filter(c=>c.type==="Need").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup><optgroup label="Wants">{cats.filter(c=>c.type==="Want").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup></select></div>
-                <div style={{ flex:"0 0 70px" }}><FL>Day</FL><input style={inp} type="number" min="1" max="31" value={newRec.day} onChange={e=>setNewRec(p=>({...p,day:e.target.value}))}/></div>
+                <div style={{ flex:"1 1 90px" }}><FL>Amount</FL><div style={{ position:"relative" }}><DS/><input style={dInp({fontSize:16})} placeholder="0.00" value={newRec.amount} onChange={e=>setNewRec(p=>({...p,amount:e.target.value}))}/></div></div>
+                <div style={{ flex:"1 1 90px" }}><FL>Type</FL><select style={{ ...inp, cursor:"pointer", fontSize:16 }} value={newRec.txnType} onChange={e=>setNewRec(p=>({...p,txnType:e.target.value}))}><option>Need</option><option>Want</option><option>Saving</option></select></div>
+                <div style={{ flex:"2 1 120px" }}><FL>Category</FL><select style={{ ...inp, cursor:"pointer", fontSize:16 }} value={newRec.catId} onChange={e=>setNewRec(p=>({...p,catId:Number(e.target.value)}))}><option value="">Select…</option><optgroup label="Needs">{cats.filter(c=>c.type==="Need").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup><optgroup label="Wants">{cats.filter(c=>c.type==="Want").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup></select></div>
+                <div style={{ flex:"0 0 70px" }}><FL>Day</FL><input style={{...inp, fontSize:16}} type="number" min="1" max="31" value={newRec.day} onChange={e=>setNewRec(p=>({...p,day:e.target.value}))}/></div>
                 <button className="tbtn" onClick={addRecurring} style={{ padding:"8px 18px", background:"#7c6fd4", color:"white", borderRadius:8 }}>+ Add</button>
               </div>
             </div>
@@ -894,7 +926,7 @@ function App() {
                   {!done && (
                     <div style={{ display:"flex", gap:8, alignItems:"center", marginTop:14 }}>
                       <span style={{ fontSize:12, color:"#bbb" }}>Add:</span>
-                      <div style={{ position:"relative", flex:1, maxWidth:140 }}><DS/><input style={dInp({ fontSize:12 })} placeholder="0.00" value={addSav[goal.id]||""} onChange={e=>setAddSav(p=>({...p,[goal.id]:e.target.value}))}/></div>
+                      <div style={{ position:"relative", flex:1, maxWidth:140 }}><DS/><input style={dInp({ fontSize:16 })} placeholder="0.00" value={addSav[goal.id]||""} onChange={e=>setAddSav(p=>({...p,[goal.id]:e.target.value}))}/></div>
                       <button className="tbtn" onClick={()=>saveGoal(goal.id)} style={{ padding:"7px 16px", background:"#edf7f2", color:"#3a8c5e", border:"1.5px solid #a0d4b5", borderRadius:8 }}>+ Save</button>
                     </div>
                   )}
@@ -905,8 +937,8 @@ function App() {
               <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14 }}>New Goal</div>
               <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"flex-end" }}>
                 <div style={{ flex:"2 1 140px" }}><FL>Name</FL><input style={inp} placeholder="e.g. New Car" value={newGoal.name} onChange={e=>setNewGoal(p=>({...p,name:e.target.value}))}/></div>
-                <div style={{ flex:"1 1 100px" }}><FL>Target</FL><div style={{ position:"relative" }}><DS/><input style={dInp({})} placeholder="5000" value={newGoal.target} onChange={e=>setNewGoal(p=>({...p,target:e.target.value}))}/></div></div>
-                <div style={{ flex:"1 1 100px" }}><FL>Already saved</FL><div style={{ position:"relative" }}><DS/><input style={dInp({})} placeholder="0" value={newGoal.saved} onChange={e=>setNewGoal(p=>({...p,saved:e.target.value}))}/></div></div>
+                <div style={{ flex:"1 1 100px" }}><FL>Target</FL><div style={{ position:"relative" }}><DS/><input style={dInp({fontSize:16})} placeholder="5000" value={newGoal.target} onChange={e=>setNewGoal(p=>({...p,target:e.target.value}))}/></div></div>
+                <div style={{ flex:"1 1 100px" }}><FL>Already saved</FL><div style={{ position:"relative" }}><DS/><input style={dInp({fontSize:16})} placeholder="0" value={newGoal.saved} onChange={e=>setNewGoal(p=>({...p,saved:e.target.value}))}/></div></div>
                 <button className="tbtn" onClick={()=>{ if(!newGoal.name.trim()||!newGoal.target) return; setGoals(p=>[...p,{...newGoal,id:Date.now(),saved:n(newGoal.saved),archived:false}]); setNewGoal({name:"",target:"",saved:""}); }} style={{ padding:"8px 18px", background:"#7c6fd4", color:"white", borderRadius:8 }}>+ Add Goal</button>
               </div>
             </div>
@@ -950,10 +982,10 @@ function App() {
             <div style={{ borderTop:"1px solid #f0f0f0", paddingTop:16 }}>
               <div style={{ fontSize:11, color:"#bbb", marginBottom:10 }}>Add a category</div>
               <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center" }}>
-                <input style={{ ...inp, flex:1, minWidth:130 }} placeholder="Category name" value={newCat.name}
+                <input style={{ ...inp, flex:1, minWidth:130, fontSize:16 }} placeholder="Category name" value={newCat.name}
                   onChange={e=>setNewCat(p=>({...p,name:e.target.value}))}
                   onKeyDown={e=>{ if(e.key==="Enter"&&newCat.name.trim()){ setCats(p=>[...p,{...newCat,id:Date.now()}]); setNewCat({name:"",type:"Need"}); } }}/>
-                <select value={newCat.type} onChange={e=>setNewCat(p=>({...p,type:e.target.value}))} style={{ ...inp, width:110, cursor:"pointer" }}><option value="Need">Need</option><option value="Want">Want</option></select>
+                <select value={newCat.type} onChange={e=>setNewCat(p=>({...p,type:e.target.value}))} style={{ ...inp, width:110, cursor:"pointer", fontSize:16 }}><option value="Need">Need</option><option value="Want">Want</option></select>
                 <button className="tbtn" onClick={()=>{ if(!newCat.name.trim()) return; setCats(p=>[...p,{...newCat,id:Date.now()}]); setNewCat({name:"",type:"Need"}); }} style={{ padding:"8px 18px", background:"#7c6fd4", color:"white", borderRadius:8, whiteSpace:"nowrap" }}>+ Add</button>
               </div>
             </div>
@@ -974,6 +1006,15 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+  </script>
+
+  <!-- Register service worker for offline support -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
   </script>
 </body>
 </html>
