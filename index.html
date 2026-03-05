@@ -321,7 +321,7 @@ function App() {
   const inp = S.inp;
   const dInp = x => ({ ...inp, paddingLeft: 22, ...x });
 
-  const VIEWS = ["home","month","yearly","recurring","goals","investments","categories"];
+  const VIEWS = ["home","month","investments","yearly","recurring","goals","categories"];
   function handleTouchStart(e) {
     // Only track single-finger swipes — ignore pinch/zoom
     if (e.touches.length !== 1) { setSwipeCancelled(true); return; }
@@ -973,19 +973,33 @@ function App() {
         {/* Nav — horizontally scrollable on mobile */}
         <div className="hscroll" style={{ marginBottom:18 }}>
           <div style={{ display:"flex", gap:4, background:"#f0f0f0", borderRadius:12, padding:4, width:"fit-content" }}>
-            {[["home","🏠 Home"],["month","📅 Month"],["yearly","📊 Yearly"],["recurring","🔁 Recurring"],["goals","🎯 Goals"],["investments","📈 Invest"],["categories","🏷️ Categories"]].map(([k,l])=>(
+            {[["home","🏠 Home"],["month","📅 Month"],["investments","📈 Invest"],["yearly","📊 Yearly"],["recurring","🔁 Recurring"],["goals","🎯 Goals"],["categories","🏷️ Categories"]].map(([k,l])=>(
               <button key={k} onClick={()=>setView(k)} style={{ border:"none", cursor:"pointer", padding: mob?"7px 10px":"7px 14px", borderRadius:9, fontSize: mob?11:12, fontFamily:"inherit", whiteSpace:"nowrap", background:view===k?"white":"transparent", color:view===k?"#1a1a1a":"#888", fontWeight:view===k?600:400, boxShadow:view===k?"0 1px 3px rgba(0,0,0,0.1)":"none" }}>{l}</button>
             ))}
           </div>
         </div>
 
         {/* Month pills — scrollable */}
-        {view!=="yearly" && (
-          <div className="hscroll" style={{ display:"flex", gap:5, marginBottom:20 }}>
+        {view!=="yearly" && view!=="home" && view!=="investments" && (
+          <div className="hscroll" style={{ display:"flex", gap:6, marginBottom:20, paddingBottom:4 }}>
             {MONTHS.map((m,i)=>{
               const active = i===mi;
-              return <button key={m} onClick={()=>setMi(i)} style={{ border:"1.5px solid "+(active?"#7c6fd4":"#e8e8e8"), cursor:"pointer", borderRadius:8, padding:"5px 11px", fontSize:11, fontFamily:"inherit", background:active?"#7c6fd4":"white", color:active?"white":"#999", fontWeight:active?600:400, flexShrink:0 }}>
-                {m}{allTxns[i]&&allTxns[i].length>0?" ✓":""}
+              const hasTxns = allTxns[i]&&allTxns[i].length>0;
+              return <button key={m} onClick={()=>setMi(i)} style={{
+                border: active?"2px solid #7c6fd4":"1.5px solid #ebebeb",
+                cursor:"pointer", borderRadius:10,
+                padding: active?"7px 15px":"5px 11px",
+                fontSize: active?13:11,
+                fontFamily:"inherit",
+                background: active?"#7c6fd4":"white",
+                color: active?"white":hasTxns?"#666":"#bbb",
+                fontWeight: active?700:hasTxns?500:400,
+                flexShrink:0,
+                boxShadow: active?"0 2px 8px rgba(124,111,212,0.35)":"none",
+                transform: active?"translateY(-1px)":"none",
+                transition:"all 0.15s",
+              }}>
+                {m}{hasTxns&&!active?" ·":""}
               </button>;
             })}
           </div>
@@ -1311,9 +1325,58 @@ function App() {
                     <button className="xbtn" style={{ fontSize:18 }} onPointerDown={e=>{e.preventDefault();setInvestments(p=>p.filter(x=>x.id!==inv.id))}}>×</button>
                   </div>
 
-                  {/* Value history */}
+                  {/* Line graph + history */}
                   {entries.length>0 && (
                     <div style={{ marginBottom:14 }}>
+                      {entries.length>1 && (() => {
+                        const vals = entries.map(e=>e.value);
+                        const minV = Math.min(...vals);
+                        const maxV = Math.max(...vals);
+                        const range = maxV - minV || 1;
+                        const W = 320, H = 80, pad = 8;
+                        const pts = entries.map((e,i)=>{
+                          const x = pad + (i/(entries.length-1))*(W-pad*2);
+                          const y = H - pad - ((e.value-minV)/range)*(H-pad*2);
+                          return [x,y];
+                        });
+                        const pathD = pts.map((p,i)=>(i===0?`M${p[0]},${p[1]}`:`L${p[0]},${p[1]}`)).join(" ");
+                        const areaD = pathD + ` L${pts[pts.length-1][0]},${H-pad} L${pts[0][0]},${H-pad} Z`;
+                        const lastPt = pts[pts.length-1];
+                        const isUp = entries[entries.length-1].value >= entries[0].value;
+                        const lineColor = isUp ? "#3a8c5e" : "#c04040";
+                        const fillColor = isUp ? "#3a8c5e22" : "#c0404022";
+                        return (
+                          <div style={{ marginBottom:14, background:"#fafafa", borderRadius:12, padding:"12px 8px 8px" }}>
+                            <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:H, display:"block", overflow:"visible" }}>
+                              {/* Grid lines */}
+                              {[0,0.5,1].map(t=>(
+                                <line key={t} x1={pad} y1={pad+(1-t)*(H-pad*2)} x2={W-pad} y2={pad+(1-t)*(H-pad*2)}
+                                  stroke="#efefef" strokeWidth="1"/>
+                              ))}
+                              {/* Area fill */}
+                              <path d={areaD} fill={fillColor}/>
+                              {/* Line */}
+                              <path d={pathD} fill="none" stroke={lineColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              {/* Dots */}
+                              {pts.map((p,i)=>(
+                                <circle key={i} cx={p[0]} cy={p[1]} r="3" fill={lineColor} stroke="white" strokeWidth="1.5"/>
+                              ))}
+                              {/* Last value label */}
+                              <text x={lastPt[0]} y={lastPt[1]-10} textAnchor="middle" fontSize="9" fill={lineColor} fontWeight="600">
+                                {moneyS(entries[entries.length-1].value)}
+                              </text>
+                              {/* Min/max labels */}
+                              <text x={pad} y={H-1} fontSize="8" fill="#ccc">{moneyS(minV)}</text>
+                              <text x={W-pad} y={H-1} fontSize="8" fill="#ccc" textAnchor="end">{moneyS(maxV)}</text>
+                            </svg>
+                            {/* Date labels */}
+                            <div style={{ display:"flex", justifyContent:"space-between", paddingTop:2, paddingLeft:pad, paddingRight:pad }}>
+                              <span style={{ fontSize:9, color:"#ccc" }}>{entries[0].date}</span>
+                              <span style={{ fontSize:9, color:"#ccc" }}>{entries[entries.length-1].date}</span>
+                            </div>
+                          </div>
+                        );
+                      })()}
                       <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:8 }}>History</div>
                       {[...entries].reverse().slice(0,6).map((e,i)=>(
                         <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 0", borderBottom:"1px solid #f8f8f8" }}>
