@@ -144,6 +144,7 @@ function App() {
   const [yMetric,     setYMetric]     = useState("total");
   const [editAlloc,   setEditAlloc]   = useState(INIT_ALLOC);
   const [addSav,      setAddSav]      = useState({});
+  const [recurOverrides, setRecurOverrides] = useState({}); // { "mi-recurId": amountStr }
   const [newTxn,      setNewTxn]      = useState({ desc:"", amount:"", catId:"", txnType:"Need", date:todayStr(), recurring:false, kind:"expense" });
   const [newRec,      setNewRec]      = useState({ desc:"", amount:"", catId:"", txnType:"Need", day:"1" });
   const [newGoal,     setNewGoal]     = useState({ name:"", target:"", saved:"" });
@@ -169,7 +170,8 @@ function App() {
     const base = n(incomes[idx]);
     const bonus = (allTxns[idx]||[]).filter(t=>t.kind==="income").reduce((s,t)=>s+n(t.amount),0);
     const inc = base+bonus;
-    return { inc, needs:inc*(alloc.needs/100), wants:inc*(alloc.wants/100), savings:inc*(alloc.savings/100), joint:alloc.joint, mom:alloc.mom };
+    const avail = Math.max(inc - alloc.joint - alloc.mom, 0);
+    return { inc, avail, needs:avail*(alloc.needs/100), wants:avail*(alloc.wants/100), savings:avail*(alloc.savings/100), joint:alloc.joint, mom:alloc.mom };
   }
   function spent(idx) {
     const ex = (allTxns[idx]||[]).filter(t=>t.kind==="expense");
@@ -211,7 +213,11 @@ function App() {
     const pad = String(mi+1).padStart(2,"0");
     const ex2 = exTxns.map(t=>t.desc+t.catId);
     const toAdd = recur.filter(r=>!ex2.includes(r.desc+r.catId))
-      .map(r=>({ id:Date.now()+Math.random(), desc:r.desc, amount:r.amount, catId:r.catId, txnType:r.txnType, recurring:true, kind:"expense", date:`2026-${pad}-${String(r.day).padStart(2,"0")}` }));
+      .map(r=>{
+        const overrideKey = `${mi}-${r.id}`;
+        const amt = recurOverrides[overrideKey] !== undefined ? recurOverrides[overrideKey] : r.amount;
+        return { id:Date.now()+Math.random(), desc:r.desc, amount:String(amt), catId:r.catId, txnType:r.txnType, recurring:true, kind:"expense", date:`2026-${pad}-${String(r.day).padStart(2,"0")}` };
+      });
     if(toAdd.length) setAllTxns(p=>p.map((m,i)=>i===mi?[...m,...toAdd]:m));
   }
   function addRecurring() {
@@ -245,6 +251,7 @@ function App() {
       <div className="overlay" onClick={()=>setShowAlloc(false)}>
         <div onClick={e=>e.stopPropagation()} style={{ background:"white", borderRadius:20, padding:24, width:"100%", maxWidth:380, boxShadow:"0 12px 50px rgba(0,0,0,0.18)", maxHeight:"90vh", overflowY:"auto" }}>
           <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:600, marginBottom:4 }}>Edit Allocation</div>
+          <p style={{ fontSize:12, color:"#bbb", marginBottom:8 }}>Joint & Mom are deducted first. Percentages split the remainder.</p>
           <p style={{ fontSize:12, color:"#bbb", marginBottom:20 }}>Percentages must add up to 100%</p>
           {[["needs","Needs","#7c6fd4"],["wants","Wants","#e8834a"],["savings","Savings","#3a8c5e"]].map(([k,l,c])=>(
             <div key={k} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
@@ -333,7 +340,7 @@ function App() {
             const hasS = sv!==null, rem = hasS?bv-sv:0, over = hasS&&sv>bv&&bv>0;
             const pct = hasS&&bv>0?Math.min(sv/bv*100,100):0;
             return (
-              <div key={cfg.key} className="bucket-card" style={{ background:cfg.bg, borderRadius:16, padding: mob?"13px 11px 11px":"17px 17px 15px", boxShadow:"0 4px 16px rgba(0,0,0,0.1)" }}>
+              <div key={cfg.key} className="bucket-card" style={{ background: over?"#c04040":cfg.bg, borderRadius:16, padding: mob?"13px 11px 11px":"17px 17px 15px", boxShadow:"0 4px 16px rgba(0,0,0,0.1)" }}>
                 <div style={{ fontSize:9, color:"rgba(255,255,255,0.75)", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:4, fontWeight:600 }}>{cfg.label}</div>
                 <div style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?15:20, fontWeight:600, color:"white", marginBottom:2 }}>
                   {B.inc>0||cfg.key==="joint"||cfg.key==="mom" ? moneyS(bv) : "—"}
@@ -624,42 +631,89 @@ function App() {
         <div style={S.card}>
           <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:12 }}>Month-by-Month</div>
           {mob ? (
-            yrData.map((m,i)=>{
+            <>
+            {yrData.map((m,i)=>{
               const over = m.s.needs>m.b.needs||m.s.wants>m.b.wants;
               const hasData = m.b.inc>0||m.s.total>0;
+              const totalOut = m.s.needs+m.s.wants+m.s.savings+m.b.joint+m.b.mom;
+              const net = m.b.inc - totalOut;
               return (
                 <div key={m.month} className="row" style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 5px", cursor:"pointer", borderBottom:"1px solid #f8f8f8", background:i===mi?"#f8f7ff":"transparent", borderRadius:8 }} onClick={()=>{ setMi(i); setView("month"); }}>
                   <span style={{ fontSize:13, fontWeight:i===mi?600:400, color:i===mi?"#7c6fd4":"#333", width:34 }}>{m.month}</span>
                   <span style={{ fontSize:12, color:"#888", flex:1 }}>{m.b.inc>0?moneyS(m.b.inc):"—"}</span>
                   <span style={{ fontSize:13, fontWeight:500, marginRight:10 }}>{m.s.total>0?moneyS(m.s.total):"—"}</span>
-                  {!hasData?<span style={{ fontSize:10, color:"#ddd" }}>—</span>:<span style={{ fontSize:10, padding:"2px 8px", borderRadius:99, background:over?"#fdeaea":"#edf7f2", color:over?"#c04040":"#3a8c5e", fontWeight:500 }}>{over?"Over":"On track"}</span>}
+                  {!hasData?<span style={{ fontSize:10, color:"#ddd" }}>—</span>:<span style={{ fontSize:11, fontWeight:600, color:net>=0?"#3a8c5e":"#c04040" }}>{net>=0?"+":""}{moneyS(net)}</span>}
                 </div>
               );
-            })
+            })}
+            {/* Mobile totals row */}
+            {(()=>{
+              const totalInc = yrData.reduce((s,m)=>s+m.b.inc,0);
+              const totalOut = yrData.reduce((s,m)=>s+m.s.needs+m.s.wants+m.s.savings+m.b.joint+m.b.mom,0);
+              const totalNet = totalInc - totalOut;
+              return (
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"12px 5px", borderTop:"2px solid #eee", marginTop:4 }}>
+                  <span style={{ fontSize:12, fontWeight:600, color:"#555", width:34 }}>Total</span>
+                  <span style={{ fontSize:12, color:"#888", flex:1 }}>{moneyS(totalInc)}</span>
+                  <span style={{ fontSize:13, fontWeight:600, marginRight:10 }}>{moneyS(totalOut)}</span>
+                  <span style={{ fontSize:13, fontWeight:700, color:totalNet>=0?"#3a8c5e":"#c04040" }}>{totalNet>=0?"+":""}{moneyS(totalNet)}</span>
+                </div>
+              );
+            })()}
+            </>
           ) : (
             <>
-              <div style={{ display:"grid", gridTemplateColumns:"48px 75px 1fr 1fr 68px 60px 55px 68px 70px", gap:"0 8px", paddingBottom:8, borderBottom:"1px solid #f5f5f5", marginBottom:4 }}>
-                {["Month","Income","Needs","Wants","Savings","Joint","Mom","Spent","Status"].map(h=><div key={h} style={{ fontSize:10, color:"#ccc", textTransform:"uppercase", letterSpacing:"0.06em" }}>{h}</div>)}
+              <div style={{ display:"grid", gridTemplateColumns:"48px 75px 80px 80px 68px 60px 55px 80px 80px 70px", gap:"0 8px", paddingBottom:8, borderBottom:"1px solid #f5f5f5", marginBottom:4 }}>
+                {["Month","Income","Needs","Wants","Savings","Joint","Mom","Spent","Net","Status"].map(h=><div key={h} style={{ fontSize:10, color:"#ccc", textTransform:"uppercase", letterSpacing:"0.06em" }}>{h}</div>)}
               </div>
               {yrData.map((m,i)=>{
                 const hasData = m.b.inc>0||m.s.total>0;
                 const over = m.s.needs>m.b.needs||m.s.wants>m.b.wants;
-                const nPct = m.s.total>0?Math.round(m.s.needs/m.s.total*100):0;
-                const wPct = m.s.total>0?Math.round(m.s.wants/m.s.total*100):0;
+                const totalOut = m.s.needs+m.s.wants+m.s.savings+m.b.joint+m.b.mom;
+                const net = m.b.inc - totalOut;
+                const nOver = m.s.needs>m.b.needs&&m.b.needs>0;
+                const wOver = m.s.wants>m.b.wants&&m.b.wants>0;
                 return (
-                  <div key={m.month} className="row" style={{ display:"grid", gridTemplateColumns:"48px 75px 1fr 1fr 68px 60px 55px 68px 70px", gap:"0 8px", padding:"9px 5px", alignItems:"center", cursor:"pointer", background:i===mi?"#f8f7ff":"transparent", borderRadius:8 }} onClick={()=>{ setMi(i); setView("month"); }}>
+                  <div key={m.month} className="row" style={{ display:"grid", gridTemplateColumns:"48px 75px 80px 80px 68px 60px 55px 80px 80px 70px", gap:"0 8px", padding:"9px 5px", alignItems:"center", cursor:"pointer", background:i===mi?"#f8f7ff":"transparent", borderRadius:8 }} onClick={()=>{ setMi(i); setView("month"); }}>
                     <span style={{ fontSize:13, fontWeight:i===mi?600:400, color:i===mi?"#7c6fd4":"#333" }}>{m.month}</span>
                     <span style={{ fontSize:12, color:"#666" }}>{m.b.inc>0?moneyS(m.b.inc):"—"}</span>
-                    <div style={{ display:"flex", alignItems:"center", gap:5 }}><div style={{ flex:1, maxWidth:50 }}><Bar value={m.s.needs} max={m.b.needs||m.s.needs||1} color="#7c6fd4" h={4} over={m.s.needs>m.b.needs&&m.b.needs>0}/></div><span style={{ fontSize:11, color:"#888", whiteSpace:"nowrap" }}>{m.s.needs>0?moneyS(m.s.needs):"—"}{nPct>0&&<span style={{ color:"#ccc" }}> {nPct}%</span>}</span></div>
-                    <div style={{ display:"flex", alignItems:"center", gap:5 }}><div style={{ flex:1, maxWidth:50 }}><Bar value={m.s.wants} max={m.b.wants||m.s.wants||1} color="#e8834a" h={4} over={m.s.wants>m.b.wants&&m.b.wants>0}/></div><span style={{ fontSize:11, color:"#888", whiteSpace:"nowrap" }}>{m.s.wants>0?moneyS(m.s.wants):"—"}{wPct>0&&<span style={{ color:"#ccc" }}> {wPct}%</span>}</span></div>
+                    <span style={{ fontSize:12, color:nOver?"#c04040":"#7c6fd4", fontWeight:nOver?600:400 }}>{m.s.needs>0?moneyS(m.s.needs):"—"}{nOver&&<span style={{ fontSize:10 }}> ▲</span>}</span>
+                    <span style={{ fontSize:12, color:wOver?"#c04040":"#e8834a", fontWeight:wOver?600:400 }}>{m.s.wants>0?moneyS(m.s.wants):"—"}{wOver&&<span style={{ fontSize:10 }}> ▲</span>}</span>
                     <span style={{ fontSize:12, color:"#3a8c5e" }}>{m.b.savings>0?moneyS(m.b.savings):"—"}</span>
                     <span style={{ fontSize:12, color:"#5b82bf" }}>{moneyS(m.b.joint)}</span>
                     <span style={{ fontSize:12, color:"#bf5b8c" }}>{moneyS(m.b.mom)}</span>
                     <span style={{ fontSize:13, fontWeight:500 }}>{m.s.total>0?moneyS(m.s.total):"—"}</span>
+                    <span style={{ fontSize:13, fontWeight:600, color:hasData?(net>=0?"#3a8c5e":"#c04040"):"#ccc" }}>{hasData?(net>=0?"+":"")+moneyS(net):"—"}</span>
                     <div>{!hasData?<span style={{ fontSize:10, color:"#ddd" }}>—</span>:<span style={{ fontSize:10, padding:"2px 8px", borderRadius:99, background:over?"#fdeaea":"#edf7f2", color:over?"#c04040":"#3a8c5e", fontWeight:500 }}>{over?"Over":"On track"}</span>}</div>
                   </div>
                 );
               })}
+              {/* Totals row */}
+              {(()=>{
+                const totalInc  = yrData.reduce((s,m)=>s+m.b.inc,0);
+                const totalNeed = yrData.reduce((s,m)=>s+m.s.needs,0);
+                const totalWant = yrData.reduce((s,m)=>s+m.s.wants,0);
+                const totalSav  = yrData.reduce((s,m)=>s+m.b.savings,0);
+                const totalJoin = yrData.filter(m=>m.b.inc>0).length*alloc.joint;
+                const totalMom  = yrData.filter(m=>m.b.inc>0).length*alloc.mom;
+                const totalSpent= yrData.reduce((s,m)=>s+m.s.total,0);
+                const totalOut  = yrData.reduce((s,m)=>s+m.s.needs+m.s.wants+m.s.savings+m.b.joint+m.b.mom,0);
+                const totalNet  = totalInc - totalOut;
+                return (
+                  <div style={{ display:"grid", gridTemplateColumns:"48px 75px 80px 80px 68px 60px 55px 80px 80px 70px", gap:"0 8px", padding:"10px 5px", alignItems:"center", borderTop:"2px solid #eee", marginTop:4 }}>
+                    <span style={{ fontSize:12, fontWeight:700, color:"#555" }}>Total</span>
+                    <span style={{ fontSize:12, fontWeight:600, color:"#555" }}>{moneyS(totalInc)}</span>
+                    <span style={{ fontSize:12, fontWeight:600, color:"#7c6fd4" }}>{moneyS(totalNeed)}</span>
+                    <span style={{ fontSize:12, fontWeight:600, color:"#e8834a" }}>{moneyS(totalWant)}</span>
+                    <span style={{ fontSize:12, fontWeight:600, color:"#3a8c5e" }}>{moneyS(totalSav)}</span>
+                    <span style={{ fontSize:12, fontWeight:600, color:"#5b82bf" }}>{moneyS(totalJoin)}</span>
+                    <span style={{ fontSize:12, fontWeight:600, color:"#bf5b8c" }}>{moneyS(totalMom)}</span>
+                    <span style={{ fontSize:13, fontWeight:700 }}>{moneyS(totalSpent)}</span>
+                    <span style={{ fontSize:13, fontWeight:700, color:totalNet>=0?"#3a8c5e":"#c04040" }}>{totalNet>=0?"+":""}{moneyS(totalNet)}</span>
+                    <span/>
+                  </div>
+                );
+              })()}
             </>
           )}
         </div>
@@ -705,8 +759,8 @@ function App() {
 
         {/* View content — swipeable */}
         <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} style={{ userSelect:"none" }}>
-          {view==="month"      && <MonthView/>}
-          {view==="yearly"     && <YearlyView/>}
+          {view==="month"      && MonthView()}
+          {view==="yearly"     && YearlyView()}
 
           {view==="recurring" && (
           <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
@@ -715,16 +769,19 @@ function App() {
               <p style={{ fontSize:12, color:"#888", lineHeight:1.7 }}>Set these up once. At the start of each month, hit <strong>"Apply recurring"</strong> in the Month tab.</p>
             </div>
             <div style={S.card}>
-              <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14 }}>
-                Recurring {recur.length>0 && <span style={{ marginLeft:8, fontSize:12 }}>· {money(recur.reduce((s,r)=>s+n(r.amount),0))}/mo</span>}
+              <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:6 }}>
+                Recurring {recur.length>0 && <span style={{ marginLeft:8, fontSize:12 }}>· {money(recur.reduce((s,r)=>s+n(r.amount),0))}/mo base</span>}
               </div>
+              <div style={{ fontSize:11, color:"#c97c3a", marginBottom:14 }}>Set a "{MONTHS[mi]} override" below to use a different amount this month only.</div>
               {recur.length===0 ? <p style={{ fontSize:13, color:"#ccc", textAlign:"center", padding:"20px 0" }}>None set up yet</p> : recur.map(r=>{
                 const cat=cats.find(c=>c.id===r.catId);
                 const tc={ Need:{bg:"#f0eeff",text:"#7c6fd4"},Want:{bg:"#fff3ec",text:"#e8834a"},Saving:{bg:"#edf7f2",text:"#3a8c5e"} };
                 const ts=tc[r.txnType]||tc.Need;
+                const overKey = `${mi}-${r.id}`;
+                const hasOverride = recurOverrides[overKey] !== undefined;
                 return (
-                  <div key={r.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 4px", borderBottom:"1px solid #f8f8f8" }}>
-                    <div style={{ flex:1 }}>
+                  <div key={r.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 4px", borderBottom:"1px solid #f8f8f8", flexWrap:"wrap", gap:8 }}>
+                    <div style={{ flex:1, minWidth:140 }}>
                       <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:3 }}>
                         <span>🔁</span>
                         <span style={{ fontSize:13, fontWeight:500 }}>{r.desc}</span>
@@ -732,8 +789,18 @@ function App() {
                       </div>
                       <div style={{ fontSize:11, color:"#bbb" }}>{cat?.name||"—"} · Day {r.day}</div>
                     </div>
-                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                      <span style={{ fontSize:14, fontWeight:600 }}>{money(r.amount)}</span>
+                    <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+                      <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:3 }}>
+                        <span style={{ fontSize:11, color:"#bbb" }}>Base: {money(r.amount)}</span>
+                        <div style={{ display:"flex", alignItems:"center", gap:5 }}>
+                          <span style={{ fontSize:10, color:"#c97c3a" }}>{MONTHS[mi]}:</span>
+                          <div style={{ position:"relative", width:90 }}><DS/><input style={{ ...dInp({ fontSize:12, width:90 }), borderColor: hasOverride?"#f5c6a0":"#eee" }} placeholder={r.amount} value={recurOverrides[overKey]||""} onChange={e=>{
+                            const val = e.target.value;
+                            setRecurOverrides(p=>({ ...p, [overKey]: val===''?undefined:val }));
+                          }}/></div>
+                          {hasOverride && <button className="xbtn" style={{ fontSize:12 }} onClick={()=>setRecurOverrides(p=>{ const n={...p}; delete n[overKey]; return n; })}>×</button>}
+                        </div>
+                      </div>
                       <button className="xbtn" onClick={()=>setRecur(p=>p.filter(x=>x.id!==r.id))}>×</button>
                     </div>
                   </div>
