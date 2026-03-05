@@ -901,7 +901,7 @@ function App() {
             <div style={{ display:"flex", alignItems:"center", gap:10 }}>
               <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?22:27, fontWeight:600 }}>budget.</h1>
               <select value={year} onChange={e=>switchYear(Number(e.target.value))} style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?14:16, fontWeight:600, border:"none", background:"transparent", color:"#bbb", cursor:"pointer", outline:"none", appearance:"none", paddingRight:4 }}>
-                {Array.from({length:6},(_,i)=>2024+i).map(y=><option key={y} value={y}>{y}</option>)}
+                {Array.from({length: Math.max(year, CURRENT_YEAR) - 2024 + 3}, (_,i) => 2024+i).map(y=><option key={y} value={y}>{y}</option>)}
               </select>
             </div>
             <div style={{ display:"flex", alignItems:"center", gap:6 }}>
