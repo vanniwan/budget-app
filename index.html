@@ -20,6 +20,21 @@
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Firebase compat (works with Babel, no ES modules needed) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script>
+    firebase.initializeApp({
+      apiKey: "AIzaSyB0sl4DaCX9VzUVnMH6JlEEwj-JEzbvBog",
+      authDomain: "budget-app-c30cb.firebaseapp.com",
+      projectId: "budget-app-c30cb",
+      storageBucket: "budget-app-c30cb.firebasestorage.app",
+      messagingSenderId: "608028862645",
+      appId: "1:608028862645:web:ab4175e2b608aa0789b6fc",
+      databaseURL: "https://budget-app-c30cb-default-rtdb.firebaseio.com"
+    });
+  </script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap');
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -188,6 +203,62 @@ function App() {
   useEffect(() => save('bud_alloc',          alloc),          [alloc]);
   useEffect(() => save('bud_paychecks',      paychecks),      [paychecks]);
   useEffect(() => save('bud_recurOverrides', recurOverrides), [recurOverrides]);
+
+  // ── Firebase sync ──────────────────────────────
+  const [syncStatus, setSyncStatus] = useState("synced"); // "synced" | "syncing" | "offline"
+  const db = typeof firebase !== 'undefined' ? firebase.database() : null;
+  const FB_PATH = 'budget/vanni';
+  const isSyncing = React.useRef(false);
+
+  // On mount: load from Firebase, fall back to localStorage
+  useEffect(() => {
+    if (!db) return;
+    setSyncStatus("syncing");
+    const ref = db.ref(FB_PATH);
+    ref.once('value').then(snap => {
+      const d = snap.val();
+      if (d) {
+        if (d.incomes)        setIncomes(d.incomes);
+        if (d.cats)           setCats(d.cats);
+        if (d.allTxns)        setAllTxns(d.allTxns);
+        if (d.recur)          setRecur(d.recur);
+        if (d.goals)          setGoals(d.goals);
+        if (d.alloc)          setAlloc(d.alloc);
+        if (d.paychecks)      setPaychecks(d.paychecks);
+        if (d.recurOverrides) setRecurOverrides(d.recurOverrides);
+      }
+      setSyncStatus("synced");
+    }).catch(() => setSyncStatus("offline"));
+
+    // Listen for real-time changes from other devices
+    ref.on('value', snap => {
+      if (isSyncing.current) return; // ignore echoes of our own writes
+      const d = snap.val();
+      if (!d) return;
+      if (d.incomes)        setIncomes(d.incomes);
+      if (d.cats)           setCats(d.cats);
+      if (d.allTxns)        setAllTxns(d.allTxns);
+      if (d.recur)          setRecur(d.recur);
+      if (d.goals)          setGoals(d.goals);
+      if (d.alloc)          setAlloc(d.alloc);
+      if (d.paychecks)      setPaychecks(d.paychecks);
+      if (d.recurOverrides) setRecurOverrides(d.recurOverrides);
+    });
+    return () => ref.off();
+  }, []);
+
+  // Push to Firebase whenever any data changes
+  useEffect(() => {
+    if (!db) return;
+    const timer = setTimeout(() => {
+      isSyncing.current = true;
+      setSyncStatus("syncing");
+      db.ref(FB_PATH).set({ incomes, cats, allTxns, recur, goals, alloc, paychecks, recurOverrides })
+        .then(() => { setSyncStatus("synced"); setTimeout(() => { isSyncing.current = false; }, 500); })
+        .catch(() => { setSyncStatus("offline"); isSyncing.current = false; });
+    }, 800); // debounce 800ms so rapid typing doesn't spam Firebase
+    return () => clearTimeout(timer);
+  }, [incomes, cats, allTxns, recur, goals, alloc, paychecks, recurOverrides]);
 
   const inp = S.inp;
   const dInp = x => ({ ...inp, paddingLeft: 22, ...x });
@@ -805,7 +876,10 @@ function App() {
         <div style={{ marginBottom:16, display:"flex", justifyContent:"space-between", alignItems:"flex-end" }}>
           <div>
             <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?22:27, fontWeight:600 }}>budget.</h1>
-            <p style={{ fontSize:12, color:"#bbb", fontWeight:300 }}>Vanni · 2026</p>
+            <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+              <p style={{ fontSize:12, color:"#bbb", fontWeight:300 }}>Vanni · 2026</p>
+              <div title={syncStatus} style={{ width:7, height:7, borderRadius:"50%", background: syncStatus==="synced"?"#3a8c5e": syncStatus==="syncing"?"#e8834a":"#e07070", transition:"background 0.3s" }}/>
+            </div>
           </div>
         </div>
 
