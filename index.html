@@ -64,12 +64,13 @@ const INIT_GOALS = [
   { id: 2, name: "Vacation",       target: 2000, saved: 2000, archived: false },
 ];
 const INIT_ALLOC = { needs: 60, wants: 10, savings: 30, joint: 1300, mom: 150 };
+const INIT_PAYCHECKS = [2,2,2,2,2,2,2,2,2,2,2,2]; // paychecks per month
 const BUCKET_CONFIGS = [
   { key: "needs",   label: "Needs",   bg: "#7c6fd4", sub: a => a.needs + "% of income" },
   { key: "wants",   label: "Wants",   bg: "#e8834a", sub: a => a.wants + "% of income" },
   { key: "savings", label: "Savings", bg: "#3a8c5e", sub: a => a.savings + "% of income" },
-  { key: "joint",   label: "Joint",   bg: "#5b82bf", sub: () => "fixed monthly" },
-  { key: "mom",     label: "Mom",     bg: "#bf5b8c", sub: () => "fixed monthly" },
+  { key: "joint",   label: "Joint",   bg: "#5b82bf", sub: () => "per paycheque" },
+  { key: "mom",     label: "Mom",     bg: "#bf5b8c", sub: () => "per paycheque" },
 ];
 const TYPE_COLORS = {
   Need:   { bg: "#f0eeff", text: "#7c6fd4", accent: "#b5a9f5" },
@@ -135,6 +136,7 @@ function App() {
   const [recur, setRecur]     = useState(INIT_RECURRING);
   const [goals, setGoals]     = useState(INIT_GOALS);
   const [alloc, setAlloc]     = useState(INIT_ALLOC);
+  const [paychecks, setPaychecks] = useState(INIT_PAYCHECKS);
 
   const [touchStartX, setTouchStartX] = useState(null);
   const [showAdd,     setShowAdd]     = useState(false);
@@ -170,8 +172,11 @@ function App() {
     const base = n(incomes[idx]);
     const bonus = (allTxns[idx]||[]).filter(t=>t.kind==="income").reduce((s,t)=>s+n(t.amount),0);
     const inc = base+bonus;
-    const avail = Math.max(inc - alloc.joint - alloc.mom, 0);
-    return { inc, avail, needs:avail*(alloc.needs/100), wants:avail*(alloc.wants/100), savings:avail*(alloc.savings/100), joint:alloc.joint, mom:alloc.mom };
+    const pc = paychecks[idx] || 2;
+    const jointTotal = alloc.joint * pc;
+    const momTotal = alloc.mom * pc;
+    const avail = Math.max(inc - jointTotal - momTotal, 0);
+    return { inc, avail, needs:avail*(alloc.needs/100), wants:avail*(alloc.wants/100), savings:avail*(alloc.savings/100), joint:jointTotal, mom:momTotal, pc };
   }
   function spent(idx) {
     const ex = (allTxns[idx]||[]).filter(t=>t.kind==="expense");
@@ -251,7 +256,7 @@ function App() {
       <div className="overlay" onClick={()=>setShowAlloc(false)}>
         <div onClick={e=>e.stopPropagation()} style={{ background:"white", borderRadius:20, padding:24, width:"100%", maxWidth:380, boxShadow:"0 12px 50px rgba(0,0,0,0.18)", maxHeight:"90vh", overflowY:"auto" }}>
           <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:600, marginBottom:4 }}>Edit Allocation</div>
-          <p style={{ fontSize:12, color:"#bbb", marginBottom:8 }}>Joint & Mom are deducted first. Percentages split the remainder.</p>
+          <p style={{ fontSize:12, color:"#bbb", marginBottom:8 }}>Joint & Mom are per-paycheque amounts, deducted first. Percentages split the remainder.</p>
           <p style={{ fontSize:12, color:"#bbb", marginBottom:20 }}>Percentages must add up to 100%</p>
           {[["needs","Needs","#7c6fd4"],["wants","Wants","#e8834a"],["savings","Savings","#3a8c5e"]].map(([k,l,c])=>(
             <div key={k} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
@@ -326,10 +331,20 @@ function App() {
         {/* Month settings row */}
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:8, flexWrap:"wrap" }}>
           <button className="tbtn" onClick={()=>{ setEditAlloc({...alloc}); setShowAlloc(true); }} style={{ padding:"6px 12px", background:"white", color:"#777", borderRadius:8, fontSize:12, border:"1px solid #eee" }}>⚙️ Edit allocation</button>
-          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-            <span style={{ fontSize:12, color:"#999" }}>{MONTHS[mi]} income</span>
-            <div style={{ position:"relative" }}><DS/>
-              <input style={dInp({ width:120, fontSize:13 })} placeholder="0.00" value={incomes[mi]} onChange={e=>setIncomes(p=>p.map((v,i)=>i===mi?e.target.value:v))}/>
+          <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+              <span style={{ fontSize:12, color:"#999" }}>Paycheques</span>
+              <div style={{ display:"flex", gap:0, borderRadius:8, overflow:"hidden", border:"1px solid #eee" }}>
+                {[2,3].map(n=>(
+                  <button key={n} onClick={()=>setPaychecks(p=>p.map((v,i)=>i===mi?n:v))} style={{ border:"none", cursor:"pointer", padding:"5px 13px", fontSize:12, fontFamily:"inherit", background:paychecks[mi]===n?"#7c6fd4":"white", color:paychecks[mi]===n?"white":"#888", fontWeight:paychecks[mi]===n?600:400 }}>{n}</button>
+                ))}
+              </div>
+            </div>
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <span style={{ fontSize:12, color:"#999" }}>{MONTHS[mi]} income</span>
+              <div style={{ position:"relative" }}><DS/>
+                <input style={dInp({ width:120, fontSize:13 })} placeholder="0.00" value={incomes[mi]} onChange={e=>setIncomes(p=>p.map((v,i)=>i===mi?e.target.value:v))}/>
+              </div>
             </div>
           </div>
         </div>
@@ -345,7 +360,9 @@ function App() {
                 <div style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?15:20, fontWeight:600, color:"white", marginBottom:2 }}>
                   {B.inc>0||cfg.key==="joint"||cfg.key==="mom" ? moneyS(bv) : "—"}
                 </div>
-                {!mob && <div style={{ fontSize:10, color:"rgba(255,255,255,0.6)", marginBottom:hasS&&B.inc>0?8:0 }}>{cfg.sub(alloc)}</div>}
+                {!mob && <div style={{ fontSize:10, color:"rgba(255,255,255,0.6)", marginBottom:hasS&&B.inc>0?8:0 }}>
+                  {cfg.key==="joint"||cfg.key==="mom" ? `${moneyS(alloc[cfg.key])} × ${B.pc} paycheques` : cfg.sub(alloc)}
+                </div>}
                 {hasS && B.inc>0 && <>
                   <div style={{ background:"rgba(255,255,255,0.2)", borderRadius:99, height:4, overflow:"hidden", margin:"7px 0 4px" }}>
                     <div style={{ width:pct+"%", height:"100%", borderRadius:99, background:over?"#ff8a8a":"white", transition:"width 0.4s" }}/>
@@ -584,7 +601,8 @@ function App() {
       needs: yrData.reduce((s,m)=>s+m.s.needs,0),
       wants: yrData.reduce((s,m)=>s+m.s.wants,0),
       savings: yrData.reduce((s,m)=>s+m.b.savings,0),
-      joint: am*alloc.joint, mom: am*alloc.mom,
+      joint: yrData.reduce((s,m)=>s+m.b.joint,0),
+      mom: yrData.reduce((s,m)=>s+m.b.mom,0),
     };
     totals.out = totals.needs+totals.wants+totals.joint+totals.mom;
     const colMap = { total:"#7c6fd4",needs:"#7c6fd4",wants:"#e8834a",savings:"#3a8c5e",joint:"#5b82bf",mom:"#bf5b8c" };
@@ -694,8 +712,8 @@ function App() {
                 const totalNeed = yrData.reduce((s,m)=>s+m.s.needs,0);
                 const totalWant = yrData.reduce((s,m)=>s+m.s.wants,0);
                 const totalSav  = yrData.reduce((s,m)=>s+m.b.savings,0);
-                const totalJoin = yrData.filter(m=>m.b.inc>0).length*alloc.joint;
-                const totalMom  = yrData.filter(m=>m.b.inc>0).length*alloc.mom;
+                const totalJoin = yrData.reduce((s,m)=>s+m.b.joint,0);
+                const totalMom  = yrData.reduce((s,m)=>s+m.b.mom,0);
                 const totalSpent= yrData.reduce((s,m)=>s+m.s.total,0);
                 const totalOut  = yrData.reduce((s,m)=>s+m.s.needs+m.s.wants+m.s.savings+m.b.joint+m.b.mom,0);
                 const totalNet  = totalInc - totalOut;
