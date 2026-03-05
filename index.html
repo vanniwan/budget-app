@@ -159,8 +159,11 @@ function FL({ children }) { return <div style={S.lbl}>{children}</div>; }
 // ─────────────────────────────────────────────
 function App() {
   const mob = useIsMobile();
-  const [view, setView]       = useState(() => load('bud_view', "month"));
-  const [mi, setMi]           = useState(() => load('bud_mi', CURRENT_MONTH));
+  const [view, setView_]      = useState(() => load('bud_view', 'month'));
+  const [mi, setMi_]          = useState(() => { const v = load('bud_mi', CURRENT_MONTH); return typeof v === 'number' ? v : CURRENT_MONTH; });
+  // Synchronous wrappers — save immediately before React re-renders
+  function setView(v) { save('bud_view', v); setView_(v); }
+  function setMi(v)   { save('bud_mi',   v); setMi_(v);   }
   // ── localStorage helpers ──
   function load(key, fallback) {
     try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
@@ -205,13 +208,7 @@ function App() {
   useEffect(() => save('bud_recurOverrides', recurOverrides), [recurOverrides]);
   useEffect(() => save('bud_view', view), [view]);
   useEffect(() => save('bud_mi', mi), [mi]);
-  // Also save synchronously on unload as a safety net
-  useEffect(() => {
-    const handler = () => { save('bud_mi', mi); save('bud_view', view); };
-    window.addEventListener('pagehide', handler);
-    window.addEventListener('visibilitychange', () => { if(document.visibilityState==='hidden') handler(); });
-    return () => { window.removeEventListener('pagehide', handler); };
-  }, [mi, view]);
+
 
   // ── Firebase sync ──────────────────────────────
   const [syncStatus, setSyncStatus] = useState("synced"); // "synced" | "syncing" | "offline"
