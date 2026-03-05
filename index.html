@@ -159,8 +159,8 @@ function FL({ children }) { return <div style={S.lbl}>{children}</div>; }
 // ─────────────────────────────────────────────
 function App() {
   const mob = useIsMobile();
-  const [view, setView]       = useState("month");
-  const [mi, setMi]           = useState(CURRENT_MONTH);
+  const [view, setView]       = useState(() => load('bud_view', "month"));
+  const [mi, setMi]           = useState(() => load('bud_mi', CURRENT_MONTH));
   // ── localStorage helpers ──
   function load(key, fallback) {
     try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
@@ -203,6 +203,8 @@ function App() {
   useEffect(() => save('bud_alloc',          alloc),          [alloc]);
   useEffect(() => save('bud_paychecks',      paychecks),      [paychecks]);
   useEffect(() => save('bud_recurOverrides', recurOverrides), [recurOverrides]);
+  useEffect(() => save('bud_view', view), [view]);
+  useEffect(() => save('bud_mi',   mi),   [mi]);
 
   // ── Firebase sync ──────────────────────────────
   const [syncStatus, setSyncStatus] = useState("synced"); // "synced" | "syncing" | "offline"
