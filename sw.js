@@ -1,17 +1,13 @@
-const CACHE = 'budget-v13';
+const CACHE = 'budget-v14';
+const ASSETS = ['./manifest.json', './icon-192.png', './icon-512.png'];
 
-// On install: cache the main page and local assets only
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(cache =>
-      cache.addAll(['./index.html', './manifest.json', './icon-192.png', './icon-512.png'])
-        .catch(() => {})
-    )
+    caches.open(CACHE).then(cache => cache.addAll(ASSETS).catch(() => {}))
   );
   self.skipWaiting();
 });
 
-// On activate: remove old caches
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
@@ -21,27 +17,41 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// Fetch: serve from cache if available, else network
 self.addEventListener('fetch', e => {
-  // Only handle same-origin or cached requests — let CDN scripts go straight to network
   const url = new URL(e.request.url);
-  const isSameOrigin = url.origin === self.location.origin;
 
-  if (!isSameOrigin) {
-    // For external CDN scripts: network first, cache as fallback
+  // Always network-first for HTML — ensures updates come through immediately
+  if (e.request.mode === 'navigate' || url.pathname.endsWith('.html') || url.pathname === '/') {
     e.respondWith(
-      fetch(e.request).then(res => {
-        if (res && res.status === 200) {
+      fetch(e.request)
+        .then(res => {
+          // Cache the fresh copy for offline fallback
           const clone = res.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));
-        }
-        return res;
-      }).catch(() => caches.match(e.request))
+          return res;
+        })
+        .catch(() => caches.match(e.request))
     );
     return;
   }
 
-  // For same-origin: cache first, then network
+  // For CDN scripts (React, Firebase etc): network-first, cache as fallback
+  if (!url.origin.includes(self.location.origin)) {
+    e.respondWith(
+      fetch(e.request)
+        .then(res => {
+          if (res && res.status === 200) {
+            const clone = res.clone();
+            caches.open(CACHE).then(c => c.put(e.request, clone));
+          }
+          return res;
+        })
+        .catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // Same-origin assets (icons, manifest): cache-first
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
@@ -51,7 +61,7 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return res;
-      }).catch(() => caches.match('./index.html'));
+      });
     })
   );
 });
