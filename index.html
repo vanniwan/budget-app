@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>budget. · Vanni 2026</title>
+  <title>budget. · Vanni</title>
 
   <!-- PWA: iPhone home screen -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -62,6 +62,7 @@ const { useState, useMemo, useEffect } = React;
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const CURRENT_MONTH = 2;
+const CURRENT_YEAR = new Date().getFullYear();
 const n = (v) => parseFloat(v) || 0;
 const money = (v) => "$" + Math.abs(n(v)).toLocaleString("en-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const moneyS = (v) => "$" + Math.round(Math.abs(n(v))).toLocaleString("en-CA");
@@ -110,15 +111,18 @@ const TYPE_COLORS = {
   income: { bg: "#eaf6fb", text: "#3a7ca5", accent: "#a8d8ea" },
 };
 
-function makeSeedTxns() {
+function makeSeedTxns(yr) {
+  const y = yr || CURRENT_YEAR;
   return MONTHS.map((_, mi) => {
-    if (mi > 2) return [];
+    if (y === 2026 && mi > 2) return [];
+    if (y !== 2026) return [];
+    const mm = String(mi+1).padStart(2,"0");
     return [
-      { id: mi*100+1, desc: "Loblaws",     amount: String(180+mi*10), catId: 1, txnType: "Need", date: `2026-0${mi+1}-05`, recurring: false, kind: "expense" },
-      { id: mi*100+2, desc: "TTC Pass",    amount: "156",             catId: 2, txnType: "Need", date: `2026-0${mi+1}-01`, recurring: true,  kind: "expense" },
-      { id: mi*100+3, desc: "Hydro",       amount: String(95+mi*5),   catId: 3, txnType: "Need", date: `2026-0${mi+1}-10`, recurring: true,  kind: "expense" },
-      { id: mi*100+4, desc: "Dinner out",  amount: String(60+mi*15),  catId: 4, txnType: "Want", date: `2026-0${mi+1}-14`, recurring: false, kind: "expense" },
-      { id: mi*100+5, desc: "Coffee shop", amount: String(55+mi*5),   catId: 8, txnType: "Want", date: `2026-0${mi+1}-20`, recurring: false, kind: "expense" },
+      { id: mi*100+1, desc: "Loblaws",     amount: String(180+mi*10), catId: 1, txnType: "Need", date: `${y}-${mm}-05`, recurring: false, kind: "expense" },
+      { id: mi*100+2, desc: "TTC Pass",    amount: "156",             catId: 2, txnType: "Need", date: `${y}-${mm}-01`, recurring: true,  kind: "expense" },
+      { id: mi*100+3, desc: "Hydro",       amount: String(95+mi*5),   catId: 3, txnType: "Need", date: `${y}-${mm}-10`, recurring: true,  kind: "expense" },
+      { id: mi*100+4, desc: "Dinner out",  amount: String(60+mi*15),  catId: 4, txnType: "Want", date: `${y}-${mm}-14`, recurring: false, kind: "expense" },
+      { id: mi*100+5, desc: "Coffee shop", amount: String(55+mi*5),   catId: 8, txnType: "Want", date: `${y}-${mm}-20`, recurring: false, kind: "expense" },
     ];
   });
 }
@@ -159,6 +163,8 @@ function FL({ children }) { return <div style={S.lbl}>{children}</div>; }
 // ─────────────────────────────────────────────
 function App() {
   const mob = useIsMobile();
+  const [year, setYear_]      = useState(() => load('bud_year', CURRENT_YEAR));
+  function setYear(y) { save('bud_year', y); setYear_(y); }
   const [view, setView_]      = useState(() => load('bud_view', 'month'));
   const [mi, setMi_]          = useState(() => { const v = load('bud_mi', CURRENT_MONTH); return typeof v === 'number' ? v : CURRENT_MONTH; });
   // Synchronous wrappers — save immediately before React re-renders
@@ -173,13 +179,13 @@ function App() {
     try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
   }
 
-  const [incomes,  setIncomes]  = useState(() => load('bud_incomes',  INIT_INCOMES));
+  const [incomes,  setIncomes]  = useState(() => load(`bud_incomes_${load('bud_year',CURRENT_YEAR)}`,  INIT_INCOMES));
   const [cats,     setCats]     = useState(() => load('bud_cats',     INIT_CATS));
-  const [allTxns,  setAllTxns]  = useState(() => load('bud_allTxns',  makeSeedTxns()));
+  const [allTxns,  setAllTxns]  = useState(() => load(`bud_allTxns_${load('bud_year',CURRENT_YEAR)}`,  makeSeedTxns(load('bud_year',CURRENT_YEAR))));
   const [recur,    setRecur]    = useState(() => load('bud_recur',    INIT_RECURRING));
   const [goals,    setGoals]    = useState(() => load('bud_goals',    INIT_GOALS));
   const [alloc,    setAlloc]    = useState(() => load('bud_alloc',    INIT_ALLOC));
-  const [paychecks,setPaychecks]= useState(() => load('bud_paychecks',INIT_PAYCHECKS));
+  const [paychecks,setPaychecks]= useState(() => load(`bud_paychecks_${load('bud_year',CURRENT_YEAR)}`,INIT_PAYCHECKS));
 
   const [touchStartX, setTouchStartX] = useState(null);
   const [touchStartY, setTouchStartY] = useState(null);
@@ -191,29 +197,39 @@ function App() {
   const [yMetric,     setYMetric]     = useState("total");
   const [editAlloc,   setEditAlloc]   = useState(INIT_ALLOC);
   const [addSav,      setAddSav]      = useState({});
-  const [recurOverrides, setRecurOverrides] = useState(() => load('bud_recurOverrides', {}));
+  const [recurOverrides, setRecurOverrides] = useState(() => load(`bud_recurOverrides_${load('bud_year',CURRENT_YEAR)}`, {}));
   const [newTxn,      setNewTxn]      = useState({ desc:"", amount:"", catId:"", txnType:"Need", date:todayStr(), recurring:false, kind:"expense" });
   const [newRec,      setNewRec]      = useState({ desc:"", amount:"", catId:"", txnType:"Need", day:"1" });
   const [newGoal,     setNewGoal]     = useState({ name:"", target:"", saved:"" });
   const [newCat,      setNewCat]      = useState({ name:"", type:"Need" });
 
   // ── Auto-save to localStorage on every change ──
-  useEffect(() => save('bud_incomes',        incomes),        [incomes]);
-  useEffect(() => save('bud_cats',           cats),           [cats]);
-  useEffect(() => save('bud_allTxns',        allTxns),        [allTxns]);
-  useEffect(() => save('bud_recur',          recur),          [recur]);
-  useEffect(() => save('bud_goals',          goals),          [goals]);
-  useEffect(() => save('bud_alloc',          alloc),          [alloc]);
-  useEffect(() => save('bud_paychecks',      paychecks),      [paychecks]);
-  useEffect(() => save('bud_recurOverrides', recurOverrides), [recurOverrides]);
+  useEffect(() => save(`bud_incomes_${year}`,        incomes),        [incomes, year]);
+  useEffect(() => save('bud_cats',                   cats),           [cats]);
+  useEffect(() => save(`bud_allTxns_${year}`,        allTxns),        [allTxns, year]);
+  useEffect(() => save('bud_recur',                  recur),          [recur]);
+  useEffect(() => save('bud_goals',                  goals),          [goals]);
+  useEffect(() => save('bud_alloc',                  alloc),          [alloc]);
+  useEffect(() => save(`bud_paychecks_${year}`,      paychecks),      [paychecks, year]);
+  useEffect(() => save(`bud_recurOverrides_${year}`, recurOverrides), [recurOverrides, year]);
   useEffect(() => save('bud_view', view), [view]);
   useEffect(() => save('bud_mi', mi), [mi]);
 
 
+  // ── Year switching ───────────────────────────────
+  function switchYear(y) {
+    setYear(y);
+    setMi_(0); save('bud_mi', 0);
+    setIncomes(load(`bud_incomes_${y}`, INIT_INCOMES));
+    setAllTxns(load(`bud_allTxns_${y}`, makeSeedTxns(y)));
+    setPaychecks(load(`bud_paychecks_${y}`, INIT_PAYCHECKS));
+    setRecurOverrides(load(`bud_recurOverrides_${y}`, {}));
+  }
+
   // ── Firebase sync ──────────────────────────────
   const [syncStatus, setSyncStatus] = useState("synced"); // "synced" | "syncing" | "offline"
   const db = typeof firebase !== 'undefined' ? firebase.database() : null;
-  const FB_PATH = 'budget/vanni';
+  const FB_PATH = `budget/vanni/${year}`;
   const isSyncing = React.useRef(false);
 
   // On mount: load from Firebase, fall back to localStorage
@@ -354,7 +370,7 @@ function App() {
       .map(r=>{
         const overrideKey = `${mi}-${r.id}`;
         const amt = recurOverrides[overrideKey] !== undefined ? recurOverrides[overrideKey] : r.amount;
-        return { id:Date.now()+Math.random(), desc:r.desc, amount:String(amt), catId:r.catId, txnType:r.txnType, recurring:true, kind:"expense", date:`2026-${pad}-${String(r.day).padStart(2,"0")}` };
+        return { id:Date.now()+Math.random(), desc:r.desc, amount:String(amt), catId:r.catId, txnType:r.txnType, recurring:true, kind:"expense", date:`${year}-${pad}-${String(r.day).padStart(2,"0")}` };
       });
     if(toAdd.length) setAllTxns(p=>p.map((m,i)=>i===mi?[...m,...toAdd]:m));
   }
@@ -882,9 +898,14 @@ function App() {
         {/* Header */}
         <div style={{ marginBottom:16, display:"flex", justifyContent:"space-between", alignItems:"flex-end" }}>
           <div>
-            <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?22:27, fontWeight:600 }}>budget.</h1>
+            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?22:27, fontWeight:600 }}>budget.</h1>
+              <select value={year} onChange={e=>switchYear(Number(e.target.value))} style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?14:16, fontWeight:600, border:"none", background:"transparent", color:"#bbb", cursor:"pointer", outline:"none", appearance:"none", paddingRight:4 }}>
+                {Array.from({length:6},(_,i)=>2024+i).map(y=><option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
             <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-              <p style={{ fontSize:12, color:"#bbb", fontWeight:300 }}>Vanni · 2026</p>
+              <p style={{ fontSize:12, color:"#bbb", fontWeight:300 }}>Vanni</p>
               <div title={syncStatus} style={{ width:7, height:7, borderRadius:"50%", background: syncStatus==="synced"?"#3a8c5e": syncStatus==="syncing"?"#e8834a":"#e07070", transition:"background 0.3s" }}/>
             </div>
           </div>
