@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="budget." />
   <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="theme-color" content="#FAF8F5" />
+  <meta name="theme-color" content="#FAFBFF" />
 
   <!-- PWA manifest -->
   <link rel="manifest" href="manifest.json" />
@@ -36,11 +36,11 @@
     });
   </script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
     * { box-sizing: border-box; margin: 0; padding: 0; }
     button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
     input, select { touch-action: manipulation; }
-    body { -webkit-tap-highlight-color: transparent; touch-action: pan-y; padding-bottom: env(safe-area-inset-bottom); background: #FAF8F5; }
+    body { -webkit-tap-highlight-color: transparent; touch-action: pan-y; padding-bottom: env(safe-area-inset-bottom); background: #FAFBFF; font-family: "Nunito", sans-serif; }
     input:focus, select:focus { border-color: #BDB8E8 !important; outline: none; }
     .row:hover { background: #F8F6F2; border-radius: 10px; }
     .xbtn { border: none; background: none; cursor: pointer; color: #ddd; font-size: 15px; padding: 8px 10px; line-height: 1; transition: color 0.15s; }
@@ -64,7 +64,7 @@
     .bucket-card:nth-child(4) { animation-delay: 0.20s; }
     .bucket-card:nth-child(5) { animation-delay: 0.25s; }
     /* Petal-like soft separator */
-    .petal-divider { width:100%; height:1px; background:linear-gradient(90deg,transparent,#E8E4DE 30%,#E8E4DE 70%,transparent); border:none; margin:2px 0; }
+    .petal-divider { width:100%; height:1px; background:linear-gradient(90deg,transparent,#E8E8F0 30%,#E8E8F0 70%,transparent); border:none; margin:2px 0; }
     /* Warm card hover */
     .tbtn:active { transform: scale(0.96); }
     /* Selection color */
@@ -116,24 +116,24 @@ const INIT_GOALS = [
 const INIT_ALLOC = { needs: 60, wants: 10, savings: 30, joint: 1300, mom: 150 };
 const INIT_PAYCHECKS = [2,2,2,2,2,2,2,2,2,2,2,2]; // paychecks per month
 const INIT_INVESTMENTS = [
-  { id: 1, name: "TFSA", type: "TFSA", color: "#7CBD8F", entries: [{ date: "2026-01-01", value: 0 }] },
-  { id: 2, name: "RRSP", type: "RRSP", color: "#7CBD8F", entries: [{ date: "2026-01-01", value: 0 }] },
+  { id: 1, name: "TFSA", type: "TFSA", color: "#9CB071", entries: [{ date: "2026-01-01", value: 0 }] },
+  { id: 2, name: "RRSP", type: "RRSP", color: "#9CB071", entries: [{ date: "2026-01-01", value: 0 }] },
 ];
 const INV_TYPES = ["TFSA","RRSP","FHSA","Stocks","ETF","Crypto","Savings","Other"];
-const INV_COLORS = ["#7CBD8F","#7CBD8F","#E87FA0","#7DB8D4","#D4849E","#D4826A","#6AABDA","#888"];
+const INV_COLORS = ["#9CB071","#9CB071","#FFB7D5","#7DB8D4","#AEACEB","#FD9FA2","#ACC2D9","#888"];
 
 const BUCKET_CONFIGS = [
-  { key: "needs",   label: "Needs",   bg: "#9BB5E8", sub: a => a.needs + "% of income" },
-  { key: "wants",   label: "Wants",   bg: "#E87FA0", sub: a => a.wants + "% of income" },
-  { key: "savings", label: "Savings", bg: "#7CBD8F", sub: a => a.savings + "% of income" },
+  { key: "needs",   label: "Needs",   bg: "#F0DB7D", sub: a => a.needs + "% of income" },
+  { key: "wants",   label: "Wants",   bg: "#FFB7D5", sub: a => a.wants + "% of income" },
+  { key: "savings", label: "Savings", bg: "#9CB071", sub: a => a.savings + "% of income" },
   { key: "joint",   label: "Joint",   bg: "#7DB8D4", sub: () => "per paycheque" },
-  { key: "mom",     label: "Mom",     bg: "#D4849E", sub: () => "per paycheque" },
+  { key: "mom",     label: "Mom",     bg: "#AEACEB", sub: () => "per paycheque" },
 ];
 const TYPE_COLORS = {
-  Need:   { bg: "#EDEAF8", text: "#7CBD8F", accent: "#B2D8BF" },
-  Want:   { bg: "#FDF0E8", text: "#E87FA0", accent: "#FDEAA0" },
-  Saving: { bg: "#EDEAF8", text: "#7CBD8F", accent: "#B2D8BF" },
-  income: { bg: "#E5F0F8", text: "#6AABDA", accent: "#a8d8ea" },
+  Need:   { bg: "#EDEAF8", text: "#9CB071", accent: "#C8DFA8" },
+  Want:   { bg: "#FDF0E8", text: "#FFB7D5", accent: "#FDEAA0" },
+  Saving: { bg: "#EDEAF8", text: "#9CB071", accent: "#C8DFA8" },
+  income: { bg: "#E5F0F8", text: "#ACC2D9", accent: "#a8d8ea" },
 };
 
 function makeSeedTxns(yr) {
@@ -153,8 +153,8 @@ function makeSeedTxns(yr) {
 }
 
 const S = {
-  card: { background: "white", borderRadius: 18, padding: "18px 20px", boxShadow: "0 2px 12px rgba(0,0,0,0.06)", border:"1px solid rgba(0,0,0,0.03)" },
-  inp:  { border: "1.5px solid #E8E4DE", borderRadius: 10, padding: "9px 11px", fontSize: 16, fontFamily: "inherit", outline: "none", background: "white", color: "#1E2B38", width: "100%", boxSizing: "border-box" },
+  card: { background: "white", borderRadius: 18, padding: "18px 20px", boxShadow: "0 2px 12px rgba(0,0,0,0.05)", border:"1px solid #F0F0F8" },
+  inp:  { border: "1.5px solid #E8E8F0", borderRadius: 10, padding: "9px 11px", fontSize: 16, fontFamily: "inherit", outline: "none", background: "white", color: "#1E2B38", width: "100%", boxSizing: "border-box" },
   lbl:  { fontSize: 10, color: "#bbb", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4, display: "block" },
 };
 
@@ -225,7 +225,7 @@ function App() {
   const [recurOverrides, setRecurOverrides] = useState(() => load(`bud_recurOverrides_${load('bud_year',CURRENT_YEAR)}`, {}));
   // Investments — NOT year-specific, carries across all years
   const [investments, setInvestments] = useState(() => load('bud_investments', INIT_INVESTMENTS));
-  const [newInv, setNewInv] = useState({ name:'', type:'TFSA', color:'#7CBD8F', value:'' });
+  const [newInv, setNewInv] = useState({ name:'', type:'TFSA', color:'#9CB071', value:'' });
   const [addInvValue, setAddInvValue] = useState({});
   const [newTxn,      setNewTxn]      = useState({ desc:"", amount:"", catId:"", txnType:"Need", date:todayStr(), recurring:false, kind:"expense" });
   const [newRec,      setNewRec]      = useState({ desc:"", amount:"", catId:"", txnType:"Need", day:"1" });
@@ -471,8 +471,8 @@ function App() {
     setAddSav(p=>({...p,[id]:""}));
   }
 
-  const spendSegs  = [{ value:Sp.needs, color:"#7CBD8F" },{ value:Sp.wants, color:"#E87FA0" },{ value:Sp.savings, color:"#7CBD8F" }].filter(s=>s.value>0);
-  const budgetSegs = B.inc>0 ? [{ value:B.needs, color:"#B2D8BF" },{ value:B.wants, color:"#FDEAA0" },{ value:B.savings, color:"#B2D8BF" },{ value:B.joint, color:"#C8E4F5" },{ value:B.mom, color:"#F5C0D2" }] : [];
+  const spendSegs  = [{ value:Sp.needs, color:"#9CB071" },{ value:Sp.wants, color:"#FFB7D5" },{ value:Sp.savings, color:"#9CB071" }].filter(s=>s.value>0);
+  const budgetSegs = B.inc>0 ? [{ value:B.needs, color:"#C8DFA8" },{ value:B.wants, color:"#FDEAA0" },{ value:B.savings, color:"#C8DFA8" },{ value:B.joint, color:"#D8E8F5" },{ value:B.mom, color:"#FFD6E8" }] : [];
 
   // ── Alloc modal ──────────────────────────────
   function AllocModal() {
@@ -481,10 +481,10 @@ function App() {
     return (
       <div className="overlay" onClick={()=>setShowAlloc(false)}>
         <div onClick={e=>e.stopPropagation()} style={{ background:"white", borderRadius:20, padding:24, width:"100%", maxWidth:380, boxShadow:"0 12px 50px rgba(0,0,0,0.18)", maxHeight:"90vh", overflowY:"auto" }}>
-          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:600, marginBottom:4 }}>Edit Allocation</div>
+          <div style={{ fontFamily:"'Nunito',sans-serif", fontSize:20, fontWeight:600, marginBottom:4 }}>Edit Allocation</div>
           <p style={{ fontSize:12, color:"#bbb", marginBottom:8 }}>Joint & Mom are per-paycheque amounts, deducted first. Percentages split the remainder.</p>
           <p style={{ fontSize:12, color:"#bbb", marginBottom:20 }}>Percentages must add up to 100%</p>
-          {[["needs","Needs","#7CBD8F"],["wants","Wants","#E87FA0"],["savings","Savings","#7CBD8F"]].map(([k,l,c])=>(
+          {[["needs","Needs","#9CB071"],["wants","Wants","#FFB7D5"],["savings","Savings","#9CB071"]].map(([k,l,c])=>(
             <div key={k} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
               <div style={{ width:8, height:8, borderRadius:2, background:c, flexShrink:0 }}/>
               <span style={{ fontSize:13, flex:1 }}>{l}</span>
@@ -495,9 +495,9 @@ function App() {
             </div>
           ))}
           <div style={{ padding:"7px 12px", borderRadius:8, background:ok?"#EDEAF8":"#fdeaea", marginBottom:16 }}>
-            <span style={{ fontSize:12, fontWeight:500, color:ok?"#7CBD8F":"#c04040" }}>Total: {tot}% {ok?"✓":"— must equal 100%"}</span>
+            <span style={{ fontSize:12, fontWeight:500, color:ok?"#9CB071":"#c04040" }}>Total: {tot}% {ok?"✓":"— must equal 100%"}</span>
           </div>
-          {[["joint","Joint","#7DB8D4"],["mom","Mom","#D4849E"]].map(([k,l,c])=>(
+          {[["joint","Joint","#7DB8D4"],["mom","Mom","#AEACEB"]].map(([k,l,c])=>(
             <div key={k} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
               <div style={{ width:8, height:8, borderRadius:2, background:c, flexShrink:0 }}/>
               <span style={{ fontSize:13, flex:1 }}>{l}</span>
@@ -505,7 +505,7 @@ function App() {
             </div>
           ))}
           <div style={{ display:"flex", gap:8, marginTop:20 }}>
-            <button className="tbtn" onClick={saveAlloc} style={{ flex:1, padding:10, background:"#7CBD8F", color:"white", borderRadius:10 }}>Save Changes</button>
+            <button className="tbtn" onClick={saveAlloc} style={{ flex:1, padding:10, background:"#9CB071", color:"white", borderRadius:10 }}>Save Changes</button>
             <button className="tbtn" onClick={()=>setShowAlloc(false)} style={{ padding:"10px 16px", background:"#f5f5f5", color:"#888", borderRadius:10 }}>Cancel</button>
           </div>
         </div>
@@ -525,13 +525,13 @@ function App() {
             <div style={{ fontSize:10, color:"#bbb", marginTop:1 }}>{done?"🎉 Complete!":money(rem)+" to go"}</div>
           </div>
           {done
-            ? <button onClick={()=>archGoal(goal.id)} style={{ fontSize:10, padding:"2px 8px", borderRadius:99, background:"#EDEAF8", color:"#7CBD8F", border:"1px solid #BDB8E8", cursor:"pointer", fontFamily:"inherit" }}>Archive ✓</button>
-            : <span style={{ fontSize:11, color:"#7CBD8F", fontWeight:600 }}>{Math.round(pct)}%</span>}
+            ? <button onClick={()=>archGoal(goal.id)} style={{ fontSize:10, padding:"2px 8px", borderRadius:99, background:"#EDEAF8", color:"#9CB071", border:"1px solid #BDB8E8", cursor:"pointer", fontFamily:"inherit" }}>Archive ✓</button>
+            : <span style={{ fontSize:11, color:"#9CB071", fontWeight:600 }}>{Math.round(pct)}%</span>}
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <DonutChart segments={[{ value:goal.saved, color:done?"#7CBD8F":"#7CBD8F" },{ value:Math.max(n(goal.target)-goal.saved,0), color:"#f0f0f0" }]} size={44} thickness={8}/>
+          <DonutChart segments={[{ value:goal.saved, color:done?"#9CB071":"#9CB071" },{ value:Math.max(n(goal.target)-goal.saved,0), color:"#f0f0f0" }]} size={44} thickness={8}/>
           <div style={{ flex:1 }}>
-            <Bar value={goal.saved} max={n(goal.target)} color={done?"#B2D8BF":"#B2D8BF"} h={5}/>
+            <Bar value={goal.saved} max={n(goal.target)} color={done?"#C8DFA8":"#C8DFA8"} h={5}/>
             <div style={{ display:"flex", justifyContent:"space-between", marginTop:3 }}>
               <span style={{ fontSize:10, color:"#bbb" }}>{moneyS(goal.saved)} saved</span>
               <span style={{ fontSize:10, color:"#bbb" }}>{money(goal.target)}</span>
@@ -541,7 +541,7 @@ function App() {
         {!done && (
           <div style={{ display:"flex", gap:5, marginTop:8 }}>
             <div style={{ position:"relative", flex:1 }}><DS/><input style={dInp({ fontSize:16 })} placeholder="Add…" value={addSav[goal.id]||""} onChange={e=>setAddSav(p=>({...p,[goal.id]:e.target.value}))}/></div>
-            <button className="tbtn" onClick={()=>saveGoal(goal.id)} style={{ padding:"7px 10px", background:"#EDEAF8", color:"#7CBD8F", border:"1.5px solid #BDB8E8", borderRadius:8, whiteSpace:"nowrap", fontSize:12 }}>+ Save</button>
+            <button className="tbtn" onClick={()=>saveGoal(goal.id)} style={{ padding:"7px 10px", background:"#EDEAF8", color:"#9CB071", border:"1.5px solid #BDB8E8", borderRadius:8, whiteSpace:"nowrap", fontSize:12 }}>+ Save</button>
           </div>
         )}
       </div>
@@ -550,51 +550,67 @@ function App() {
 
   // ── Month view ────────────────────────────────
   function MonthView() {
+    const MCOLS = ["#FFB7D5","#F0DB7D","#9CB071","#B7CEEC","#FFB7D5","#F0DB7D","#9CB071","#AEACEB","#FD9FA2","#F9E4BC","#ACC2D9","#B7CEEC"];
+    const MTEXT = ["#8A1040","#7A6000","#3A5010","#2A5080","#8A1040","#7A6000","#3A5010","#3A3880","#8A2030","#7A5010","#2A4060","#2A5080"];
+    const tabCol = MCOLS[mi];
+    const textCol = MTEXT[mi];
     return (
-      <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+      <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
 
-        {/* Month settings row */}
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:8, flexWrap:"wrap" }}>
-          <button className="tbtn" onClick={()=>{ setEditAlloc({...alloc}); setShowAlloc(true); }} style={{ padding:"7px 14px", background:"white", color:"#888", borderRadius:10, fontSize:12, border:"1.5px solid #E8E4DE", fontWeight:500 }}>⚙️ Edit allocation</button>
-          <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-              <span style={{ fontSize:12, color:"#999" }}>Paycheques</span>
-              <div style={{ display:"flex", gap:0, borderRadius:10, overflow:"hidden", border:"1.5px solid #E8E4DE" }}>
-                {[2,3].map(n=>(
-                  <button key={n} onClick={()=>setPaychecks(p=>p.map((v,i)=>i===mi?n:v))} style={{ border:"none", cursor:"pointer", padding:"5px 13px", fontSize:12, fontFamily:"inherit", background:paychecks[mi]===n?"#7CBD8F":"white", color:paychecks[mi]===n?"white":"#888", fontWeight:paychecks[mi]===n?600:400 }}>{n}</button>
-                ))}
-              </div>
+        {/* ── Month hero ── */}
+        <div style={{ background:tabCol, borderRadius:22, padding:"20px 20px 16px", position:"relative", overflow:"hidden" }}>
+          <div style={{ position:"absolute", top:-30, right:-30, width:120, height:120, borderRadius:"50%", background:"rgba(255,255,255,0.18)", pointerEvents:"none" }}/>
+          <div style={{ position:"absolute", bottom:-20, left:20, width:60, height:60, borderRadius:"50%", background:"rgba(255,255,255,0.12)", pointerEvents:"none" }}/>
+
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:8 }}>
+            {/* Left: month + income */}
+            <div>
+              <div style={{ fontSize:11, fontWeight:700, color:"rgba(0,0,0,0.4)", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:4 }}>{MONTHS[mi]} {year}</div>
+              <div style={{ fontSize: mob?30:36, fontWeight:900, color:"#1a1a1a", lineHeight:1, marginBottom:6 }}>{B.inc>0?moneyS(B.inc):"—"}</div>
+              {Sp.total>0 && <div style={{ fontSize:12, fontWeight:600, color:"rgba(0,0,0,0.45)" }}>{moneyS(Sp.total)} spent · {B.inc>Sp.total?<span style={{color:"rgba(0,0,0,0.6)"}}>{""+moneyS(B.inc-Sp.total)+" left"}</span>:<span style={{color:"#c04040"}}>{"over budget"}</span>}</div>}
             </div>
-            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-              <span style={{ fontSize:12, color:"#999" }}>{MONTHS[mi]} income</span>
-              <div style={{ position:"relative" }}><DS/>
-                <input style={dInp({ width:120, fontSize:16 })} placeholder="0.00" value={incomes[mi]} onChange={e=>setIncomes(p=>p.map((v,i)=>i===mi?e.target.value:v))}/>
+            {/* Right: inputs */}
+            <div style={{ display:"flex", flexDirection:"column", gap:8, alignItems:"flex-end" }}>
+              <div style={{ background:"rgba(255,255,255,0.55)", borderRadius:12, padding:"8px 12px", display:"flex", alignItems:"center", gap:8 }}>
+                <span style={{ fontSize:11, fontWeight:600, color:"rgba(0,0,0,0.45)", whiteSpace:"nowrap" }}>Income</span>
+                <div style={{ position:"relative" }}>
+                  <span style={{ position:"absolute", left:7, top:"50%", transform:"translateY(-50%)", fontSize:12, color:"rgba(0,0,0,0.4)", fontWeight:700 }}>$</span>
+                  <input style={{ border:"none", background:"transparent", padding:"4px 6px 4px 18px", fontSize:14, fontFamily:"inherit", outline:"none", width:90, color:"#1a1a1a", fontWeight:800 }} placeholder="0.00" value={incomes[mi]} onChange={e=>setIncomes(p=>p.map((v,i)=>i===mi?e.target.value:v))}/>
+                </div>
               </div>
+              <div style={{ display:"flex", gap:6, alignItems:"center" }}>
+                <span style={{ fontSize:11, fontWeight:600, color:"rgba(0,0,0,0.4)" }}>Paycheques</span>
+                <div style={{ display:"flex", borderRadius:10, overflow:"hidden", border:"2px solid rgba(255,255,255,0.6)", background:"rgba(255,255,255,0.3)" }}>
+                  {[2,3].map(num=>(
+                    <button key={num} onClick={()=>setPaychecks(p=>p.map((v,i)=>i===mi?num:v))} style={{ border:"none", cursor:"pointer", padding:"5px 12px", fontSize:12, fontFamily:"inherit", background:paychecks[mi]===num?"rgba(255,255,255,0.85)":"transparent", color:"#1a1a1a", fontWeight:paychecks[mi]===num?800:500 }}>{num}</button>
+                  ))}
+                </div>
+              </div>
+              <button onClick={()=>{ setEditAlloc({...alloc}); setShowAlloc(true); }} style={{ fontSize:11, fontWeight:600, color:"rgba(0,0,0,0.45)", background:"rgba(255,255,255,0.4)", borderRadius:8, padding:"4px 10px", border:"none", cursor:"pointer", fontFamily:"inherit" }}>Edit allocation</button>
             </div>
           </div>
         </div>
-        <div style={{ display:"grid", gridTemplateColumns: mob ? "repeat(3,1fr)" : "repeat(5,1fr)", gap:10 }}>
+
+        {/* ── Budget buckets ── */}
+        <div style={{ display:"grid", gridTemplateColumns: mob?"repeat(3,1fr)":"repeat(5,1fr)", gap:8 }}>
           {BUCKET_CONFIGS.map(cfg => {
             const bv = B[cfg.key];
             const sv = cfg.key==="needs"?Sp.needs:cfg.key==="wants"?Sp.wants:cfg.key==="savings"?Sp.savings:null;
             const hasS = sv!==null, rem = hasS?bv-sv:0, over = hasS&&sv>bv&&bv>0;
             const pct = hasS&&bv>0?Math.min(sv/bv*100,100):0;
+            const cardBg = over ? "#FD9FA2" : cfg.bg;
             return (
-              <div key={cfg.key} className="bucket-card" style={{ background: over?"#c04040":cfg.bg, borderRadius:18, padding: mob?"13px 11px 11px":"17px 17px 15px", boxShadow:"0 4px 20px rgba(0,0,0,0.12)", position:"relative", overflow:"hidden" }}>
-                {/* Decorative circle */}
-                <div style={{ position:"absolute", top:-18, right:-18, width:70, height:70, borderRadius:"50%", background:"rgba(255,255,255,0.12)", pointerEvents:"none" }}/>
-                <div style={{ fontSize:9, color:"rgba(255,255,255,0.75)", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:4, fontWeight:600 }}>{cfg.label}</div>
-                <div style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?15:20, fontWeight:600, color:"white", marginBottom:2 }}>
+              <div key={cfg.key} className="bucket-card" style={{ background:cardBg, borderRadius:16, padding: mob?"14px 12px 12px":"18px 16px 14px", boxShadow:"0 3px 10px rgba(0,0,0,0.08)", position:"relative", overflow:"hidden" }}>
+                <div style={{ position:"absolute", bottom:-16, right:-16, width:60, height:60, borderRadius:"50%", background:"rgba(255,255,255,0.2)", pointerEvents:"none" }}/>
+                <div style={{ fontSize:10, fontWeight:700, color:"rgba(0,0,0,0.45)", textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:5 }}>{cfg.label}</div>
+                <div style={{ fontSize: mob?18:22, fontWeight:900, color:"#1a1a1a", lineHeight:1.1, marginBottom: hasS&&B.inc>0?8:0 }}>
                   {B.inc>0||cfg.key==="joint"||cfg.key==="mom" ? moneyS(bv) : "—"}
                 </div>
-                {!mob && <div style={{ fontSize:10, color:"rgba(255,255,255,0.6)", marginBottom:hasS&&B.inc>0?8:0 }}>
-                  {cfg.key==="joint"||cfg.key==="mom" ? `${moneyS(alloc[cfg.key])} × ${B.pc} paycheques` : cfg.sub(alloc)}
-                </div>}
                 {hasS && B.inc>0 && <>
-                  <div style={{ background:"rgba(255,255,255,0.2)", borderRadius:99, height:4, overflow:"hidden", margin:"7px 0 4px" }}>
-                    <div style={{ width:pct+"%", height:"100%", borderRadius:99, background:over?"#ff8a8a":"white", transition:"width 0.4s" }}/>
+                  <div style={{ background:"rgba(0,0,0,0.1)", borderRadius:99, height:4, overflow:"hidden", marginBottom:4 }}>
+                    <div style={{ width:pct+"%", height:"100%", borderRadius:99, background:over?"#c04040":"rgba(0,0,0,0.3)", transition:"width 0.4s" }}/>
                   </div>
-                  <div style={{ fontSize: mob?9:10, fontWeight:600, color:over?"#ff8a8a":"rgba(255,255,255,0.9)", textAlign:"right" }}>
+                  <div style={{ fontSize:10, fontWeight:700, color:over?"#c04040":"rgba(0,0,0,0.45)", textAlign:"right" }}>
                     {over?moneyS(Math.abs(rem))+" over":moneyS(Math.abs(rem))+" left"}
                   </div>
                 </>}
@@ -603,946 +619,260 @@ function App() {
           })}
         </div>
 
-        {/* Goals + Transactions */}
-        <div style={{ display:"grid", gridTemplateColumns: mob?"1fr":"1fr 1fr", gap:14 }}>
-          {/* Spending Breakdown */}
-          <div style={S.card}>
-            <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14 }}>Spending Breakdown</div>
-            <div style={{ display:"flex", alignItems:"center", gap:16 }}>
-              <div style={{ position:"relative", flexShrink:0 }}>
-                <DonutChart segments={spendSegs.length>0?spendSegs:[{value:1,color:"#f0f0f0"}]} size={mob?90:110} thickness={mob?18:20}/>
-                <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
-                  <div style={{ fontFamily:"'Playfair Display',serif", fontSize:13, fontWeight:600, color:"#1a1a1a" }}>{Sp.total>0?moneyS(Sp.total):"—"}</div>
-                  <div style={{ fontSize:9, color:"#bbb" }}>spent</div>
-                </div>
-              </div>
-              <div style={{ flex:1 }}>
-                {[{l:"Needs",v:Sp.needs,c:"#7CBD8F"},{l:"Wants",v:Sp.wants,c:"#E87FA0"},{l:"Savings",v:Sp.savings,c:"#7CBD8F"}].map(s=>(
-                  <div key={s.l} style={{ marginBottom:7 }}>
-                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}>
-                      <div style={{ display:"flex", alignItems:"center", gap:5 }}><div style={{ width:7,height:7,borderRadius:2,background:s.c }}/><span style={{ fontSize:12, color:"#666" }}>{s.l}</span></div>
-                      <span style={{ fontSize:12, fontWeight:500, color:s.c }}>{s.v>0?moneyS(s.v):"—"}</span>
-                    </div>
-                    <Bar value={s.v} max={Sp.total||1} color={s.c} h={4}/>
-                  </div>
-                ))}
+        {/* ── Spending breakdown ── */}
+        <div style={{ background:"white", borderRadius:18, padding:"16px 18px", boxShadow:"0 2px 10px rgba(0,0,0,0.05)", border:"1px solid #F0F0F8" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+            <div style={{ fontSize:12, fontWeight:800, color:"#1a1a1a", textTransform:"uppercase", letterSpacing:"0.06em" }}>Spending</div>
+            <div style={{ fontSize:20, fontWeight:900, color:"#1a1a1a" }}>{Sp.total>0?moneyS(Sp.total):"—"}</div>
+          </div>
+          <div style={{ display:"flex", gap:10, alignItems:"center" }}>
+            <div style={{ position:"relative", flexShrink:0 }}>
+              <DonutChart segments={spendSegs.length>0?spendSegs:[{value:1,color:"#F0F0F8"}]} size={mob?76:88} thickness={mob?13:15}/>
+              <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                <div style={{ fontSize:9, fontWeight:700, color:"#999", textTransform:"uppercase" }}>spent</div>
               </div>
             </div>
-          </div>
-          {/* Budget Allocation */}
-          <div style={S.card}>
-            <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14 }}>Budget Allocation</div>
-            <div style={{ display:"flex", alignItems:"center", gap:16 }}>
-              <div style={{ position:"relative", flexShrink:0 }}>
-                <DonutChart segments={budgetSegs.length>0?budgetSegs:[{value:1,color:"#f0f0f0"}]} size={mob?90:110} thickness={mob?18:20}/>
-                <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
-                  <div style={{ fontFamily:"'Playfair Display',serif", fontSize:13, fontWeight:600, color:"#1a1a1a" }}>{B.inc>0?moneyS(B.inc):"—"}</div>
-                  <div style={{ fontSize:9, color:"#bbb" }}>income</div>
-                </div>
-              </div>
-              <div style={{ flex:1 }}>
-                {[{l:"Needs",v:B.needs,c:"#B2D8BF"},{l:"Wants",v:B.wants,c:"#FDEAA0"},{l:"Savings",v:B.savings,c:"#B2D8BF"},{l:"Joint",v:B.joint,c:"#C8E4F5"},{l:"Mom",v:B.mom,c:"#F5C0D2"}].map(s=>(
-                  <div key={s.l} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:5 }}>
-                    <div style={{ display:"flex", alignItems:"center", gap:5 }}><div style={{ width:7,height:7,borderRadius:2,background:s.c }}/><span style={{ fontSize:12, color:"#666" }}>{s.l}</span></div>
-                    <span style={{ fontSize:12, fontWeight:500 }}>{B.inc>0?moneyS(s.v):"—"}</span>
+            <div style={{ flex:1, display:"flex", flexDirection:"column", gap:9 }}>
+              {[{l:"Needs",v:Sp.needs,c:"#B8960A",bg:"#F0DB7D"},{l:"Wants",v:Sp.wants,c:"#D4609A",bg:"#FFB7D5"},{l:"Savings",v:Sp.savings,c:"#5A7A30",bg:"#9CB071"}].map(s=>(
+                <div key={s.l} style={{ display:"flex", alignItems:"center", gap:8 }}>
+                  <div style={{ width:10, height:10, borderRadius:3, background:s.bg, flexShrink:0 }}/>
+                  <span style={{ fontSize:12, fontWeight:600, color:"#555", flex:1 }}>{s.l}</span>
+                  <span style={{ fontSize:13, fontWeight:800, color:s.c }}>{s.v>0?moneyS(s.v):"—"}</span>
+                  <div style={{ width:50, background:"#F5F5FA", borderRadius:99, height:5, overflow:"hidden" }}>
+                    <div style={{ width:(Sp.total>0?Math.min(s.v/Sp.total*100,100):0)+"%", height:"100%", borderRadius:99, background:s.bg }}/>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Goals + Transactions */}
-        <div style={{ display:"grid", gridTemplateColumns: mob?"1fr":"290px 1fr", gap:14, alignItems:"start" }}>
+        {/* ── Budget allocation — compact pill row ── */}
+        {B.inc>0 && (
+          <div style={{ background:"white", borderRadius:18, padding:"16px 18px", boxShadow:"0 2px 10px rgba(0,0,0,0.05)", border:"1px solid #F0F0F8" }}>
+            <div style={{ fontSize:12, fontWeight:800, color:"#1a1a1a", textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:12 }}>Budget</div>
+            <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+              {[
+                {l:"Needs",   v:B.needs,  spent:Sp.needs,  bg:"#F0DB7D", c:"#7A5800"},
+                {l:"Wants",   v:B.wants,  spent:Sp.wants,  bg:"#FFB7D5", c:"#8A1040"},
+                {l:"Savings", v:B.savings, spent:Sp.savings, bg:"#9CB071", c:"#3A5010"},
+                {l:"Joint",   v:B.joint,  spent:null,       bg:"#B7CEEC", c:"#2A5080"},
+                {l:"Mom",     v:B.mom,    spent:null,       bg:"#AEACEB", c:"#3A3880"},
+              ].map(s=>{
+                const over = s.spent!==null && s.spent>s.v && s.v>0;
+                return (
+                  <div key={s.l} style={{ flex:"1 1 70px", background:over?"#FFF0F0":s.bg, borderRadius:14, padding:"10px 12px 8px" }}>
+                    <div style={{ fontSize:9, fontWeight:700, color:over?"#c04040":s.c, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:3 }}>{s.l}</div>
+                    <div style={{ fontSize:15, fontWeight:900, color:over?"#c04040":"#1a1a1a" }}>{moneyS(s.v)}</div>
+                    {s.spent!==null && <div style={{ fontSize:9, fontWeight:600, color:over?"#c04040":"rgba(0,0,0,0.4)", marginTop:3 }}>{moneyS(s.spent)} spent</div>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
-          {/* Goals sidebar */}
-          <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
-            {activeGoals.length>0 && (
-              <div style={S.card}>
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
-                  <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em" }}>Goals</div>
-                  <button className="tbtn" onClick={()=>setView("goals")} style={{ fontSize:11, color:"#bbb", background:"none", padding:0 }}>Manage →</button>
-                </div>
-                {activeGoals.map(g=><GoalMini key={g.id} goal={g}/>)}
-              </div>
-            )}
-            {inTxns.length>0 && (
-              <div style={{ ...S.card, borderTop:"3px solid #a8d8ea" }}>
-                <div style={{ fontSize:11, fontWeight:600, color:"#6AABDA", textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:8 }}>Extra Income</div>
-                {inTxns.map(t=>(
-                  <div key={t.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 0", borderBottom:"1px solid #f5f5f5" }}>
-                    <span style={{ fontSize:12, color:"#555" }}>{t.desc}</span>
-                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                      <span style={{ fontSize:13, fontWeight:600, color:"#6AABDA" }}>+{money(t.amount)}</span>
-                      <button className="xbtn" onPointerDown={e=>{e.preventDefault();delTxn(t.id)}}>×</button>
+        {/* ── Goals strip ── */}
+        {activeGoals.length>0 && (
+          <div style={{ background:"white", borderRadius:18, padding:"14px 18px", boxShadow:"0 2px 10px rgba(0,0,0,0.05)", border:"1px solid #F0F0F8" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+              <div style={{ fontSize:12, fontWeight:800, color:"#1a1a1a", textTransform:"uppercase", letterSpacing:"0.06em" }}>Goals</div>
+              <button className="tbtn" onClick={()=>setView("goals")} style={{ fontSize:11, fontWeight:700, color:"#9D5783", background:"none", padding:0 }}>All →</button>
+            </div>
+            <div style={{ display:"flex", gap:8, overflowX:"auto" }}>
+              {activeGoals.map((g,gi)=>{
+                const GCOLS=[["#F0DB7D","#7A5800"],["#FFB7D5","#8A1040"],["#9CB071","#3A5010"],["#B7CEEC","#2A5080"],["#AEACEB","#3A3880"]];
+                const [bg,tc]=GCOLS[gi%GCOLS.length];
+                const pct=n(g.target)>0?Math.min(g.saved/n(g.target)*100,100):0;
+                return (
+                  <div key={g.id} style={{ background:bg, borderRadius:14, padding:"10px 14px", minWidth:90, flexShrink:0 }}>
+                    <div style={{ fontSize:10, fontWeight:700, color:tc, marginBottom:4, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:100 }}>{g.name}</div>
+                    <div style={{ fontSize:20, fontWeight:900, color:"#1a1a1a" }}>{Math.round(pct)}<span style={{ fontSize:11 }}>%</span></div>
+                    <div style={{ background:"rgba(0,0,0,0.1)", borderRadius:99, height:3, marginTop:5, overflow:"hidden" }}>
+                      <div style={{ width:pct+"%", height:"100%", background:"rgba(0,0,0,0.3)", borderRadius:99 }}/>
                     </div>
                   </div>
-                ))}
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── Extra income ── */}
+        {inTxns.length>0 && (
+          <div style={{ background:"white", borderRadius:18, padding:"14px 18px", borderTop:"3px solid #B7CEEC", boxShadow:"0 2px 10px rgba(0,0,0,0.05)" }}>
+            <div style={{ fontSize:12, fontWeight:800, color:"#2A5080", textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:8 }}>Extra Income</div>
+            {inTxns.map(t=>(
+              <div key={t.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 0", borderBottom:"1px solid #F5F5FA" }}>
+                <span style={{ fontSize:12, color:"#555" }}>{t.desc}</span>
+                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                  <span style={{ fontSize:13, fontWeight:800, color:"#2A5080" }}>+{money(t.amount)}</span>
+                  <button className="xbtn" onPointerDown={e=>{e.preventDefault();delTxn(t.id)}}>×</button>
+                </div>
               </div>
+            ))}
+          </div>
+        )}
+
+        {/* ── Transactions ── */}
+        <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+          <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
+            {!recApplied && recur.length>0 && (
+              <button className="tbtn" onClick={applyRecur} style={{ padding:"7px 12px", background:"#F9E4BC", color:"#7A5010", border:"none", borderRadius:10, fontSize:12, fontWeight:700 }}>
+                Recurring ({recur.length})
+              </button>
             )}
+            {recApplied && <span style={{ fontSize:11, fontWeight:700, color:"#5A7A30" }}>✓ Applied</span>}
+            <button className="tbtn" onClick={()=>setShowAdd(p=>!p)} style={{ padding:"8px 20px", background:"#9D5783", color:"white", borderRadius:12, fontSize:13, marginLeft:"auto", fontWeight:800 }}>
+              {showAdd?"✕ Cancel":"+ Add"}
+            </button>
           </div>
 
-          {/* Transactions */}
-          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-            {/* Action buttons row */}
-            <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
-              {!recApplied && recur.length>0 && (
-                <button className="tbtn" onClick={applyRecur} style={{ padding:"7px 12px", background:"white", color:"#D4826A", border:"1.5px solid #F5C9A8", borderRadius:9, fontSize:12 }}>
-                  🔁 Apply recurring ({recur.length})
-                </button>
-              )}
-              {recApplied && <span style={{ fontSize:11, color:"#7CBD8F" }}>✓ Recurring applied</span>}
-              <button className="tbtn" onClick={()=>setShowAdd(p=>!p)} style={{ padding:"7px 16px", background:"#7CBD8F", color:"white", borderRadius:9, fontSize:12, marginLeft:"auto" }}>
-                {showAdd?"✕ Cancel":"+ Add transaction"}
-              </button>
-            </div>
-            {/* Add txn panel */}
-            {showAdd && (
-              <div style={{ ...S.card, border:"1.5px solid #BDB8E8" }}>
-                <div style={{ fontSize:11, color:"#7CBD8F", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14 }}>New Transaction</div>
-                <div style={{ display:"flex", gap:6, marginBottom:14 }}>
-                  {[["expense","💸 Expense"],["income","💰 Income"]].map(([k,l])=>(
-                    <button key={k} onClick={()=>setNewTxn(p=>({...p,kind:k}))}
-                      style={{ border:"1.5px solid "+(newTxn.kind===k?"#7CBD8F":"#eee"), borderRadius:8, padding:"6px 14px", fontSize:12, cursor:"pointer", fontFamily:"inherit", background:newTxn.kind===k?"#EDEAF8":"white", color:newTxn.kind===k?"#7CBD8F":"#aaa", fontWeight:newTxn.kind===k?600:400 }}>{l}
-                    </button>
-                  ))}
-                </div>
-                <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"flex-end" }}>
-                  <div style={{ flex:"2 1 140px" }}><FL>Description</FL><input style={inp} placeholder="e.g. Loblaws run" autoFocus value={newTxn.desc} onChange={e=>setNewTxn(p=>({...p,desc:e.target.value}))}/></div>
-                  <div style={{ flex:"1 1 100px" }}><FL>Amount</FL><div style={{ position:"relative" }}><DS/><input style={dInp({fontSize:16})} placeholder="0.00" value={newTxn.amount} onChange={e=>setNewTxn(p=>({...p,amount:e.target.value}))}/></div></div>
-                  {newTxn.kind==="expense" && <>
-                    <div style={{ flex:"1 1 100px" }}><FL>Type</FL><select style={{ ...inp, cursor:"pointer", fontSize:16 }} value={newTxn.txnType} onChange={e=>setNewTxn(p=>({...p,txnType:e.target.value}))}><option>Need</option><option>Want</option><option>Saving</option></select></div>
-                    <div style={{ flex:"2 1 130px" }}><FL>Category</FL><select style={{ ...inp, cursor:"pointer", fontSize:16 }} value={newTxn.catId} onChange={e=>setNewTxn(p=>({...p,catId:e.target.value}))}><option value="">Select…</option><optgroup label="Needs">{cats.filter(c=>c.type==="Need").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup><optgroup label="Wants">{cats.filter(c=>c.type==="Want").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup></select></div>
-                  </>}
-                  <div style={{ flex:"1 1 120px" }}><FL>Date</FL><input type="date" style={inp} value={newTxn.date} onChange={e=>setNewTxn(p=>({...p,date:e.target.value}))}/></div>
-                  {newTxn.kind==="expense" && (
-                    <label style={{ display:"flex", alignItems:"center", gap:5, fontSize:12, color:"#888", cursor:"pointer", paddingBottom:8 }}>
-                      <input type="checkbox" style={{ accentColor:"#B2D8BF" }} checked={newTxn.recurring} onChange={e=>setNewTxn(p=>({...p,recurring:e.target.checked}))}/>Recurring
-                    </label>
-                  )}
-                  <button className="tbtn" onClick={addTxn} style={{ padding:"8px 20px", background:"#7CBD8F", color:"white", borderRadius:8, flexShrink:0 }}>Add</button>
-                </div>
+          {showAdd && (
+            <div style={{ background:"white", borderRadius:18, padding:"18px", border:"2px solid #AEACEB", boxShadow:"0 2px 10px rgba(0,0,0,0.05)" }}>
+              <div style={{ fontSize:12, fontWeight:800, color:"#9D5783", textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:14 }}>New Transaction</div>
+              <div style={{ display:"flex", gap:6, marginBottom:14 }}>
+                {[["expense","Expense"],["income","Income"]].map(([k,l])=>(
+                  <button key={k} onClick={()=>setNewTxn(p=>({...p,kind:k}))}
+                    style={{ border:"2px solid "+(newTxn.kind===k?"#AEACEB":"#F0F0F8"), borderRadius:10, padding:"7px 18px", fontSize:13, cursor:"pointer", fontFamily:"inherit", background:newTxn.kind===k?"#AEACEB":"white", color:newTxn.kind===k?"white":"#aaa", fontWeight:newTxn.kind===k?800:500 }}>{l}
+                  </button>
+                ))}
               </div>
-            )}
-          <div style={S.card}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14, flexWrap:"wrap", gap:8 }}>
-              <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em" }}>Transactions {mTxns.length>0&&"· "+mTxns.length}</div>
+              <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"flex-end" }}>
+                <div style={{ flex:"2 1 140px" }}><FL>Description</FL><input style={inp} placeholder="e.g. Loblaws" autoFocus value={newTxn.desc} onChange={e=>setNewTxn(p=>({...p,desc:e.target.value}))}/></div>
+                <div style={{ flex:"1 1 100px" }}><FL>Amount</FL><div style={{ position:"relative" }}><DS/><input style={dInp({fontSize:16})} placeholder="0.00" value={newTxn.amount} onChange={e=>setNewTxn(p=>({...p,amount:e.target.value}))}/></div></div>
+                {newTxn.kind==="expense" && <>
+                  <div style={{ flex:"1 1 100px" }}><FL>Type</FL><select style={{ ...inp, cursor:"pointer", fontSize:16 }} value={newTxn.txnType} onChange={e=>setNewTxn(p=>({...p,txnType:e.target.value}))}><option>Need</option><option>Want</option><option>Saving</option></select></div>
+                  <div style={{ flex:"2 1 130px" }}><FL>Category</FL><select style={{ ...inp, cursor:"pointer", fontSize:16 }} value={newTxn.catId} onChange={e=>setNewTxn(p=>({...p,catId:e.target.value}))}><option value="">Select…</option><optgroup label="Needs">{cats.filter(c=>c.type==="Need").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup><optgroup label="Wants">{cats.filter(c=>c.type==="Want").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup></select></div>
+                </>}
+                <div style={{ flex:"1 1 120px" }}><FL>Date</FL><input type="date" style={inp} value={newTxn.date} onChange={e=>setNewTxn(p=>({...p,date:e.target.value}))}/></div>
+                {newTxn.kind==="expense" && (
+                  <label style={{ display:"flex", alignItems:"center", gap:5, fontSize:12, fontWeight:600, color:"#888", cursor:"pointer", paddingBottom:8 }}>
+                    <input type="checkbox" style={{ accentColor:"#9CB071" }} checked={newTxn.recurring} onChange={e=>setNewTxn(p=>({...p,recurring:e.target.checked}))}/>Recurring
+                  </label>
+                )}
+                <button className="tbtn" onClick={addTxn} style={{ padding:"8px 22px", background:"#9CB071", color:"white", borderRadius:10, fontWeight:800, fontSize:13 }}>Add</button>
+              </div>
+            </div>
+          )}
+
+          <div style={{ background:"white", borderRadius:18, padding:"16px 18px", boxShadow:"0 2px 10px rgba(0,0,0,0.05)", border:"1px solid #F0F0F8" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, flexWrap:"wrap", gap:8 }}>
+              <div style={{ fontSize:12, fontWeight:800, color:"#1a1a1a", textTransform:"uppercase", letterSpacing:"0.06em" }}>Transactions {mTxns.length>0&&"· "+mTxns.length}</div>
               <div className="hscroll" style={{ display:"flex", gap:4 }}>
-                {[["all","All"],["Need","Need"],["Want","Want"],["Saving","Saving"],["income","💰"],["recurring","🔁"]].map(([k,l])=>(
-                  <button key={k} onClick={()=>setFilter(k)} style={{ border:"1.5px solid "+(filter===k?"#7CBD8F":"#eee"), cursor:"pointer", borderRadius:8, padding:"4px 9px", fontSize:11, fontFamily:"inherit", background:filter===k?"#EDEAF8":"white", color:filter===k?"#7CBD8F":"#888", fontWeight:filter===k?600:400, flexShrink:0 }}>{l}</button>
+                {[["all","All"],["Need","Need"],["Want","Want"],["Saving","Saving"],["income","Income"],["recurring","Recurring"]].map(([k,l])=>(
+                  <button key={k} onClick={()=>setFilter(k)} style={{ border:"2px solid "+(filter===k?"#9D5783":"#F0F0F8"), cursor:"pointer", borderRadius:8, padding:"4px 10px", fontSize:11, fontFamily:"inherit", background:filter===k?"#9D5783":"white", color:filter===k?"white":"#888", fontWeight:filter===k?700:500, flexShrink:0 }}>{l}</button>
                 ))}
               </div>
             </div>
-
             {fTxns.length===0 ? (
               <div style={{ textAlign:"center", padding:"36px 0" }}>
                 <div style={{ fontSize:28, marginBottom:8 }}>💸</div>
-                <p style={{ fontSize:13, color:"#ccc" }}>{mTxns.length===0?"No transactions yet":"No transactions match this filter"}</p>
+                <p style={{ fontSize:13, color:"#ccc", fontWeight:600 }}>{mTxns.length===0?"No transactions yet":"No match"}</p>
                 {mTxns.length===0&&recur.length>0&&!recApplied && (
-                  <button className="tbtn" onClick={applyRecur} style={{ marginTop:12, padding:"8px 18px", background:"#fff5ed", color:"#D4826A", border:"1.5px solid #F5C9A8", borderRadius:8 }}>
-                    🔁 Apply {recur.length} recurring transactions
+                  <button className="tbtn" onClick={applyRecur} style={{ marginTop:12, padding:"8px 18px", background:"#F9E4BC", color:"#7A5010", border:"none", borderRadius:10, fontWeight:700 }}>
+                    Apply {recur.length} recurring
                   </button>
                 )}
               </div>
             ) : mob ? (
-              /* ── Mobile txn list (card style) ── */
               <>
                 {fTxns.map(t => {
                   const cat = cats.find(c=>c.id===t.catId);
                   const ts  = t.kind==="income" ? TYPE_COLORS.income : (TYPE_COLORS[t.txnType]||TYPE_COLORS.Need);
                   return (
-                    <div key={t.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"11px 4px", borderBottom:"1px solid #f8f8f8" }}>
+                    <div key={t.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"11px 4px", borderBottom:"1px solid #F5F5FA" }}>
                       <div style={{ flex:1, minWidth:0 }}>
                         <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:3 }}>
-                          {t.recurring && <span style={{ fontSize:10 }}>🔁</span>}
-                          {t.kind==="income" && <span style={{ fontSize:10 }}>💰</span>}
-                          <span style={{ fontSize:13, color:"#333", fontWeight:500, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{t.desc}</span>
+                          <span style={{ fontSize:13, color:"#1a1a1a", fontWeight:600, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{t.desc}</span>
                         </div>
                         <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-                          <span style={{ fontSize:10, padding:"1px 6px", borderRadius:99, background:ts.bg, color:ts.text }}>{t.kind==="income"?"Income":t.txnType}</span>
-                          {cat && <span style={{ fontSize:10, color:"#bbb" }}>{cat.name}</span>}
-                          <span style={{ fontSize:10, color:"#ccc" }}>{t.date.slice(5)}</span>
+                          <span style={{ fontSize:10, padding:"2px 8px", borderRadius:99, background:ts.bg, color:ts.text, fontWeight:700 }}>{t.kind==="income"?"Income":t.txnType}</span>
+                          {cat && <span style={{ fontSize:10, color:"#C0C8D0", fontWeight:500 }}>{cat.name}</span>}
+                          <span style={{ fontSize:10, color:"#C0C8D0" }}>{t.date.slice(5)}</span>
                         </div>
                       </div>
                       <div style={{ display:"flex", alignItems:"center", gap:8, marginLeft:10, flexShrink:0 }}>
-                        <span style={{ fontSize:14, fontWeight:600, color:t.kind==="income"?"#6AABDA":"#1a1a1a" }}>{t.kind==="income"?"+":""}{money(t.amount)}</span>
+                        <span style={{ fontSize:15, fontWeight:800, color:t.kind==="income"?"#3A5080":"#1a1a1a" }}>{t.kind==="income"?"+":""}{money(t.amount)}</span>
                         <button className="xbtn" onPointerDown={e=>{e.preventDefault();delTxn(t.id)}}>×</button>
                       </div>
                     </div>
                   );
                 })}
-                <div style={{ borderTop:"1px solid #f5f5f5", marginTop:8, paddingTop:10, display:"flex", justifyContent:"space-between" }}>
-                  <span style={{ fontSize:12, color:"#bbb" }}>{fTxns.length} transaction{fTxns.length!==1?"s":""}</span>
-                  <span style={{ fontSize:14, fontWeight:600, fontFamily:"'Playfair Display',serif" }}>{money(fTxns.filter(t=>t.kind==="expense").reduce((s,t)=>s+n(t.amount),0))}</span>
+                <div style={{ borderTop:"1px solid #F0F0F8", marginTop:8, paddingTop:10, display:"flex", justifyContent:"space-between" }}>
+                  <span style={{ fontSize:12, color:"#B0B8C0", fontWeight:600 }}>{fTxns.length} item{fTxns.length!==1?"s":""}</span>
+                  <span style={{ fontSize:15, fontWeight:900, color:"#1a1a1a" }}>{money(fTxns.filter(t=>t.kind==="expense").reduce((s,t)=>s+n(t.amount),0))}</span>
                 </div>
               </>
             ) : (
-              /* ── Desktop txn table ── */
               <>
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 85px 90px 100px 85px 38px 20px", gap:"0 8px", paddingBottom:8, borderBottom:"1px solid #f5f5f5", marginBottom:4 }}>
-                  {["Description","Amount","Type","Category","Date","% total",""].map((h,i)=>(
-                    <div key={i} style={{ fontSize:10, color:"#ccc", textTransform:"uppercase", letterSpacing:"0.06em" }}>{h}</div>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 90px 90px 100px 90px 20px", gap:"0 8px", paddingBottom:8, borderBottom:"1px solid #F0F0F8", marginBottom:4 }}>
+                  {["Description","Amount","Type","Category","Date",""].map((h,i)=>(
+                    <div key={i} style={{ fontSize:10, color:"#C0C8D0", textTransform:"uppercase", letterSpacing:"0.06em", fontWeight:700 }}>{h}</div>
                   ))}
                 </div>
                 {fTxns.map(t => {
                   const cat = cats.find(c=>c.id===t.catId);
-                  const total = mTxns.filter(x=>x.kind==="expense").reduce((s,x)=>s+n(x.amount),0);
-                  const pct  = total>0&&t.kind==="expense" ? Math.round(n(t.amount)/total*100) : 0;
                   const ts   = t.kind==="income" ? TYPE_COLORS.income : (TYPE_COLORS[t.txnType]||TYPE_COLORS.Need);
                   return (
-                    <div key={t.id} className="row" style={{ display:"grid", gridTemplateColumns:"1fr 85px 90px 100px 85px 38px 20px", gap:"0 8px", padding:"8px 4px", alignItems:"center" }}>
-                      <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-                        {t.recurring && <span style={{ fontSize:10 }}>🔁</span>}
-                        {t.kind==="income" && <span style={{ fontSize:10 }}>💰</span>}
-                        <span style={{ fontSize:13, color:"#333" }}>{t.desc}</span>
-                      </div>
-                      <span style={{ fontSize:13, fontWeight:500, color:t.kind==="income"?"#6AABDA":"#1a1a1a" }}>{t.kind==="income"?"+":""}{money(t.amount)}</span>
-                      <span style={{ fontSize:11, padding:"2px 7px", borderRadius:99, background:ts.bg, color:ts.text, textAlign:"center" }}>{t.kind==="income"?"Income":t.txnType}</span>
-                      <span style={{ fontSize:12, color:"#666" }}>{cat?cat.name:"—"}</span>
-                      <span style={{ fontSize:11, color:"#bbb" }}>{t.date}</span>
-                      <div style={{ display:"flex", alignItems:"center", gap:3 }}>
-                        {t.kind==="expense" && <><div style={{ width:20,height:4,background:"#f5f5f5",borderRadius:3,overflow:"hidden" }}><div style={{ width:pct+"%",height:"100%",background:ts.accent }}/></div><span style={{ fontSize:9,color:"#bbb" }}>{pct}%</span></>}
-                      </div>
+                    <div key={t.id} className="row" style={{ display:"grid", gridTemplateColumns:"1fr 90px 90px 100px 90px 20px", gap:"0 8px", padding:"9px 4px", alignItems:"center" }}>
+                      <span style={{ fontSize:13, color:"#1a1a1a", fontWeight:600 }}>{t.desc}</span>
+                      <span style={{ fontSize:14, fontWeight:800, color:t.kind==="income"?"#3A5080":"#1a1a1a" }}>{t.kind==="income"?"+":""}{money(t.amount)}</span>
+                      <span style={{ fontSize:11, padding:"3px 8px", borderRadius:99, background:ts.bg, color:ts.text, textAlign:"center", fontWeight:700 }}>{t.kind==="income"?"Income":t.txnType}</span>
+                      <span style={{ fontSize:12, color:"#888", fontWeight:500 }}>{cat?cat.name:"—"}</span>
+                      <span style={{ fontSize:11, color:"#C0C8D0", fontWeight:500 }}>{t.date}</span>
                       <button className="xbtn" onPointerDown={e=>{e.preventDefault();delTxn(t.id)}}>×</button>
                     </div>
                   );
                 })}
-                <div style={{ borderTop:"1px solid #f5f5f5", marginTop:8, paddingTop:10, display:"flex", justifyContent:"space-between" }}>
-                  <span style={{ fontSize:12, color:"#bbb" }}>{fTxns.length} transaction{fTxns.length!==1?"s":""}</span>
-                  <span style={{ fontSize:14, fontWeight:600, fontFamily:"'Playfair Display',serif" }}>{money(fTxns.filter(t=>t.kind==="expense").reduce((s,t)=>s+n(t.amount),0))}</span>
-                </div>
-              </>
-            )}
-          </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Yearly view ───────────────────────────────
-  function YearlyView() {
-    const am = yrData.filter(m=>m.b.inc>0).length;
-    const totals = {
-      inc: yrData.reduce((s,m)=>s+m.b.inc,0),
-      needs: yrData.reduce((s,m)=>s+m.s.needs,0),
-      wants: yrData.reduce((s,m)=>s+m.s.wants,0),
-      savings: yrData.reduce((s,m)=>s+m.b.savings,0),
-      joint: yrData.reduce((s,m)=>s+m.b.joint,0),
-      mom: yrData.reduce((s,m)=>s+m.b.mom,0),
-    };
-    totals.out = totals.needs+totals.wants+totals.joint+totals.mom;
-    const colMap = { total:"#9BB5E8",needs:"#9BB5E8",wants:"#E87FA0",savings:"#7CBD8F",joint:"#7DB8D4",mom:"#D4849E" };
-    const vals = yrData.map(m => yMetric==="needs"?m.s.needs:yMetric==="wants"?m.s.wants:yMetric==="savings"?m.b.savings:yMetric==="joint"?m.b.joint:yMetric==="mom"?m.b.mom:m.s.total);
-    const buds = yrData.map(m => yMetric==="needs"?m.b.needs:yMetric==="wants"?m.b.wants:yMetric==="savings"?m.b.savings:yMetric==="joint"?m.b.joint:yMetric==="mom"?m.b.mom:m.b.needs+m.b.wants);
-    const maxV = Math.max(...vals,...buds,1);
-    return (
-      <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
-        <div style={{ display:"grid", gridTemplateColumns: mob?"repeat(4,1fr)":"repeat(7,1fr)", gap:10 }}>
-          {[{l:"Income",v:totals.inc,bg:"#6AABDA"},{l:"Needs",v:totals.needs,bg:"#7CBD8F"},{l:"Wants",v:totals.wants,bg:"#E87FA0"},{l:"Savings",v:totals.savings,bg:"#7CBD8F"},{l:"Joint",v:totals.joint,bg:"#7DB8D4"},{l:"Mom",v:totals.mom,bg:"#D4849E"},{l:"Total Out",v:totals.out,bg:"#7DB8E8"}].map(col=>(
-            <div key={col.l} className="bucket-card" style={{ background:col.bg, borderRadius:14, padding: mob?"11px 9px":"14px", boxShadow:"0 4px 14px rgba(0,0,0,0.1)" }}>
-              <div style={{ fontSize:9, color:"rgba(255,255,255,0.65)", textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:4 }}>{col.l}</div>
-              <div style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?13:17, fontWeight:600, color:"white" }}>{moneyS(col.v)}</div>
-            </div>
-          ))}
-        </div>
-
-        <div style={S.card}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:8 }}>
-            <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em" }}>Monthly Comparison</div>
-            <div className="hscroll" style={{ display:"flex", gap:3, background:"#f5f5f5", borderRadius:8, padding:3 }}>
-              {[["total","Total"],["needs","Needs"],["wants","Wants"],["savings","Savings"],["joint","Joint"],["mom","Mom"]].map(([k,l])=>(
-                <button key={k} onClick={()=>setYMetric(k)} style={{ border:"none", cursor:"pointer", borderRadius:7, padding:"4px 10px", fontSize:11, fontFamily:"inherit", whiteSpace:"nowrap", background:yMetric===k?"white":"transparent", color:yMetric===k?"#1a1a1a":"#aaa", fontWeight:yMetric===k?500:400, boxShadow:yMetric===k?"0 1px 3px rgba(0,0,0,0.08)":"none" }}>{l}</button>
-              ))}
-            </div>
-          </div>
-          <div style={{ display:"flex", gap:4, alignItems:"flex-end", height:130 }}>
-            {yrData.map((m,i)=>{
-              const v=vals[i],b=buds[i], bh=(b/maxV)*110, vh=(v/maxV)*110, over=v>b&&b>0;
-              return (
-                <div key={m.month} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:3, cursor:"pointer" }} onClick={()=>{ setMi(i); setView("month"); }}>
-                  <div style={{ position:"relative", width:"100%", height:118, display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
-                    {b>0 && <div style={{ position:"absolute", bottom:bh, left:0, right:0, borderTop:"1.5px dashed "+(over?"#e07070":"#ddd"), zIndex:2 }}/>}
-                    <div style={{ width:"75%", height:Math.max(vh,v>0?3:0), background:over?"#e07070":colMap[yMetric], borderRadius:"4px 4px 0 0", zIndex:1, transition:"height 0.4s" }}/>
+            {/* Net worth circle left + glance right */}
+            <div style={{ display:"flex", gap:12, alignItems:"stretch" }}>
+              {/* Circle */}
+              <div style={{ background:"linear-gradient(145deg,#9CB071,#AEACEB)", borderRadius:24, padding:"20px 16px", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minWidth:mob?130:150, flexShrink:0, position:"relative", overflow:"hidden", boxShadow:"0 6px 20px rgba(156,176,113,0.3)" }}>
+                <div style={{ position:"absolute", top:-20, right:-20, width:70, height:70, borderRadius:"50%", background:"rgba(255,255,255,0.15)", pointerEvents:"none" }}/>
+                <div style={{ position:"absolute", bottom:-20, left:-10, width:50, height:50, borderRadius:"50%", background:"rgba(255,255,255,0.1)", pointerEvents:"none" }}/>
+                <div style={{ fontSize:9, fontWeight:700, color:"rgba(255,255,255,0.75)", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:8 }}>Net Worth</div>
+                <div style={{ position:"relative", width:mob?84:96, height:mob?84:96, marginBottom:10 }}>
+                  <svg viewBox="0 0 100 100" style={{ width:"100%", height:"100%", transform:"rotate(-90deg)" }}>
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="9"/>
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="white" strokeWidth="9"
+                      strokeDasharray={`${Math.min((netWorth/500000)*264,264)} 264`} strokeLinecap="round"/>
+                  </svg>
+                  <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center" }}>
+                    <div style={{ fontSize:mob?12:14, fontWeight:900, color:"white", textAlign:"center", lineHeight:1.1 }}>{moneyS(netWorth)}</div>
                   </div>
-                  <span style={{ fontSize:9, color:i===mi?"#7CBD8F":"#ccc", fontWeight:i===mi?600:400 }}>{m.month}</span>
-                  {!mob&&v>0 && <span style={{ fontSize:8, color:"#bbb" }}>{moneyS(v).replace("$","")}</span>}
                 </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <div style={S.card}>
-          <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:12 }}>Month-by-Month</div>
-          {mob ? (
-            <>
-            {yrData.map((m,i)=>{
-              const over = m.s.needs>m.b.needs||m.s.wants>m.b.wants;
-              const hasData = m.b.inc>0||m.s.total>0;
-              const totalOut = m.s.needs+m.s.wants+m.s.savings+m.b.joint+m.b.mom;
-              const net = m.b.inc - totalOut;
-              return (
-                <div key={m.month} className="row" style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 5px", cursor:"pointer", borderBottom:"1px solid #f8f8f8", background:i===mi?MONTH_BG[i]+"99":"transparent", borderRadius:8 }} onClick={()=>{ setMi(i); setView("month"); }}>
-                  <span style={{ fontSize:13, fontWeight:i===mi?600:400, color:i===mi?"#7CBD8F":"#333", width:34 }}>{m.month}</span>
-                  <span style={{ fontSize:12, color:"#888", flex:1 }}>{m.b.inc>0?moneyS(m.b.inc):"—"}</span>
-                  <span style={{ fontSize:13, fontWeight:500, marginRight:10 }}>{m.s.total>0?moneyS(m.s.total):"—"}</span>
-                  {!hasData?<span style={{ fontSize:10, color:"#ddd" }}>—</span>:<span style={{ fontSize:11, fontWeight:600, color:net>=0?"#7CBD8F":"#c04040" }}>{net>=0?"+":""}{moneyS(net)}</span>}
-                </div>
-              );
-            })}
-            {/* Mobile totals row */}
-            {(()=>{
-              const totalInc = yrData.reduce((s,m)=>s+m.b.inc,0);
-              const totalOut = yrData.reduce((s,m)=>s+m.s.needs+m.s.wants+m.s.savings+m.b.joint+m.b.mom,0);
-              const totalNet = totalInc - totalOut;
-              return (
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"12px 5px", borderTop:"2px solid #eee", marginTop:4 }}>
-                  <span style={{ fontSize:12, fontWeight:600, color:"#555", width:34 }}>Total</span>
-                  <span style={{ fontSize:12, color:"#888", flex:1 }}>{moneyS(totalInc)}</span>
-                  <span style={{ fontSize:13, fontWeight:600, marginRight:10 }}>{moneyS(totalOut)}</span>
-                  <span style={{ fontSize:13, fontWeight:700, color:totalNet>=0?"#7CBD8F":"#c04040" }}>{totalNet>=0?"+":""}{moneyS(totalNet)}</span>
-                </div>
-              );
-            })()}
-            </>
-          ) : (
-            <>
-              <div style={{ display:"grid", gridTemplateColumns:"48px 75px 80px 80px 68px 60px 55px 80px 80px 70px", gap:"0 8px", paddingBottom:8, borderBottom:"1px solid #f5f5f5", marginBottom:4 }}>
-                {["Month","Income","Needs","Wants","Savings","Joint","Mom","Spent","Net","Status"].map(h=><div key={h} style={{ fontSize:10, color:"#ccc", textTransform:"uppercase", letterSpacing:"0.06em" }}>{h}</div>)}
-              </div>
-              {yrData.map((m,i)=>{
-                const hasData = m.b.inc>0||m.s.total>0;
-                const over = m.s.needs>m.b.needs||m.s.wants>m.b.wants;
-                const totalOut = m.s.needs+m.s.wants+m.s.savings+m.b.joint+m.b.mom;
-                const net = m.b.inc - totalOut;
-                const nOver = m.s.needs>m.b.needs&&m.b.needs>0;
-                const wOver = m.s.wants>m.b.wants&&m.b.wants>0;
-                return (
-                  <div key={m.month} className="row" style={{ display:"grid", gridTemplateColumns:"48px 75px 80px 80px 68px 60px 55px 80px 80px 70px", gap:"0 8px", padding:"9px 5px", alignItems:"center", cursor:"pointer", background:i===mi?MONTH_BG[i]+"99":"transparent", borderRadius:8 }} onClick={()=>{ setMi(i); setView("month"); }}>
-                    <span style={{ fontSize:13, fontWeight:i===mi?600:400, color:i===mi?"#7CBD8F":"#333" }}>{m.month}</span>
-                    <span style={{ fontSize:12, color:"#666" }}>{m.b.inc>0?moneyS(m.b.inc):"—"}</span>
-                    <span style={{ fontSize:12, color:nOver?"#c04040":"#7CBD8F", fontWeight:nOver?600:400 }}>{m.s.needs>0?moneyS(m.s.needs):"—"}{nOver&&<span style={{ fontSize:10 }}> ▲</span>}</span>
-                    <span style={{ fontSize:12, color:wOver?"#c04040":"#E87FA0", fontWeight:wOver?600:400 }}>{m.s.wants>0?moneyS(m.s.wants):"—"}{wOver&&<span style={{ fontSize:10 }}> ▲</span>}</span>
-                    <span style={{ fontSize:12, color:"#7CBD8F" }}>{m.b.savings>0?moneyS(m.b.savings):"—"}</span>
-                    <span style={{ fontSize:12, color:"#7DB8D4" }}>{moneyS(m.b.joint)}</span>
-                    <span style={{ fontSize:12, color:"#D4849E" }}>{moneyS(m.b.mom)}</span>
-                    <span style={{ fontSize:13, fontWeight:500 }}>{m.s.total>0?moneyS(m.s.total):"—"}</span>
-                    <span style={{ fontSize:13, fontWeight:600, color:hasData?(net>=0?"#7CBD8F":"#c04040"):"#ccc" }}>{hasData?(net>=0?"+":"")+moneyS(net):"—"}</span>
-                    <div>{!hasData?<span style={{ fontSize:10, color:"#ddd" }}>—</span>:<span style={{ fontSize:10, padding:"2px 8px", borderRadius:99, background:over?"#fdeaea":"#EDEAF8", color:over?"#c04040":"#7CBD8F", fontWeight:500 }}>{over?"Over":"On track"}</span>}</div>
-                  </div>
-                );
-              })}
-              {/* Totals row */}
-              {(()=>{
-                const totalInc  = yrData.reduce((s,m)=>s+m.b.inc,0);
-                const totalNeed = yrData.reduce((s,m)=>s+m.s.needs,0);
-                const totalWant = yrData.reduce((s,m)=>s+m.s.wants,0);
-                const totalSav  = yrData.reduce((s,m)=>s+m.b.savings,0);
-                const totalJoin = yrData.reduce((s,m)=>s+m.b.joint,0);
-                const totalMom  = yrData.reduce((s,m)=>s+m.b.mom,0);
-                const totalSpent= yrData.reduce((s,m)=>s+m.s.total,0);
-                const totalOut  = yrData.reduce((s,m)=>s+m.s.needs+m.s.wants+m.s.savings+m.b.joint+m.b.mom,0);
-                const totalNet  = totalInc - totalOut;
-                return (
-                  <div style={{ display:"grid", gridTemplateColumns:"48px 75px 80px 80px 68px 60px 55px 80px 80px 70px", gap:"0 8px", padding:"10px 5px", alignItems:"center", borderTop:"2px solid #eee", marginTop:4 }}>
-                    <span style={{ fontSize:12, fontWeight:700, color:"#555" }}>Total</span>
-                    <span style={{ fontSize:12, fontWeight:600, color:"#555" }}>{moneyS(totalInc)}</span>
-                    <span style={{ fontSize:12, fontWeight:600, color:"#7CBD8F" }}>{moneyS(totalNeed)}</span>
-                    <span style={{ fontSize:12, fontWeight:600, color:"#E87FA0" }}>{moneyS(totalWant)}</span>
-                    <span style={{ fontSize:12, fontWeight:600, color:"#7CBD8F" }}>{moneyS(totalSav)}</span>
-                    <span style={{ fontSize:12, fontWeight:600, color:"#7DB8D4" }}>{moneyS(totalJoin)}</span>
-                    <span style={{ fontSize:12, fontWeight:600, color:"#D4849E" }}>{moneyS(totalMom)}</span>
-                    <span style={{ fontSize:13, fontWeight:700 }}>{moneyS(totalSpent)}</span>
-                    <span style={{ fontSize:13, fontWeight:700, color:totalNet>=0?"#7CBD8F":"#c04040" }}>{totalNet>=0?"+":""}{moneyS(totalNet)}</span>
-                    <span/>
-                  </div>
-                );
-              })()}
-            </>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // ── Main ─────────────────────────────────────
-  return (
-    <div style={{ fontFamily:"'DM Sans',sans-serif", background:"#FAF8F5", minHeight:"100vh", padding: mob?"14px 12px":"24px 18px", color:"#1a1a1a" }}>
-      {showAlloc && <AllocModal/>}
-
-      <div style={{ maxWidth:1100, margin:"0 auto" }}>
-
-        {/* Header */}
-        <div style={{ marginBottom:16, display:"flex", justifyContent:"space-between", alignItems:"flex-end" }}>
-          <div>
-            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-              <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?22:27, fontWeight:600 }}>budget.</h1>
-              <select value={year} onChange={e=>switchYear(Number(e.target.value))} style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?14:16, fontWeight:600, border:"none", background:"transparent", color:"#bbb", cursor:"pointer", outline:"none", appearance:"none", paddingRight:4 }}>
-                {Array.from({length: Math.max(year, CURRENT_YEAR) - 2024 + 3}, (_,i) => 2024+i).map(y=><option key={y} value={y}>{y}</option>)}
-              </select>
-            </div>
-            <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-              <p style={{ fontSize:12, color:"#bbb", fontWeight:300 }}>Vanni</p>
-              <div title={syncStatus} style={{ width:7, height:7, borderRadius:"50%", background: syncStatus==="synced"?"#7CBD8F": syncStatus==="syncing"?"#E87FA0":"#e07070", transition:"background 0.3s" }}/>
-            </div>
-          </div>
-        </div>
-
-        {/* Nav — horizontally scrollable on mobile */}
-        <div className="hscroll" style={{ marginBottom:18 }}>
-          <div style={{ display:"flex", gap:3, background:"#EDE9E4", borderRadius:14, padding:4, width:"fit-content" }}>
-            {[["home","🏠 Home"],["month","📅 Month"],["investments","📈 Invest"],["yearly","📊 Yearly"],["recurring","🔁 Recurring"],["goals","🎯 Goals"],["categories","🏷️ Categories"]].map(([k,l])=>(
-              <button key={k} onClick={()=>setView(k)} style={{ border:"none", cursor:"pointer", padding: mob?"7px 10px":"7px 14px", borderRadius:9, fontSize: mob?11:12, fontFamily:"inherit", whiteSpace:"nowrap", background:view===k?"white":"transparent", color:view===k?"#1E2B38":"#A0978C", fontWeight:view===k?600:400, boxShadow:view===k?"0 2px 6px rgba(0,0,0,0.08)":"none", borderRadius:10 }}>{l}</button>
-            ))}
-          </div>
-        </div>
-
-        {/* Month pills — browser tab style */}
-        {view==="month" && (
-          <div style={{ marginBottom:0, paddingBottom:0, overflowX:"auto", display:"flex", WebkitOverflowScrolling:"touch" }}>
-            <div style={{ display:"flex", gap:0, minWidth:"max-content" }}>
-              {(() => {
-                const MCOLS = ["#FFD6E0","#FFE8A3","#C8EAD3","#C8E4F5","#F5C0D2","#FDEAA0","#B8E8C8","#A8D8F0","#FFD0E0","#FFF0A0","#C0E8D0","#D0E8F8"];
-                return MONTHS.map((m,i)=>{
-                  const active = i===mi;
-                  const hasTxns = allTxns[i]&&allTxns[i].length>0;
-                  const col = MCOLS[i];
-                  return (
-                    <button key={m} onClick={()=>setMi(i)} style={{
-                      border:"none",
-                      borderBottom: active?"3px solid "+col:"3px solid transparent",
-                      cursor:"pointer",
-                      borderRadius:"10px 10px 0 0",
-                      padding:"8px 13px",
-                      fontSize:12,
-                      fontFamily:"'Playfair Display',serif",
-                      background: active ? col : "rgba(255,255,255,0.5)",
-                      color: active ? "#1E2B38" : hasTxns ? "#888" : "#ccc",
-                      fontWeight: active ? 700 : hasTxns ? 500 : 400,
-                      flexShrink:0,
-                      letterSpacing:"0.01em",
-                      boxShadow: active ? "0 -2px 8px rgba(0,0,0,0.06)" : "none",
-                      transition:"background 0.15s, color 0.15s, box-shadow 0.15s",
-                      position:"relative",
-                      zIndex: active ? 2 : 1,
-                    }}>
-                      {m}{hasTxns&&!active?" ·":""}
-                    </button>
-                  );
-                });
-              })()}
-            </div>
-          </div>
-        )}
-        {/* Tab underline connector */}
-        {view==="month" && (
-          <div style={{ height:3, background:"#EEF0F4", marginBottom:18, borderRadius:"0 0 4px 4px" }}/>
-        )}
-
-        {/* View content — swipeable */}
-        <div onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} style={{ WebkitUserSelect:"none", userSelect:"none" }}>
-
-        {view==="home" && (() => {
-          const totalInvested = investments.reduce((s,inv)=>s+(inv.entries&&inv.entries.length>0?inv.entries[inv.entries.length-1].value:0),0);
-          const activeGoals = goals.filter(g=>!g.archived);
-          const totalSaved  = activeGoals.reduce((s,g)=>s+g.saved,0);
-          const netWorth    = totalInvested + totalSaved;
-          const thisYear    = allYearsData.find(d=>d.year===year) || {};
-          return (
-          <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
-
-            {/* Net worth hero */}
-            <div style={{ background:"linear-gradient(135deg,#7CBD8F,#7DB8D4)", borderRadius:20, padding: mob?"20px 18px":"28px 28px 24px", boxShadow:"0 6px 24px rgba(124,189,143,0.2)" }}>
-              <div style={{ fontSize:10, color:"rgba(255,255,255,0.7)", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:6 }}>Total Net Worth</div>
-              <div style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?32:42, fontWeight:600, color:"white", marginBottom:4 }}>{moneyS(netWorth)}</div>
-              <div style={{ display:"flex", gap:16, flexWrap:"wrap", marginTop:12 }}>
-                {[{l:"Investments",v:totalInvested,c:"rgba(255,255,255,0.9)"},{l:"Goal Savings",v:totalSaved,c:"rgba(255,255,255,0.9)"}].map(s=>(
-                  <div key={s.l}>
-                    <div style={{ fontSize:9, color:"rgba(255,255,255,0.6)", textTransform:"uppercase", letterSpacing:"0.08em" }}>{s.l}</div>
-                    <div style={{ fontSize: mob?16:20, fontWeight:600, color:s.c, fontFamily:"'Playfair Display',serif" }}>{moneyS(s.v)}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Spring decorative dots row */}
-            <div style={{ display:"flex", gap:8, justifyContent:"center", margin:"-6px 0 2px" }}>
-              {["#B2D8BF","#FDEAA0","#C8E4F5","#F5C0D2","#B2D8BF"].map((col,i)=>(
-                <div key={i} style={{ width:6, height:6, borderRadius:"50%", background:col, opacity:0.7 }}/>
-              ))}
-            </div>
-
-            {/* This year snapshot */}
-            {thisYear.hasData && (
-              <div style={S.card}>
-                <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14 }}>{year} at a glance</div>
-                <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
-                  {[
-                    {l:"Income",    v:thisYear.totalInc,   c:"#6AABDA"},
-                    {l:"Spent",     v:thisYear.totalSpent,  c:"#E87FA0"},
-                    {l:"Net",       v:thisYear.net,         c:thisYear.net>=0?"#7CBD8F":"#c04040"},
-                  ].map(s=>(
-                    <div key={s.l} style={{ textAlign:"center", padding:"14px 8px", background:"#FAFAF8", borderRadius:14, border:"1px solid #EEE9E0" }}>
-                      <div style={{ fontSize:10, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:6 }}>{s.l}</div>
-                      <div style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?15:19, fontWeight:600, color:s.c }}>{s.v<0?"-":""}{moneyS(Math.abs(s.v))}</div>
+                <div style={{ display:"flex", flexDirection:"column", gap:4, width:"100%" }}>
+                  {[{l:"Invest",v:totalInvested,dot:"#F0DB7D"},{l:"Goals",v:totalSaved,dot:"#FFB7D5"}].map(s=>(
+                    <div key={s.l} style={{ display:"flex", alignItems:"center", gap:5 }}>
+                      <div style={{ width:6, height:6, borderRadius:"50%", background:s.dot, flexShrink:0 }}/>
+                      <div style={{ fontSize:9, fontWeight:600, color:"rgba(255,255,255,0.7)", flex:1 }}>{s.l}</div>
+                      <div style={{ fontSize:10, fontWeight:800, color:"white" }}>{moneyS(s.v)}</div>
                     </div>
                   ))}
                 </div>
               </div>
-            )}
 
-            {/* Investment accounts */}
-            {investments.length>0 && (
-              <div style={S.card}>
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
-                  <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em" }}>Investments</div>
-                  <button className="tbtn" onClick={()=>setView("investments")} style={{ fontSize:11, color:"#bbb", background:"none", padding:0 }}>Manage →</button>
-                </div>
-                {investments.map(inv=>{
-                  const latest = inv.entries&&inv.entries.length>0?inv.entries[inv.entries.length-1].value:0;
-                  const first  = inv.entries&&inv.entries.length>0?inv.entries[0].value:0;
-                  const gain   = latest-first;
-                  const pct    = first>0?(gain/first*100):0;
-                  return (
-                    <div key={inv.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 0", borderBottom:"1px solid #f8f8f8" }}>
-                      <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                        <div style={{ width:10, height:10, borderRadius:"50%", background:inv.color, flexShrink:0 }}/>
-                        <div>
-                          <div style={{ fontSize:13, fontWeight:500 }}>{inv.name}</div>
-                          <div style={{ fontSize:10, color:"#bbb" }}>{inv.type}</div>
-                        </div>
+              {/* Glance cards */}
+              <div style={{ flex:1, display:"flex", flexDirection:"column", gap:8 }}>
+                <div style={{ fontSize:11, fontWeight:800, color:"#9D5783", textTransform:"uppercase", letterSpacing:"0.08em" }}>{year} at a glance</div>
+                {thisYear.hasData ? (
+                  <>
+                    {[
+                      {l:"Income",  v:thisYear.totalInc,   bg:"#B7CEEC", c:"#1A3D60"},
+                      {l:"Spent",   v:thisYear.totalSpent,  bg:"#FFB7D5", c:"#701040"},
+                      {l:"Net",     v:thisYear.net,         bg:thisYear.net>=0?"#9CB071":"#FD9FA2", c:thisYear.net>=0?"#2A4A10":"#801010"},
+                    ].map(s=>(
+                      <div key={s.l} style={{ background:s.bg, borderRadius:12, padding:"10px 14px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                        <span style={{ fontSize:11, fontWeight:800, color:s.c, textTransform:"uppercase", letterSpacing:"0.05em" }}>{s.l}</span>
+                        <span style={{ fontSize:mob?13:15, fontWeight:900, color:s.c }}>{s.v<0?"-":""}{moneyS(Math.abs(s.v))}</span>
                       </div>
-                      <div style={{ textAlign:"right" }}>
-                        <div style={{ fontSize:14, fontWeight:600, fontFamily:"'Playfair Display',serif" }}>{moneyS(latest)}</div>
-                        {gain!==0&&<div style={{ fontSize:10, color:gain>0?"#7CBD8F":"#c04040", fontWeight:500 }}>{gain>0?"▲":"▼"} {moneyS(Math.abs(gain))} {pct!==0&&`(${pct.toFixed(1)}%)`}</div>}
-                      </div>
-                    </div>
-                  );
-                })}
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", paddingTop:10, marginTop:4 }}>
-                  <span style={{ fontSize:12, color:"#888", fontWeight:500 }}>Total</span>
-                  <span style={{ fontSize:16, fontWeight:700, fontFamily:"'Playfair Display',serif", color:"#7CBD8F" }}>{moneyS(totalInvested)}</span>
-                </div>
-              </div>
-            )}
-
-            {/* Goals summary */}
-            {activeGoals.length>0 && (
-              <div style={S.card}>
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
-                  <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em" }}>Goals</div>
-                  <button className="tbtn" onClick={()=>setView("goals")} style={{ fontSize:11, color:"#bbb", background:"none", padding:0 }}>Manage →</button>
-                </div>
-                {activeGoals.map(g=>{
-                  const pct = n(g.target)>0?Math.min(g.saved/n(g.target)*100,100):0;
-                  const done = pct>=100;
-                  return (
-                    <div key={g.id} style={{ marginBottom:14 }}>
-                      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
-                        <span style={{ fontSize:13, fontWeight:500 }}>{g.name}</span>
-                        <span style={{ fontSize:12, fontWeight:600, color:done?"#7CBD8F":"#7CBD8F" }}>{moneyS(g.saved)} / {moneyS(g.target)}</span>
-                      </div>
-                      <div style={{ background:"#f0f0f0", borderRadius:99, height:6, overflow:"hidden" }}>
-                        <div style={{ width:pct+"%", height:"100%", borderRadius:99, background:done?"#7CBD8F":"#B2D8BF", transition:"width 0.4s" }}/>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Year-by-year table */}
-            {allYearsData.length>0 && (
-              <div style={S.card}>
-                <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14 }}>Year by Year</div>
-                {allYearsData.map(d=>(
-                  <div key={d.year} className="row" onClick={()=>{ switchYear(d.year); setView("yearly"); }}
-                    style={{ display:"grid", gridTemplateColumns: mob?"60px 1fr 1fr 80px":"80px 1fr 1fr 1fr 90px", gap:"0 12px", padding:"10px 5px", alignItems:"center", cursor:"pointer", background:d.year===year?"#F0F8F6":"transparent", borderRadius:8, borderBottom:"1px solid #f8f8f8" }}>
-                    <span style={{ fontSize:13, fontWeight:d.year===year?600:400, color:d.year===year?"#7CBD8F":"#333" }}>{d.year}</span>
-                    <div>
-                      <div style={{ fontSize:10, color:"#bbb" }}>Income</div>
-                      <div style={{ fontSize:12, fontWeight:500 }}>{d.totalInc>0?moneyS(d.totalInc):"—"}</div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize:10, color:"#bbb" }}>Spent</div>
-                      <div style={{ fontSize:12, fontWeight:500 }}>{d.totalSpent>0?moneyS(d.totalSpent):"—"}</div>
-                    </div>
-                    {!mob && <div>
-                      <div style={{ fontSize:10, color:"#bbb" }}>Fixed</div>
-                      <div style={{ fontSize:12 }}>{moneyS(d.totalJoint+d.totalMom)}</div>
-                    </div>}
-                    <div style={{ textAlign:"right" }}>
-                      <div style={{ fontSize:10, color:"#bbb" }}>Net</div>
-                      <div style={{ fontSize:13, fontWeight:700, color:d.net>=0?"#7CBD8F":"#c04040" }}>{d.net>=0?"+":""}{moneyS(d.net)}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-          </div>
-          );
-        })()}
-
-          {view==="month"      && MonthView()}
-          {view==="yearly"     && YearlyView()}
-
-          {view==="recurring" && (
-          <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
-            <div style={{ ...S.card, background:"#fff8f0", border:"1px solid #F5C9A8", boxShadow:"none" }}>
-              <div style={{ fontSize:12, color:"#D4826A", fontWeight:500, marginBottom:4 }}>🔁 How recurring works</div>
-              <p style={{ fontSize:12, color:"#888", lineHeight:1.7 }}>Set these up once. At the start of each month, hit <strong>"Apply recurring"</strong> in the Month tab.</p>
-            </div>
-            <div style={S.card}>
-              <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:6 }}>
-                Recurring {recur.length>0 && <span style={{ marginLeft:8, fontSize:12 }}>· {money(recur.reduce((s,r)=>s+n(r.amount),0))}/mo base</span>}
-              </div>
-              <div style={{ fontSize:11, color:"#D4826A", marginBottom:14 }}>Set a "{MONTHS[mi]} override" below to use a different amount this month only.</div>
-              {recur.length===0 ? <p style={{ fontSize:13, color:"#ccc", textAlign:"center", padding:"20px 0" }}>None set up yet</p> : recur.map(r=>{
-                const cat=cats.find(c=>c.id===r.catId);
-                const tc={ Need:{bg:"#EDEAF8",text:"#7CBD8F"},Want:{bg:"#FDF0E8",text:"#E87FA0"},Saving:{bg:"#EDEAF8",text:"#7CBD8F"} };
-                const ts=tc[r.txnType]||tc.Need;
-                const overKey = `${mi}-${r.id}`;
-                const hasOverride = recurOverrides[overKey] !== undefined;
-                return (
-                  <div key={r.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"10px 4px", borderBottom:"1px solid #f8f8f8", flexWrap:"wrap", gap:8 }}>
-                    <div style={{ flex:1, minWidth:140 }}>
-                      <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:3 }}>
-                        <span>🔁</span>
-                        <span style={{ fontSize:13, fontWeight:500 }}>{r.desc}</span>
-                        <span style={{ fontSize:11, padding:"1px 6px", borderRadius:99, background:ts.bg, color:ts.text }}>{r.txnType}</span>
-                      </div>
-                      <div style={{ fontSize:11, color:"#bbb" }}>{cat?.name||"—"} · Day {r.day}</div>
-                    </div>
-                    <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
-                      <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:3 }}>
-                        <span style={{ fontSize:11, color:"#bbb" }}>Base: {money(r.amount)}</span>
-                        <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-                          <span style={{ fontSize:10, color:"#D4826A" }}>{MONTHS[mi]}:</span>
-                          <div style={{ position:"relative", width:90 }}><DS/><input style={{ ...dInp({ fontSize:16, width:90 }), borderColor: hasOverride?"#FDEAA0":"#eee" }} placeholder={r.amount} value={recurOverrides[overKey]||""} onChange={e=>{
-                            const val = e.target.value;
-                            setRecurOverrides(p=>({ ...p, [overKey]: val===''?undefined:val }));
-                          }}/></div>
-                          {hasOverride && <button className="xbtn" style={{ fontSize:12 }} onPointerDown={e=>{e.preventDefault();setRecurOverrides(p=>{ const n2={...p}; delete n2[overKey]; return n2; })}}>×</button>}
-                        </div>
-                      </div>
-                      <button className="xbtn" onPointerDown={e=>{e.preventDefault();setRecur(p=>p.filter(x=>x.id!==r.id))}}>×</button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div style={{ ...S.card, border:"2px dashed #eee", boxShadow:"none" }}>
-              <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14 }}>Add Recurring</div>
-              <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"flex-end" }}>
-                <div style={{ flex:"2 1 140px" }}><FL>Description</FL><input style={inp} placeholder="e.g. Spotify" value={newRec.desc} onChange={e=>setNewRec(p=>({...p,desc:e.target.value}))}/></div>
-                <div style={{ flex:"1 1 90px" }}><FL>Amount</FL><div style={{ position:"relative" }}><DS/><input style={dInp({fontSize:16})} placeholder="0.00" value={newRec.amount} onChange={e=>setNewRec(p=>({...p,amount:e.target.value}))}/></div></div>
-                <div style={{ flex:"1 1 90px" }}><FL>Type</FL><select style={{ ...inp, cursor:"pointer", fontSize:16 }} value={newRec.txnType} onChange={e=>setNewRec(p=>({...p,txnType:e.target.value}))}><option>Need</option><option>Want</option><option>Saving</option></select></div>
-                <div style={{ flex:"2 1 120px" }}><FL>Category</FL><select style={{ ...inp, cursor:"pointer", fontSize:16 }} value={newRec.catId} onChange={e=>setNewRec(p=>({...p,catId:Number(e.target.value)}))}><option value="">Select…</option><optgroup label="Needs">{cats.filter(c=>c.type==="Need").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup><optgroup label="Wants">{cats.filter(c=>c.type==="Want").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup></select></div>
-                <div style={{ flex:"0 0 70px" }}><FL>Day</FL><input style={{...inp, fontSize:16}} type="number" min="1" max="31" value={newRec.day} onChange={e=>setNewRec(p=>({...p,day:e.target.value}))}/></div>
-                <button className="tbtn" onClick={addRecurring} style={{ padding:"8px 18px", background:"#7CBD8F", color:"white", borderRadius:8 }}>+ Add</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {view==="goals" && (
-          <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
-
-            {/* Goals grid — color-blocked cards */}
-            {activeGoals.length>0 && (
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:12 }}>
-                {activeGoals.map((goal, gi)=>{
-                  const GCOLS = ["#FFD6E0","#C8E4F5","#C8EAD3","#FFE8A3","#F5C0D2","#A8D8F0","#FDEAA0","#B8E8C8"];
-                  const col = GCOLS[gi % GCOLS.length];
-                  const rem = Math.max(n(goal.target)-goal.saved,0);
-                  const pct = n(goal.target)>0?Math.min(goal.saved/n(goal.target)*100,100):0;
-                  const done = rem===0;
-                  const textCol = "#2C3E50";
-                  return (
-                    <div key={goal.id} style={{ background:col, borderRadius:20, padding:"18px 16px 14px", position:"relative", overflow:"hidden", boxShadow:"0 4px 16px rgba(0,0,0,0.08)" }}>
-                      {/* Decorative circle */}
-                      <div style={{ position:"absolute", bottom:-20, right:-20, width:80, height:80, borderRadius:"50%", background:"rgba(255,255,255,0.25)", pointerEvents:"none" }}/>
-                      {/* Delete */}
-                      <button className="xbtn" onPointerDown={e=>{e.preventDefault();delGoal(goal.id)}} style={{ position:"absolute", top:10, right:10, fontSize:16, color:"rgba(0,0,0,0.3)" }}>×</button>
-                      {/* Name */}
-                      <div style={{ fontSize:13, fontWeight:700, color:textCol, marginBottom:2, paddingRight:20 }}>{goal.name}</div>
-                      <div style={{ fontSize:10, color:"rgba(0,0,0,0.45)", marginBottom:12 }}>{done?"🎉 Complete!":money(rem)+" to go"}</div>
-                      {/* Big percentage */}
-                      <div style={{ fontFamily:"'Playfair Display',serif", fontSize:32, fontWeight:700, color:textCol, lineHeight:1, marginBottom:8 }}>{Math.round(pct)}<span style={{ fontSize:16 }}>%</span></div>
-                      {/* Progress bar */}
-                      <div style={{ background:"rgba(255,255,255,0.5)", borderRadius:99, height:6, overflow:"hidden", marginBottom:10 }}>
-                        <div style={{ width:pct+"%", height:"100%", borderRadius:99, background:"rgba(0,0,0,0.2)", transition:"width 0.4s" }}/>
-                      </div>
-                      {/* Saved / Target */}
-                      <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, color:"rgba(0,0,0,0.55)", marginBottom: done?0:10 }}>
-                        <span><b style={{ color:textCol }}>{moneyS(goal.saved)}</b> saved</span>
-                        <span>of <b style={{ color:textCol }}>{moneyS(goal.target)}</b></span>
-                      </div>
-                      {/* Add savings input */}
-                      {!done && (
-                        <div style={{ display:"flex", gap:6, alignItems:"center" }}>
-                          <div style={{ position:"relative", flex:1 }}>
-                            <span style={{ position:"absolute", left:9, top:"50%", transform:"translateY(-50%)", fontSize:12, color:"rgba(0,0,0,0.4)" }}>$</span>
-                            <input style={{ border:"none", background:"rgba(255,255,255,0.6)", borderRadius:8, padding:"7px 8px 7px 20px", fontSize:13, fontFamily:"inherit", outline:"none", width:"100%", boxSizing:"border-box", color:textCol }} placeholder="0.00" value={addSav[goal.id]||""} onChange={e=>setAddSav(p=>({...p,[goal.id]:e.target.value}))}/>
-                          </div>
-                          <button className="tbtn" onClick={()=>saveGoal(goal.id)} style={{ padding:"7px 12px", background:"rgba(255,255,255,0.7)", color:textCol, border:"none", borderRadius:8, fontWeight:600, fontSize:12 }}>+ Save</button>
-                        </div>
-                      )}
-                      {done && <button onClick={()=>archGoal(goal.id)} style={{ fontSize:11, padding:"5px 14px", borderRadius:99, background:"rgba(255,255,255,0.6)", color:textCol, border:"none", cursor:"pointer", fontFamily:"inherit", fontWeight:600 }}>Archive ✓</button>}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Add new goal */}
-            <div style={{ ...S.card, border:"2px dashed #D0D8E8", boxShadow:"none" }}>
-              <div style={{ fontSize:11, color:"#B0B8C0", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14 }}>New Goal</div>
-              <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"flex-end" }}>
-                <div style={{ flex:"2 1 140px" }}><FL>Name</FL><input style={inp} placeholder="e.g. Europe Trip" value={newGoal.name} onChange={e=>setNewGoal(p=>({...p,name:e.target.value}))}/></div>
-                <div style={{ flex:"1 1 100px" }}><FL>Target</FL><div style={{ position:"relative" }}><DS/><input style={dInp({fontSize:16})} placeholder="5000" value={newGoal.target} onChange={e=>setNewGoal(p=>({...p,target:e.target.value}))}/></div></div>
-                <div style={{ flex:"1 1 100px" }}><FL>Already saved</FL><div style={{ position:"relative" }}><DS/><input style={dInp({fontSize:16})} placeholder="0" value={newGoal.saved} onChange={e=>setNewGoal(p=>({...p,saved:e.target.value}))}/></div></div>
-                <button className="tbtn" onClick={()=>{ if(!newGoal.name.trim()||!newGoal.target) return; setGoals(p=>[...p,{...newGoal,id:Date.now(),saved:n(newGoal.saved),archived:false}]); setNewGoal({name:"",target:"",saved:""}); }} style={{ padding:"8px 20px", background:"#7CBD8F", color:"white", borderRadius:10 }}>+ Add Goal</button>
-              </div>
-            </div>
-
-            {/* Archived */}
-            {archGoals.length>0 && (
-              <div>
-                <button className="tbtn" onClick={()=>setShowArchived(p=>!p)} style={{ fontSize:12, color:"#B0B8C0", background:"none", padding:"6px 0", marginBottom:8 }}>
-                  {showArchived?"▾":"▸"} {archGoals.length} archived goal{archGoals.length!==1?"s":""}
-                </button>
-                {showArchived && archGoals.map(goal=>(
-                  <div key={goal.id} style={{ ...S.card, opacity:0.6, borderLeft:"4px solid #ddd", marginBottom:10 }}>
-                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                      <div><div style={{ fontSize:14, fontWeight:500, color:"#888" }}>{goal.name}</div><div style={{ fontSize:11, color:"#bbb" }}>🎉 Completed · {money(goal.saved)} saved</div></div>
-                      <div style={{ display:"flex", gap:8 }}>
-                        <button onPointerDown={e=>{e.preventDefault();restoreGoal(goal.id)}} style={{ fontSize:11, padding:"4px 10px", borderRadius:99, background:"#f5f5f5", color:"#888", border:"1px solid #eee", cursor:"pointer", fontFamily:"inherit" }}>Restore</button>
-                        <button className="xbtn" onPointerDown={e=>{e.preventDefault();delGoal(goal.id)}}>×</button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {view==="investments" && (
-          <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
-
-            {/* Summary cards */}
-            {investments.length>0 && (
-              <div style={{ display:"grid", gridTemplateColumns: mob?"repeat(2,1fr)":"repeat(4,1fr)", gap:10 }}>
-                {investments.map(inv=>{
-                  const latest = inv.entries&&inv.entries.length>0 ? inv.entries[inv.entries.length-1].value : 0;
-                  const prev   = inv.entries&&inv.entries.length>1 ? inv.entries[inv.entries.length-2].value : latest;
-                  const change = latest - prev;
-                  return (
-                    <div key={inv.id} className="bucket-card" style={{ background:inv.color, borderRadius:16, padding: mob?"13px 11px":"17px 17px 15px", boxShadow:"0 4px 16px rgba(0,0,0,0.1)" }}>
-                      <div style={{ fontSize:9, color:"rgba(255,255,255,0.75)", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:4, fontWeight:600 }}>{inv.type}</div>
-                      <div style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?15:20, fontWeight:600, color:"white", marginBottom:2 }}>{moneyS(latest)}</div>
-                      {!mob && <div style={{ fontSize:10, color:"rgba(255,255,255,0.7)" }}>{inv.name}</div>}
-                      {change!==0 && <div style={{ fontSize:10, fontWeight:600, color:"rgba(255,255,255,0.9)", marginTop:4 }}>{change>0?"+":""}{moneyS(change)}</div>}
-                    </div>
-                  );
-                })}
-                {/* Total card */}
-                <div className="bucket-card" style={{ background:"#7DB8E8", borderRadius:16, padding: mob?"13px 11px":"17px 17px 15px", boxShadow:"0 4px 16px rgba(0,0,0,0.1)" }}>
-                  <div style={{ fontSize:9, color:"rgba(255,255,255,0.75)", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:4, fontWeight:600 }}>Total</div>
-                  <div style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?15:20, fontWeight:600, color:"white" }}>
-                    {moneyS(investments.reduce((s,inv)=>s+(inv.entries&&inv.entries.length>0?inv.entries[inv.entries.length-1].value:0),0))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Account cards */}
-            {investments.map(inv=>{
-              const entries = inv.entries||[];
-              const latest  = entries.length>0 ? entries[entries.length-1].value : 0;
-              const first   = entries.length>0 ? entries[0].value : 0;
-              const totalGain = latest - first;
-              const pct = first>0 ? ((latest-first)/first*100).toFixed(1) : null;
-              return (
-                <div key={inv.id} style={{ ...S.card, borderLeft:"4px solid "+inv.color }}>
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
-                    <div>
-                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                        <div style={{ fontSize:15, fontWeight:600 }}>{inv.name}</div>
-                        <span style={{ fontSize:11, padding:"2px 8px", borderRadius:99, background:inv.color+"22", color:inv.color, fontWeight:500 }}>{inv.type}</span>
-                      </div>
-                      {totalGain!==0 && <div style={{ fontSize:11, color:totalGain>0?"#7CBD8F":"#c04040", marginTop:2 }}>
-                        {totalGain>0?"▲":"▼"} {moneyS(Math.abs(totalGain))} all time {pct&&`(${pct}%)`}
-                      </div>}
-                    </div>
-                    <button className="xbtn" style={{ fontSize:18 }} onPointerDown={e=>{e.preventDefault();setInvestments(p=>p.filter(x=>x.id!==inv.id))}}>×</button>
-                  </div>
-
-                  {/* Line graph + history */}
-                  {entries.length>0 && (
-                    <div style={{ marginBottom:14 }}>
-                      {entries.length>1 && (() => {
-                        const vals = entries.map(e=>e.value);
-                        const minV = Math.min(...vals);
-                        const maxV = Math.max(...vals);
-                        const range = maxV - minV || 1;
-                        const W = 320, H = 80, pad = 8;
-                        const pts = entries.map((e,i)=>{
-                          const x = pad + (i/(entries.length-1))*(W-pad*2);
-                          const y = H - pad - ((e.value-minV)/range)*(H-pad*2);
-                          return [x,y];
-                        });
-                        const pathD = pts.map((p,i)=>(i===0?`M${p[0]},${p[1]}`:`L${p[0]},${p[1]}`)).join(" ");
-                        const areaD = pathD + ` L${pts[pts.length-1][0]},${H-pad} L${pts[0][0]},${H-pad} Z`;
-                        const lastPt = pts[pts.length-1];
-                        const isUp = entries[entries.length-1].value >= entries[0].value;
-                        const lineColor = isUp ? "#7CBD8F" : "#c04040";
-                        const fillColor = isUp ? "#7CBD8F22" : "#c0404022";
-                        return (
-                          <div style={{ marginBottom:14, background:"#fafafa", borderRadius:12, padding:"12px 8px 8px" }}>
-                            <svg viewBox={`0 0 ${W} ${H}`} style={{ width:"100%", height:H, display:"block", overflow:"visible" }}>
-                              {/* Grid lines */}
-                              {[0,0.5,1].map(t=>(
-                                <line key={t} x1={pad} y1={pad+(1-t)*(H-pad*2)} x2={W-pad} y2={pad+(1-t)*(H-pad*2)}
-                                  stroke="#efefef" strokeWidth="1"/>
-                              ))}
-                              {/* Area fill */}
-                              <path d={areaD} fill={fillColor}/>
-                              {/* Line */}
-                              <path d={pathD} fill="none" stroke={lineColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              {/* Dots */}
-                              {pts.map((p,i)=>(
-                                <circle key={i} cx={p[0]} cy={p[1]} r="3" fill={lineColor} stroke="white" strokeWidth="1.5"/>
-                              ))}
-                              {/* Last value label */}
-                              <text x={lastPt[0]} y={lastPt[1]-10} textAnchor="middle" fontSize="9" fill={lineColor} fontWeight="600">
-                                {moneyS(entries[entries.length-1].value)}
-                              </text>
-                              {/* Min/max labels */}
-                              <text x={pad} y={H-1} fontSize="8" fill="#ccc">{moneyS(minV)}</text>
-                              <text x={W-pad} y={H-1} fontSize="8" fill="#ccc" textAnchor="end">{moneyS(maxV)}</text>
-                            </svg>
-                            {/* Date labels */}
-                            <div style={{ display:"flex", justifyContent:"space-between", paddingTop:2, paddingLeft:pad, paddingRight:pad }}>
-                              <span style={{ fontSize:9, color:"#ccc" }}>{entries[0].date}</span>
-                              <span style={{ fontSize:9, color:"#ccc" }}>{entries[entries.length-1].date}</span>
-                            </div>
-                          </div>
-                        );
-                      })()}
-                      <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:8 }}>History</div>
-                      {[...entries].reverse().slice(0,6).map((e,i)=>(
-                        <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 0", borderBottom:"1px solid #f8f8f8" }}>
-                          <span style={{ fontSize:12, color:"#888" }}>{e.date}</span>
-                          <span style={{ fontSize:13, fontWeight:500, color:inv.color }}>{money(e.value)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Update value */}
-                  <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-                    <span style={{ fontSize:12, color:"#bbb" }}>Update value:</span>
-                    <div style={{ position:"relative", flex:1, maxWidth:160 }}><DS/><input style={dInp({fontSize:16})} placeholder="0.00" value={addInvValue[inv.id]||""} onChange={e=>setAddInvValue(p=>({...p,[inv.id]:e.target.value}))}/></div>
-                    <button className="tbtn" onClick={()=>{
-                      const v=n(addInvValue[inv.id]); if(!v&&v!==0) return;
-                      const today=todayStr();
-                      setInvestments(p=>p.map(x=>x.id===inv.id?{...x,entries:[...(x.entries||[]),{date:today,value:v}]}:x));
-                      setAddInvValue(p=>({...p,[inv.id]:""}));
-                    }} style={{ padding:"7px 14px", background:inv.color+"22", color:inv.color, border:"1.5px solid "+inv.color+"44", borderRadius:8, fontSize:12, fontWeight:500 }}>Save</button>
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Add new account */}
-            <div style={{ ...S.card, border:"2px dashed #eee", boxShadow:"none" }}>
-              <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14 }}>Add Account</div>
-              <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"flex-end" }}>
-                <div style={{ flex:"2 1 130px" }}><FL>Name</FL><input style={{...inp,fontSize:16}} placeholder="e.g. Wealthsimple TFSA" value={newInv.name} onChange={e=>setNewInv(p=>({...p,name:e.target.value}))}/></div>
-                <div style={{ flex:"1 1 100px" }}><FL>Type</FL>
-                  <select style={{...inp,cursor:"pointer",fontSize:16}} value={newInv.type} onChange={e=>setNewInv(p=>({...p,type:e.target.value}))}>
-                    {INV_TYPES.map(t=><option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
-                <div style={{ flex:"1 1 110px" }}><FL>Starting value</FL><div style={{ position:"relative" }}><DS/><input style={dInp({fontSize:16})} placeholder="0.00" value={newInv.value} onChange={e=>setNewInv(p=>({...p,value:e.target.value}))}/></div></div>
-                <div style={{ flex:"0 0 auto" }}><FL>Colour</FL>
-                  <div style={{ display:"flex", gap:5 }}>
-                    {INV_COLORS.map(col=>(
-                      <div key={col} onPointerDown={e=>{e.preventDefault();setNewInv(p=>({...p,color:col}))}} style={{ width:22, height:22, borderRadius:"50%", background:col, cursor:"pointer", border: newInv.color===col?"3px solid #333":"2px solid transparent" }}/>
                     ))}
-                  </div>
-                </div>
-                <button className="tbtn" onClick={()=>{
-                  if(!newInv.name.trim()) return;
-                  setInvestments(p=>[...p,{...newInv, id:Date.now(), entries:[{date:todayStr(), value:n(newInv.value)}]}]);
-                  setNewInv({name:'',type:'TFSA',color:'#7CBD8F',value:''});
-                }} style={{ padding:"8px 18px", background:"#7CBD8F", color:"white", borderRadius:8 }}>+ Add</button>
+                  </>
+                ) : (
+                  <div style={{ fontSize:12, color:"#C0C8D0", padding:"10px 0", fontWeight:600 }}>No data for {year}</div>
+                )}
               </div>
             </div>
 
-          </div>
-        )}
 
-
-        {view==="categories" && (
-          <div style={S.card}>
-            <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:16 }}>Your Categories</div>
-            {[["Need","#7CBD8F","#EDEAF8","#B2D8BF"],["Want","#E87FA0","#FDF0E8","#FDEAA0"]].map(([type,text,bg,accent])=>(
-              <div key={type} style={{ marginBottom:20 }}>
-                <div style={{ fontSize:11, fontWeight:600, color:text, textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:10 }}>{type}s</div>
-                <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
-                  {cats.filter(c=>c.type===type).map(cat=>(
-                    <div key={cat.id} style={{ display:"flex", alignItems:"center", gap:6, background:bg, border:"1.5px solid "+accent, borderRadius:99, padding:"5px 12px 5px 14px" }}>
-                      <span style={{ fontSize:13, color:text }}>{cat.name}</span>
-                      <button className="xbtn" style={{ fontSize:14 }} onPointerDown={e=>{e.preventDefault();setCats(p=>p.filter(c=>c.id!==cat.id))}}>×</button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-            <div style={{ borderTop:"1px solid #f0f0f0", paddingTop:16 }}>
-              <div style={{ fontSize:11, color:"#bbb", marginBottom:10 }}>Add a category</div>
-              <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center" }}>
-                <input style={{ ...inp, flex:1, minWidth:130, fontSize:16 }} placeholder="Category name" value={newCat.name}
-                  onChange={e=>setNewCat(p=>({...p,name:e.target.value}))}
-                  onKeyDown={e=>{ if(e.key==="Enter"&&newCat.name.trim()){ setCats(p=>[...p,{...newCat,id:Date.now()}]); setNewCat({name:"",type:"Need"}); } }}/>
-                <select value={newCat.type} onChange={e=>setNewCat(p=>({...p,type:e.target.value}))} style={{ ...inp, width:110, cursor:"pointer", fontSize:16 }}><option value="Need">Need</option><option value="Want">Want</option></select>
-                <button className="tbtn" onClick={()=>{ if(!newCat.name.trim()) return; setCats(p=>[...p,{...newCat,id:Date.now()}]); setNewCat({name:"",type:"Need"}); }} style={{ padding:"8px 18px", background:"#7CBD8F", color:"white", borderRadius:8, whiteSpace:"nowrap" }}>+ Add</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-          {/* Swipe dots indicator */}
-          <div style={{ display:"flex", justifyContent:"center", gap:6, marginTop:22, paddingBottom:8 }}>
-            {VIEWS.map(v=>(
-              <div key={v} onClick={()=>setView(v)} style={{ width: v===view?18:6, height:6, borderRadius:99, background: v===view?"#7CBD8F":"#ddd", transition:"all 0.2s", cursor:"pointer" }}/>
-            ))}
-          </div>
-        </div>
-
-      </div>
-    </div>
-  );
-}
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
-  </script>
-
-  <!-- Register service worker for offline support -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        // Use relative path so it works regardless of GitHub Pages repo name
-        const base = window.location.pathname.replace(/\/[^\/]*$/, '/');
-        navigator.serviceWorker.register(base + 'sw.js', { scope: base })
-          .catch(err => console.log('SW registration failed:', err));
-      });
-    }
-  </script>
-</body>
-</html>
