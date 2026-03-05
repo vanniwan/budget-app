@@ -97,6 +97,13 @@ const INIT_GOALS = [
 ];
 const INIT_ALLOC = { needs: 60, wants: 10, savings: 30, joint: 1300, mom: 150 };
 const INIT_PAYCHECKS = [2,2,2,2,2,2,2,2,2,2,2,2]; // paychecks per month
+const INIT_INVESTMENTS = [
+  { id: 1, name: "TFSA", type: "TFSA", color: "#3a8c5e", entries: [{ date: "2026-01-01", value: 0 }] },
+  { id: 2, name: "RRSP", type: "RRSP", color: "#7c6fd4", entries: [{ date: "2026-01-01", value: 0 }] },
+];
+const INV_TYPES = ["TFSA","RRSP","FHSA","Stocks","ETF","Crypto","Savings","Other"];
+const INV_COLORS = ["#3a8c5e","#7c6fd4","#e8834a","#5b82bf","#bf5b8c","#c97c3a","#3a7ca5","#888"];
+
 const BUCKET_CONFIGS = [
   { key: "needs",   label: "Needs",   bg: "#7c6fd4", sub: a => a.needs + "% of income" },
   { key: "wants",   label: "Wants",   bg: "#e8834a", sub: a => a.wants + "% of income" },
@@ -198,6 +205,10 @@ function App() {
   const [editAlloc,   setEditAlloc]   = useState(INIT_ALLOC);
   const [addSav,      setAddSav]      = useState({});
   const [recurOverrides, setRecurOverrides] = useState(() => load(`bud_recurOverrides_${load('bud_year',CURRENT_YEAR)}`, {}));
+  // Investments — NOT year-specific, carries across all years
+  const [investments, setInvestments] = useState(() => load('bud_investments', INIT_INVESTMENTS));
+  const [newInv, setNewInv] = useState({ name:'', type:'TFSA', color:'#3a8c5e', value:'' });
+  const [addInvValue, setAddInvValue] = useState({});
   const [newTxn,      setNewTxn]      = useState({ desc:"", amount:"", catId:"", txnType:"Need", date:todayStr(), recurring:false, kind:"expense" });
   const [newRec,      setNewRec]      = useState({ desc:"", amount:"", catId:"", txnType:"Need", day:"1" });
   const [newGoal,     setNewGoal]     = useState({ name:"", target:"", saved:"" });
@@ -212,6 +223,7 @@ function App() {
   useEffect(() => save('bud_alloc',                  alloc),          [alloc]);
   useEffect(() => save(`bud_paychecks_${year}`,      paychecks),      [paychecks, year]);
   useEffect(() => save(`bud_recurOverrides_${year}`, recurOverrides), [recurOverrides, year]);
+  useEffect(() => save('bud_investments', investments), [investments]);
   useEffect(() => save('bud_view', view), [view]);
   useEffect(() => save('bud_mi', mi), [mi]);
 
@@ -230,6 +242,7 @@ function App() {
   const [syncStatus, setSyncStatus] = useState("synced"); // "synced" | "syncing" | "offline"
   const db = typeof firebase !== 'undefined' ? firebase.database() : null;
   const FB_PATH = `budget/vanni/${year}`;
+  const FB_INV_PATH = 'budget/vanni/investments';
   const isSyncing = React.useRef(false);
 
   // On mount: load from Firebase, fall back to localStorage
@@ -283,10 +296,32 @@ function App() {
     return () => clearTimeout(timer);
   }, [incomes, cats, allTxns, recur, goals, alloc, paychecks, recurOverrides]);
 
+  // Firebase investments sync (separate from year data)
+  useEffect(() => {
+    if (!db) return;
+    db.ref(FB_INV_PATH).once('value').then(snap => {
+      const d = snap.val();
+      if (d) setInvestments(d);
+    }).catch(() => {});
+    db.ref(FB_INV_PATH).on('value', snap => {
+      const d = snap.val();
+      if (d && !isSyncing.current) setInvestments(d);
+    });
+    return () => db.ref(FB_INV_PATH).off();
+  }, []);
+
+  useEffect(() => {
+    if (!db) return;
+    const timer = setTimeout(() => {
+      db.ref(FB_INV_PATH).set(investments).catch(() => {});
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [investments]);
+
   const inp = S.inp;
   const dInp = x => ({ ...inp, paddingLeft: 22, ...x });
 
-  const VIEWS = ["month","yearly","recurring","goals","categories"];
+  const VIEWS = ["month","yearly","recurring","goals","investments","categories"];
   function handleTouchStart(e) {
     // Only track single-finger swipes — ignore pinch/zoom
     if (e.touches.length !== 1) { setSwipeCancelled(true); return; }
@@ -914,7 +949,7 @@ function App() {
         {/* Nav — horizontally scrollable on mobile */}
         <div className="hscroll" style={{ marginBottom:18 }}>
           <div style={{ display:"flex", gap:4, background:"#f0f0f0", borderRadius:12, padding:4, width:"fit-content" }}>
-            {[["month","📅 Month"],["yearly","📊 Yearly"],["recurring","🔁 Recurring"],["goals","🎯 Goals"],["categories","🏷️ Categories"]].map(([k,l])=>(
+            {[["month","📅 Month"],["yearly","📊 Yearly"],["recurring","🔁 Recurring"],["goals","🎯 Goals"],["investments","📈 Invest"],["categories","🏷️ Categories"]].map(([k,l])=>(
               <button key={k} onClick={()=>setView(k)} style={{ border:"none", cursor:"pointer", padding: mob?"7px 10px":"7px 14px", borderRadius:9, fontSize: mob?11:12, fontFamily:"inherit", whiteSpace:"nowrap", background:view===k?"white":"transparent", color:view===k?"#1a1a1a":"#888", fontWeight:view===k?600:400, boxShadow:view===k?"0 1px 3px rgba(0,0,0,0.1)":"none" }}>{l}</button>
             ))}
           </div>
@@ -1062,6 +1097,115 @@ function App() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+
+        {view==="investments" && (
+          <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+
+            {/* Summary cards */}
+            {investments.length>0 && (
+              <div style={{ display:"grid", gridTemplateColumns: mob?"repeat(2,1fr)":"repeat(4,1fr)", gap:10 }}>
+                {investments.map(inv=>{
+                  const latest = inv.entries&&inv.entries.length>0 ? inv.entries[inv.entries.length-1].value : 0;
+                  const prev   = inv.entries&&inv.entries.length>1 ? inv.entries[inv.entries.length-2].value : latest;
+                  const change = latest - prev;
+                  return (
+                    <div key={inv.id} className="bucket-card" style={{ background:inv.color, borderRadius:16, padding: mob?"13px 11px":"17px 17px 15px", boxShadow:"0 4px 16px rgba(0,0,0,0.1)" }}>
+                      <div style={{ fontSize:9, color:"rgba(255,255,255,0.75)", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:4, fontWeight:600 }}>{inv.type}</div>
+                      <div style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?15:20, fontWeight:600, color:"white", marginBottom:2 }}>{moneyS(latest)}</div>
+                      {!mob && <div style={{ fontSize:10, color:"rgba(255,255,255,0.7)" }}>{inv.name}</div>}
+                      {change!==0 && <div style={{ fontSize:10, fontWeight:600, color:"rgba(255,255,255,0.9)", marginTop:4 }}>{change>0?"+":""}{moneyS(change)}</div>}
+                    </div>
+                  );
+                })}
+                {/* Total card */}
+                <div className="bucket-card" style={{ background:"#2a2a2a", borderRadius:16, padding: mob?"13px 11px":"17px 17px 15px", boxShadow:"0 4px 16px rgba(0,0,0,0.1)" }}>
+                  <div style={{ fontSize:9, color:"rgba(255,255,255,0.75)", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:4, fontWeight:600 }}>Total</div>
+                  <div style={{ fontFamily:"'Playfair Display',serif", fontSize: mob?15:20, fontWeight:600, color:"white" }}>
+                    {moneyS(investments.reduce((s,inv)=>s+(inv.entries&&inv.entries.length>0?inv.entries[inv.entries.length-1].value:0),0))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Account cards */}
+            {investments.map(inv=>{
+              const entries = inv.entries||[];
+              const latest  = entries.length>0 ? entries[entries.length-1].value : 0;
+              const first   = entries.length>0 ? entries[0].value : 0;
+              const totalGain = latest - first;
+              const pct = first>0 ? ((latest-first)/first*100).toFixed(1) : null;
+              return (
+                <div key={inv.id} style={{ ...S.card, borderLeft:"4px solid "+inv.color }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
+                    <div>
+                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <div style={{ fontSize:15, fontWeight:600 }}>{inv.name}</div>
+                        <span style={{ fontSize:11, padding:"2px 8px", borderRadius:99, background:inv.color+"22", color:inv.color, fontWeight:500 }}>{inv.type}</span>
+                      </div>
+                      {totalGain!==0 && <div style={{ fontSize:11, color:totalGain>0?"#3a8c5e":"#c04040", marginTop:2 }}>
+                        {totalGain>0?"▲":"▼"} {moneyS(Math.abs(totalGain))} all time {pct&&`(${pct}%)`}
+                      </div>}
+                    </div>
+                    <button className="xbtn" style={{ fontSize:18 }} onPointerDown={e=>{e.preventDefault();setInvestments(p=>p.filter(x=>x.id!==inv.id))}}>×</button>
+                  </div>
+
+                  {/* Value history */}
+                  {entries.length>0 && (
+                    <div style={{ marginBottom:14 }}>
+                      <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:8 }}>History</div>
+                      {[...entries].reverse().slice(0,6).map((e,i)=>(
+                        <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"5px 0", borderBottom:"1px solid #f8f8f8" }}>
+                          <span style={{ fontSize:12, color:"#888" }}>{e.date}</span>
+                          <span style={{ fontSize:13, fontWeight:500, color:inv.color }}>{money(e.value)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Update value */}
+                  <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                    <span style={{ fontSize:12, color:"#bbb" }}>Update value:</span>
+                    <div style={{ position:"relative", flex:1, maxWidth:160 }}><DS/><input style={dInp({fontSize:16})} placeholder="0.00" value={addInvValue[inv.id]||""} onChange={e=>setAddInvValue(p=>({...p,[inv.id]:e.target.value}))}/></div>
+                    <button className="tbtn" onClick={()=>{
+                      const v=n(addInvValue[inv.id]); if(!v&&v!==0) return;
+                      const today=todayStr();
+                      setInvestments(p=>p.map(x=>x.id===inv.id?{...x,entries:[...(x.entries||[]),{date:today,value:v}]}:x));
+                      setAddInvValue(p=>({...p,[inv.id]:""}));
+                    }} style={{ padding:"7px 14px", background:inv.color+"22", color:inv.color, border:"1.5px solid "+inv.color+"44", borderRadius:8, fontSize:12, fontWeight:500 }}>Save</button>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Add new account */}
+            <div style={{ ...S.card, border:"2px dashed #eee", boxShadow:"none" }}>
+              <div style={{ fontSize:11, color:"#bbb", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:14 }}>Add Account</div>
+              <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"flex-end" }}>
+                <div style={{ flex:"2 1 130px" }}><FL>Name</FL><input style={{...inp,fontSize:16}} placeholder="e.g. Wealthsimple TFSA" value={newInv.name} onChange={e=>setNewInv(p=>({...p,name:e.target.value}))}/></div>
+                <div style={{ flex:"1 1 100px" }}><FL>Type</FL>
+                  <select style={{...inp,cursor:"pointer",fontSize:16}} value={newInv.type} onChange={e=>setNewInv(p=>({...p,type:e.target.value}))}>
+                    {INV_TYPES.map(t=><option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex:"1 1 110px" }}><FL>Starting value</FL><div style={{ position:"relative" }}><DS/><input style={dInp({fontSize:16})} placeholder="0.00" value={newInv.value} onChange={e=>setNewInv(p=>({...p,value:e.target.value}))}/></div></div>
+                <div style={{ flex:"0 0 auto" }}><FL>Colour</FL>
+                  <div style={{ display:"flex", gap:5 }}>
+                    {INV_COLORS.map(col=>(
+                      <div key={col} onPointerDown={e=>{e.preventDefault();setNewInv(p=>({...p,color:col}))}} style={{ width:22, height:22, borderRadius:"50%", background:col, cursor:"pointer", border: newInv.color===col?"3px solid #333":"2px solid transparent" }}/>
+                    ))}
+                  </div>
+                </div>
+                <button className="tbtn" onClick={()=>{
+                  if(!newInv.name.trim()) return;
+                  setInvestments(p=>[...p,{...newInv, id:Date.now(), entries:[{date:todayStr(), value:n(newInv.value)}]}]);
+                  setNewInv({name:'',type:'TFSA',color:'#3a8c5e',value:''});
+                }} style={{ padding:"8px 18px", background:"#7c6fd4", color:"white", borderRadius:8 }}>+ Add</button>
+              </div>
+            </div>
+
           </div>
         )}
 
