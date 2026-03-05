@@ -1,20 +1,17 @@
-const CACHE = 'budget-v1';
-const ASSETS = [
-  '/budget-app/',
-  '/budget-app/index.html',
-  'https://unpkg.com/react@18/umd/react.production.min.js',
-  'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
-  'https://unpkg.com/@babel/standalone/babel.min.js',
-  'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap'
-];
+const CACHE = 'budget-v2';
 
+// On install: cache the main page and local assets only
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(ASSETS).catch(() => {}))
+    caches.open(CACHE).then(cache =>
+      cache.addAll(['./index.html', './manifest.json', './icon-192.png', './icon-512.png'])
+        .catch(() => {})
+    )
   );
   self.skipWaiting();
 });
 
+// On activate: remove old caches
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
@@ -24,17 +21,37 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
+// Fetch: serve from cache if available, else network
 self.addEventListener('fetch', e => {
+  // Only handle same-origin or cached requests — let CDN scripts go straight to network
+  const url = new URL(e.request.url);
+  const isSameOrigin = url.origin === self.location.origin;
+
+  if (!isSameOrigin) {
+    // For external CDN scripts: network first, cache as fallback
+    e.respondWith(
+      fetch(e.request).then(res => {
+        if (res && res.status === 200) {
+          const clone = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+        }
+        return res;
+      }).catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // For same-origin: cache first, then network
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
       return fetch(e.request).then(res => {
-        if (res && res.status === 200 && res.type !== 'opaque') {
+        if (res && res.status === 200) {
           const clone = res.clone();
-          caches.open(CACHE).then(cache => cache.put(e.request, clone));
+          caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return res;
-      }).catch(() => caches.match('/budget-app/index.html'));
+      }).catch(() => caches.match('./index.html'));
     })
   );
 });
