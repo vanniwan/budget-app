@@ -135,10 +135,10 @@ function DS(){return <span style={{position:"absolute",left:10,top:"50%",transfo
 function dInp(extra){return{...S.inp,paddingLeft:28,...extra};}
 
 // ── LINE CHART for investments ─────────────────────────────
-function LineChart({entries,color}){
+function LineChart({entries,color,height=80}){
   const [hover,setHover]=useState(null);
   if(!entries||entries.length<1)return null;
-  if(entries.length===1){const W=300,H=60;return(<svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",height:60,display:"block"}}><circle cx={W/2} cy={H/2} r={4} fill={color}/></svg>);}
+  if(entries.length===1){const W=300,H=60;return(<svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",height:height,display:"block"}}><circle cx={W/2} cy={H/2} r={4} fill={color}/></svg>);}
   const vals=entries.map(e=>e.value);
   const mn=Math.min(...vals)*0.97, mx=Math.max(...vals)*1.01;
   const range=mx-mn||1;
@@ -157,7 +157,7 @@ function LineChart({entries,color}){
   const moneyF=v=>v>=1000?"$"+(v/1000).toFixed(1)+"k":"$"+Math.round(v);
   return(
     <div style={{position:"relative",marginBottom:4}}>
-      <svg viewBox={"0 0 "+W+" "+H} style={{width:"100%",height:80,display:"block",overflow:"visible"}}
+      <svg viewBox={"0 0 "+W+" "+H} style={{width:"100%",height:height,display:"block",overflow:"visible"}}
         onMouseLeave={()=>setHover(null)} onTouchEnd={()=>setTimeout(()=>setHover(null),1500)}>
         {/* Subtle grid */}
         {[25,50,75].map(pct=>{
@@ -811,15 +811,19 @@ function App(){
   // ── YearlyView ────────────────────────────────────────────
   function YearlyView(){
     const txns=(allTxns||[]).flat();
-    const totals={
-      inc:(incomes||[]).reduce((s,v)=>s+n(v),0),
-      out:txns.filter(t=>t.kind==="expense").reduce((s,t)=>s+n(t.amount),0),
-    };
-    const net=totals.inc-totals.out;
+    // Each month's total out = transactions + joint + mom allocations
     const monthlyData=MONTHS.map((m,i)=>{
       const mt=allTxns[i]||[];
-      return{m,short:m.slice(0,3),inc:n(incomes[i]),out:mt.filter(t=>t.kind==="expense").reduce((s,t)=>s+n(t.amount),0)};
+      const pc=paychecks[i]||2;
+      const fixedOut=Math.round(n(alloc.joint)*pc)+Math.round(n(alloc.mom)*pc);
+      const txnOut=mt.filter(t=>t.kind==="expense").reduce((s,t)=>s+n(t.amount),0);
+      return{m,short:m.slice(0,3),inc:n(incomes[i]),out:txnOut+fixedOut};
     });
+    const totals={
+      inc:monthlyData.reduce((s,d)=>s+d.inc,0),
+      out:monthlyData.reduce((s,d)=>s+d.out,0),
+    };
+    const net=totals.inc-totals.out;
     const activeMonths=monthlyData.filter(d=>d.inc>0||d.out>0);
     const maxVal=Math.max(...monthlyData.map(d=>Math.max(d.inc,d.out)),1);
     const chartH=120;
@@ -1168,13 +1172,7 @@ function App(){
         {/* INVESTMENTS */}
         {view==="investments"&&(
           <div style={{display:"flex",flexDirection:"column",gap:20}}>
-            {/* Joint line chart */}
-            {investments.length>0&&investments.length>0&&(
-              <div style={{...S.card,paddingBottom:12,background:"linear-gradient(135deg,#F0DB7D,#F5EAC0)",border:"none"}}>
-                <div style={{fontSize:11,fontWeight:800,color:"rgba(0,0,0,0.5)",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:12}}>Portfolio History</div>
-                <JointLineChart investments={investments}/>
-              </div>
-            )}
+
             {/* Header summary */}
             {investments.length>0&&(()=>{
               const firstVal=investments.reduce((s,inv)=>s+(inv.entries&&inv.entries.length>0?inv.entries[0].value:0),0);
@@ -1225,8 +1223,13 @@ function App(){
                   <div style={{background:"#EDE8E0",borderRadius:99,height:4,overflow:"hidden",marginBottom:12}}>
                     <div style={{width:sharePct+"%",height:"100%",borderRadius:99,background:inv.color,transition:"width 0.4s"}}/>
                   </div>
-                  {/* Mini line chart */}
-                  {inv.entries&&inv.entries.length>=2&&<LineChart entries={inv.entries} color={inv.color}/>}
+                  {/* Individual line chart */}
+                  {inv.entries&&inv.entries.length>=1&&(
+                    <div style={{background:"linear-gradient(135deg,"+inv.color+"22,"+inv.color+"08)",borderRadius:12,padding:"10px 10px 4px",marginBottom:4}}>
+                      <div style={{fontSize:9,fontWeight:700,color:"rgba(0,0,0,0.35)",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:6}}>Value History</div>
+                      <LineChart entries={inv.entries} color={inv.color} height={70}/>
+                    </div>
+                  )}
                   {/* Update row */}
                   <div style={{display:"flex",gap:8,marginTop:12,alignItems:"center"}}>
                     <div style={{position:"relative",flex:1}}><DS/><input style={dInp({fontSize:16})} placeholder="Update value" value={updateVals[inv.id]||""} onChange={e=>setUpdateVals(p=>({...p,[inv.id]:e.target.value}))}/></div>
