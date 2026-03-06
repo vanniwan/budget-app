@@ -505,10 +505,10 @@ function App(){
   }
   function delTxn(id){setAllTxns(p=>p.map((arr,i)=>i===mi?arr.filter(t=>t.id!==id):arr));}
   function applyRecur(){
-    const today=new Date();
     const mm=String(mi+1).padStart(2,"0");
     const toAdd=recur.map(r=>({...r,id:Date.now()+Math.random(),date:`${year}-${mm}-01`}));
-    setAllTxns(p=>p.map((arr,i)=>i===mi?[...arr,...toAdd]:arr));
+    // Remove any existing recurring txns for this month first, then re-add
+    setAllTxns(p=>p.map((arr,i)=>i===mi?[...arr.filter(t=>!t.recurring),...toAdd]:arr));
     setRecurOverrides(p=>p.map((v,i)=>i===mi?true:v));
   }
   function saveGoal(id){
@@ -708,13 +708,12 @@ function App(){
         {/* Transactions */}
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
           <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-            {!recApplied&&recur.length>0&&(
+            {recur.length>0&&(
               <button className="tbtn" onClick={applyRecur} style={{padding:"7px 12px",background:"#F5EAC0",color:"#7A5010",border:"none",borderRadius:10,fontSize:12,fontWeight:700}}>
-                Recurring ({recur.length})
+                {recApplied?"🔁 Re-apply recurring":"🔁 Apply recurring ("+recur.length+")"}
               </button>
             )}
-            {recApplied&&<span style={{fontSize:11,fontWeight:700,color:"#3A5010"}}>✓ Applied</span>}
-            <button className="tbtn" onClick={()=>setShowAdd(p=>!p)} style={{padding:"8px 20px",background:"#9D5783",color:"white",borderRadius:12,fontSize:13,marginLeft:"auto",fontWeight:800}}>
+            <button className="tbtn" onClick={()=>setShowAdd(p=>!p)} style={{padding:"8px 20px",background:"#AEACEB",color:"white",borderRadius:12,fontSize:13,marginLeft:"auto",fontWeight:800}}>
               {showAdd?"✕ Cancel":"+ Add"}
             </button>
           </div>
