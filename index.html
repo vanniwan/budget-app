@@ -460,6 +460,7 @@ function App(){
   const [newRecur,setNewRecur]=useState({desc:"",amount:"",txnType:"Need",catId:""});
   const [newInv,setNewInv]=useState({name:"",type:"TFSA",color:INV_COLORS[0],startVal:""});
   const [showAddInv,setShowAddInv]=useState(false);
+  const [activeGoalIdx,setActiveGoalIdx]=useState(0);
   const [updateVals,setUpdateVals]=useState({});
 
   // Computed
@@ -1275,7 +1276,6 @@ function App(){
 
         {/* GOALS */}
         {view==="goals"&&(()=>{
-          const [activeGoalIdx,setActiveGoalIdx]=useState(0);
           const visGoal=activeGoals[activeGoalIdx]||null;
           const GCOLS=["#FFB7D5","#F0DB7D","#9CB071","#B7CEEC","#AEACEB","#FD9FA2","#F5EAC0"];
           return(
@@ -1320,7 +1320,7 @@ function App(){
                   const pct=n(visGoal.target)>0?Math.min(visGoal.saved/n(visGoal.target)*100,100):0;
                   const done=rem===0;
                   return(
-                    <div style={{background:col,borderRadius:24,padding:"22px 20px 18px",boxShadow:"0 6px 24px rgba(0,0,0,0.1)",position:"relative"}}>
+                    <div style={{background:`linear-gradient(145deg,${col},${col}88)`,borderRadius:24,padding:"22px 20px 18px",boxShadow:"0 6px 24px rgba(0,0,0,0.1)",position:"relative"}}>
                       <button className="xbtn" onPointerDown={e=>{e.preventDefault();delGoal(visGoal.id)}} style={{position:"absolute",top:14,right:14,fontSize:18,color:"rgba(0,0,0,0.3)"}}>×</button>
                       <div style={{fontSize:16,fontWeight:900,color:"#1a1a1a",marginBottom:4,paddingRight:24}}>{visGoal.name}</div>
                       <div style={{fontSize:11,fontWeight:600,color:"rgba(0,0,0,0.45)",marginBottom:18}}>{done?"🎉 Complete!":moneyS(rem)+" to go"}</div>
