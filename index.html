@@ -53,8 +53,8 @@ const VIEWS=[["home","🏠"],["month","📅"],["investments","📈"],["yearly","
 
 const PALETTE={
   yellow:"#F0DB7D",pink:"#FFB7D5",green:"#9CB071",blue:"#B7CEEC",
-  purple:"#9D5783",lavender:"#AEACEB",peach:"#F9E4BC",coral:"#FD9FA2",
-  slate:"#ACC2D9",white:"#ffffff",black:"#1a1a1a"
+  purple:"#9D5783",lavender:"#AEACEB",peach:"#F5EAC0",coral:"#FD9FA2",
+  slate:"#B7CEEC",white:"#ffffff",black:"#1a1a1a"
 };
 
 const BUCKET_CONFIGS=[
@@ -68,16 +68,16 @@ const TYPE_COLORS={
   Need:  {bg:"#FEF8D8",text:"#7A5800",accent:"#F0DB7D"},
   Want:  {bg:"#FFF0F8",text:"#8A1060",accent:"#FFB7D5"},
   Saving:{bg:"#EEF5E5",text:"#3A5010",accent:"#9CB071"},
-  income:{bg:"#EAEAF8",text:"#3A3880",accent:"#AEACEB"},
+  income:{bg:"#EDE8F5",text:"#3A2860",accent:"#AEACEB"},
 };
-const INV_COLORS=["#9CB071","#F0DB7D","#FFB7D5","#B7CEEC","#AEACEB","#F9E4BC","#FD9FA2","#ACC2D9"];
+const INV_COLORS=["#9CB071","#F0DB7D","#FFB7D5","#B7CEEC","#AEACEB","#F5EAC0","#FD9FA2","#B7CEEC"];
 const INV_TYPES=["TFSA","RRSP","FHSA","Stocks","ETF","Crypto","Savings","Other"];
 const INIT_INVESTMENTS=[
   {id:1,name:"TFSA",type:"TFSA",color:"#9CB071",entries:[]},
   {id:2,name:"RRSP",type:"RRSP",color:"#AEACEB",entries:[]},
 ];
-const MONTH_COLS=["#FFB7D5","#F0DB7D","#9CB071","#B7CEEC","#FFB7D5","#F0DB7D","#9CB071","#AEACEB","#FD9FA2","#F9E4BC","#ACC2D9","#B7CEEC"];
-const MONTH_COLS2=["#AEACEB","#FD9FA2","#AEACEB","#FFB7D5","#F0DB7D","#9CB071","#B7CEEC","#FFB7D5","#F9E4BC","#FD9FA2","#AEACEB","#9CB071"];
+const MONTH_COLS=["#FFB7D5","#F0DB7D","#9CB071","#B7CEEC","#FFB7D5","#F0DB7D","#9CB071","#AEACEB","#FD9FA2","#F5EAC0","#B7CEEC","#B7CEEC"];
+const MONTH_COLS2=["#AEACEB","#FD9FA2","#AEACEB","#FFB7D5","#F0DB7D","#9CB071","#B7CEEC","#FFB7D5","#F5EAC0","#FD9FA2","#AEACEB","#9CB071"];
 
 // ── Helpers ───────────────────────────────────────────────
 const n=v=>parseFloat(String(v).replace(/[^0-9.-]/g,""))||0;
@@ -113,8 +113,8 @@ function makeSeedTxns(yr){
 }
 
 const S={
-  card:{background:"white",borderRadius:18,padding:"18px 20px",boxShadow:"0 2px 12px rgba(0,0,0,0.05)",border:"1px solid #F0F0F8"},
-  inp:{border:"1.5px solid #E8E8F0",borderRadius:10,padding:"9px 11px",fontSize:16,fontFamily:"inherit",outline:"none",background:"white",color:"#1a1a1a",width:"100%",boxSizing:"border-box"},
+  card:{background:"white",borderRadius:18,padding:"18px 20px",boxShadow:"0 2px 12px rgba(0,0,0,0.05)",border:"1px solid #F0EDE8"},
+  inp:{border:"1.5px solid #EDE8F5",borderRadius:10,padding:"9px 11px",fontSize:16,fontFamily:"inherit",outline:"none",background:"white",color:"#1a1a1a",width:"100%",boxSizing:"border-box"},
   lbl:{fontSize:10,color:"#bbb",textTransform:"uppercase",letterSpacing:"0.07em",marginBottom:4,display:"block",fontWeight:700},
 };
 
@@ -122,39 +122,76 @@ const S={
 function DonutChart({segments,size=110,thickness=20}){
   const r=(size-thickness)/2,cx=size/2,cy=size/2,circ=2*Math.PI*r;
   const total=segments.reduce((s,g)=>s+g.value,0);
-  if(!total)return <svg width={size} height={size}><circle cx={cx} cy={cy} r={r} fill="none" stroke="#F0F0F8" strokeWidth={thickness}/></svg>;
+  if(!total)return <svg width={size} height={size}><circle cx={cx} cy={cy} r={r} fill="none" stroke="#F0EDE8" strokeWidth={thickness}/></svg>;
   let off=0;
   return <svg width={size} height={size}>{segments.map((seg,i)=>{const dash=(seg.value/total)*circ;const el=<circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={seg.color} strokeWidth={thickness} strokeDasharray={`${dash} ${circ-dash}`} strokeDashoffset={-off} transform={`rotate(-90 ${cx} ${cy})`}/>;off+=dash;return el;})}</svg>;
 }
 function Bar({value,max,color,h=6}){
   const pct=max>0?Math.min(value/max*100,100):0;
-  return <div style={{background:"#F0F0F8",borderRadius:99,height:h,overflow:"hidden"}}><div style={{width:pct+"%",height:"100%",borderRadius:99,background:color,transition:"width 0.4s"}}/></div>;
+  return <div style={{background:"#F0EDE8",borderRadius:99,height:h,overflow:"hidden"}}><div style={{width:pct+"%",height:"100%",borderRadius:99,background:color,transition:"width 0.4s"}}/></div>;
 }
 function FL({children}){return <label style={S.lbl}>{children}</label>;}
 function DS(){return <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:13,color:"#aaa",fontWeight:700}}>$</span>;}
 function dInp(extra){return{...S.inp,paddingLeft:28,...extra};}
 
 // ── LINE CHART for investments ─────────────────────────────
-function LineChart({entries,color,width=300,height=70}){
+function LineChart({entries,color}){
+  const [hover,setHover]=useState(null);
   if(!entries||entries.length<2)return null;
   const vals=entries.map(e=>e.value);
-  const mn=Math.min(...vals),mx=Math.max(...vals);
+  const mn=Math.min(...vals)*0.97, mx=Math.max(...vals)*1.01;
   const range=mx-mn||1;
+  const W=100, H=100; // viewBox units
+  const pad={t:8,b:18,l:4,r:4};
   const pts=entries.map((e,i)=>{
-    const x=8+(i/(entries.length-1))*(width-16);
-    const y=height-8-((e.value-mn)/range)*(height-16);
-    return[x,y];
+    const x=pad.l+(i/(entries.length-1))*(W-pad.l-pad.r);
+    const y=pad.t+((mx-e.value)/range)*(H-pad.t-pad.b);
+    return{x,y,val:e.value,date:e.date};
   });
-  const d="M"+pts.map(p=>p.join(",")).join(" L");
+  const linePath="M"+pts.map(p=>p.x.toFixed(1)+","+p.y.toFixed(1)).join(" L");
+  const areaPath=linePath+" L"+pts[pts.length-1].x.toFixed(1)+","+(H-pad.b)+" L"+pts[0].x.toFixed(1)+","+(H-pad.b)+" Z";
   const up=vals[vals.length-1]>=vals[0];
-  const lineColor=up?"#9CB071":"#FD9FA2";
+  const lineCol=up?"#3A5010":"#c04040";
+  const areaCol=up?"rgba(58,122,48,0.08)":"rgba(192,64,64,0.06)";
+  const moneyF=v=>v>=1000?"$"+(v/1000).toFixed(1)+"k":"$"+Math.round(v);
   return(
-    <svg width={width} height={height} style={{overflow:"visible"}}>
-      <polyline points={pts.map(p=>p.join(",")).join(" ")} fill="none" stroke={lineColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      {pts.map((p,i)=><circle key={i} cx={p[0]} cy={p[1]} r={3} fill={lineColor}/>)}
-      <text x={8} y={height-1} fontSize="8" fill="#B0B8C0" fontFamily="Nunito,sans-serif">{entries[0].date.slice(5)}</text>
-      <text x={width-8} y={height-1} fontSize="8" fill="#B0B8C0" fontFamily="Nunito,sans-serif" textAnchor="end">{entries[entries.length-1].date.slice(5)}</text>
-    </svg>
+    <div style={{position:"relative",marginBottom:4}}>
+      <svg viewBox={"0 0 "+W+" "+H} style={{width:"100%",height:80,display:"block",overflow:"visible"}}
+        onMouseLeave={()=>setHover(null)} onTouchEnd={()=>setTimeout(()=>setHover(null),1500)}>
+        {/* Subtle grid */}
+        {[25,50,75].map(pct=>{
+          const y=pad.t+(pct/100)*(H-pad.t-pad.b);
+          return <line key={pct} x1={pad.l} y1={y} x2={W-pad.r} y2={y} stroke="#EDE8E0" strokeWidth="0.5"/>;
+        })}
+        {/* Area fill */}
+        <path d={areaPath} fill={areaCol}/>
+        {/* Line */}
+        <path d={linePath} fill="none" stroke={lineCol} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        {/* Dots + hover zones */}
+        {pts.map((p,i)=>(
+          <g key={i} onMouseEnter={()=>setHover(i)} onTouchStart={()=>setHover(i)}>
+            <circle cx={p.x} cy={p.y} r={hover===i?3.5:2} fill={hover===i?lineCol:"white"} stroke={lineCol} strokeWidth="1.5"/>
+            {/* Invisible wider hit area */}
+            <circle cx={p.x} cy={p.y} r={6} fill="transparent"/>
+          </g>
+        ))}
+        {/* Hover tooltip */}
+        {hover!==null&&(()=>{
+          const p=pts[hover];
+          const tipX=Math.max(10,Math.min(p.x,W-22));
+          return(
+            <g>
+              <line x1={p.x} y1={pad.t} x2={p.x} y2={H-pad.b} stroke={lineCol} strokeWidth="0.5" strokeDasharray="2,2"/>
+              <rect x={tipX-10} y={p.y-14} width={26} height={11} rx="3" fill={lineCol}/>
+              <text x={tipX+3} y={p.y-6} fontSize="6" fill="white" fontFamily="Nunito,sans-serif" textAnchor="middle">{moneyF(p.val)}</text>
+            </g>
+          );
+        })()}
+        {/* Date labels */}
+        <text x={pts[0].x} y={H-2} fontSize="6" fill="#C0B8B0" fontFamily="Nunito,sans-serif" textAnchor="start">{entries[0].date.slice(5)}</text>
+        <text x={pts[pts.length-1].x} y={H-2} fontSize="6" fill="#C0B8B0" fontFamily="Nunito,sans-serif" textAnchor="end">{entries[entries.length-1].date.slice(5)}</text>
+      </svg>
+    </div>
   );
 }
 
@@ -380,7 +417,7 @@ function App(){
     const pct=n(goal.target)>0?Math.min(goal.saved/n(goal.target)*100,100):0;
     const done=rem===0;
     return(
-      <div style={{borderBottom:"1px solid #F5F5FA",paddingBottom:12,marginBottom:12}}>
+      <div style={{borderBottom:"1px solid #F0EDE8",paddingBottom:12,marginBottom:12}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
           <div><div style={{fontSize:13,fontWeight:700}}>{goal.name}</div><div style={{fontSize:10,color:"#bbb",marginTop:1}}>{done?"🎉 Complete!":money(rem)+" to go"}</div></div>
           <span style={{fontSize:13,fontWeight:800,color:"#9D5783"}}>{Math.round(pct)}%</span>
@@ -474,12 +511,15 @@ function App(){
               </div>
 
               {/* Row 2 */}
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              <div style={{display:"flex",gap:8}}>
                 {row2.map(({key,label,bg,val,sub})=>(
-                  <div key={key} className="bucket-card" style={{background:bg,borderRadius:20,padding:"16px 18px",boxShadow:"0 4px 16px rgba(0,0,0,0.08)",display:"flex",flexDirection:"column",gap:4}}>
-                    <div style={{fontSize:9,fontWeight:700,color:"rgba(0,0,0,0.4)",textTransform:"uppercase",letterSpacing:"0.08em"}}>{label}</div>
-                    <div style={{fontSize:mob?22:28,fontWeight:900,color:"#1a1a1a",lineHeight:1}}>{B.inc>0||key==="joint"||key==="mom"?moneyS(val):"—"}</div>
-                    <div style={{fontSize:9,fontWeight:600,color:"rgba(0,0,0,0.35)"}}>{sub}</div>
+                  <div key={key} style={{flex:1,display:"flex",alignItems:"center",gap:10,background:bg,borderRadius:12,padding:"9px 12px"}}>
+                    <div style={{width:8,height:8,borderRadius:2,background:"rgba(0,0,0,0.2)",flexShrink:0}}/>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:9,fontWeight:600,color:"rgba(0,0,0,0.4)",textTransform:"uppercase",letterSpacing:"0.06em"}}>{label}</div>
+                      <div style={{fontSize:9,fontWeight:500,color:"rgba(0,0,0,0.3)",marginTop:1}}>{sub}</div>
+                    </div>
+                    <div style={{fontSize:13,fontWeight:700,color:"#2a2a2a"}}>{B.inc>0?moneyS(val):"—"}</div>
                   </div>
                 ))}
               </div>
@@ -487,81 +527,6 @@ function App(){
             </div>
           );
         })()}
-
-        {/* Spending breakdown */}
-        <div style={S.card}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-            <div style={{fontSize:12,fontWeight:800,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:"0.06em"}}>Spending</div>
-            <div style={{fontSize:20,fontWeight:900,color:"#1a1a1a"}}>{Sp.total>0?moneyS(Sp.total):"—"}</div>
-          </div>
-          <div style={{display:"flex",gap:12,alignItems:"center"}}>
-            <div style={{position:"relative",flexShrink:0}}>
-              <DonutChart segments={spendSegs.length>0?spendSegs:[{value:1,color:"#F0F0F8"}]} size={mob?76:88} thickness={mob?13:15}/>
-            </div>
-            <div style={{flex:1,display:"flex",flexDirection:"column",gap:9}}>
-              {[{l:"Needs",v:Sp.needs,c:"#7A5800",bg:"#F0DB7D"},{l:"Wants",v:Sp.wants,c:"#8A1060",bg:"#FFB7D5"},{l:"Savings",v:Sp.savings,c:"#3A5010",bg:"#9CB071"}].map(s=>(
-                <div key={s.l} style={{display:"flex",alignItems:"center",gap:8}}>
-                  <div style={{width:10,height:10,borderRadius:3,background:s.bg,flexShrink:0}}/>
-                  <span style={{fontSize:12,fontWeight:600,color:"#555",flex:1}}>{s.l}</span>
-                  <span style={{fontSize:13,fontWeight:800,color:s.c,minWidth:60,textAlign:"right"}}>{s.v>0?moneyS(s.v):"—"}</span>
-                  <div style={{width:50,background:"#F5F5FA",borderRadius:99,height:5,overflow:"hidden"}}>
-                    <div style={{width:(Sp.total>0?Math.min(s.v/Sp.total*100,100):0)+"%",height:"100%",borderRadius:99,background:s.bg}}/>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Budget allocation */}
-        {B.inc>0&&(
-          <div style={{...S.card,padding:"14px 16px"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-              <div style={{fontSize:11,fontWeight:800,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:"0.06em"}}>Budget</div>
-              <button className="tbtn" onClick={()=>{setEditAlloc({...alloc});setShowAlloc(true);}} style={{fontSize:11,fontWeight:600,color:"#9D5783",background:"none",padding:0}}>Edit →</button>
-            </div>
-            {/* Top row: Needs / Wants / Savings */}
-            <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:10}}>
-              {[
-                {l:"Needs",   v:B.needs,   spent:Sp.needs,   dot:"#F0DB7D"},
-                {l:"Wants",   v:B.wants,   spent:Sp.wants,   dot:"#FFB7D5"},
-                {l:"Savings", v:B.savings, spent:Sp.savings, dot:"#9CB071"},
-              ].map(s=>{
-                const over=s.spent>s.v&&s.v>0;
-                const pct=s.v>0?Math.min(s.spent/s.v*100,100):0;
-                const rem=s.v-s.spent;
-                return(
-                  <div key={s.l}>
-                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-                      <div style={{width:8,height:8,borderRadius:2,background:over?"#FD9FA2":s.dot,flexShrink:0}}/>
-                      <span style={{fontSize:12,fontWeight:600,color:"#555",flex:1}}>{s.l}</span>
-                      <span style={{fontSize:12,fontWeight:800,color:over?"#c04040":"#1a1a1a"}}>{moneyS(s.v)}</span>
-                      <span style={{fontSize:11,fontWeight:600,color:over?"#c04040":"#B0B8C0",minWidth:60,textAlign:"right"}}>
-                        {over?moneyS(Math.abs(rem))+" over":moneyS(Math.abs(rem))+" left"}
-                      </span>
-                    </div>
-                    <div style={{background:"#F0EDE8",borderRadius:99,height:4,overflow:"hidden"}}>
-                      <div style={{width:pct+"%",height:"100%",borderRadius:99,background:over?"#FD9FA2":s.dot,transition:"width 0.4s"}}/>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            {/* Bottom row: Joint + Mom */}
-            <div style={{display:"flex",gap:6,paddingTop:10,borderTop:"1px solid #F0EDE8"}}>
-              {[
-                {l:"Joint", v:B.joint, dot:"#B7CEEC"},
-                {l:"Mom",   v:B.mom,   dot:"#AEACEB"},
-              ].map(s=>(
-                <div key={s.l} style={{flex:1,display:"flex",alignItems:"center",gap:7,background:"#F8F5F0",borderRadius:10,padding:"8px 10px"}}>
-                  <div style={{width:8,height:8,borderRadius:2,background:s.dot,flexShrink:0}}/>
-                  <span style={{fontSize:11,fontWeight:600,color:"#888",flex:1}}>{s.l}</span>
-                  <span style={{fontSize:13,fontWeight:800,color:"#1a1a1a"}}>{moneyS(s.v)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Goals strip */}
         {activeGoals.length>0&&(
@@ -596,12 +561,12 @@ function App(){
         {/* Extra income */}
         {inTxns.length>0&&(
           <div style={{...S.card,borderTop:"3px solid #B7CEEC"}}>
-            <div style={{fontSize:12,fontWeight:800,color:"#2A5080",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:8}}>Extra Income</div>
+            <div style={{fontSize:12,fontWeight:800,color:"#3A5080",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:8}}>Extra Income</div>
             {inTxns.map(t=>(
-              <div key={t.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 0",borderBottom:"1px solid #F5F5FA"}}>
+              <div key={t.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 0",borderBottom:"1px solid #F0EDE8"}}>
                 <span style={{fontSize:12,color:"#555",fontWeight:600}}>{t.desc}</span>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <span style={{fontSize:13,fontWeight:800,color:"#2A5080"}}>+{money(t.amount)}</span>
+                  <span style={{fontSize:13,fontWeight:800,color:"#3A5080"}}>+{money(t.amount)}</span>
                   <button className="xbtn" onPointerDown={e=>{e.preventDefault();delTxn(t.id)}}>×</button>
                 </div>
               </div>
@@ -613,7 +578,7 @@ function App(){
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
           <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
             {!recApplied&&recur.length>0&&(
-              <button className="tbtn" onClick={applyRecur} style={{padding:"7px 12px",background:"#F9E4BC",color:"#7A5010",border:"none",borderRadius:10,fontSize:12,fontWeight:700}}>
+              <button className="tbtn" onClick={applyRecur} style={{padding:"7px 12px",background:"#F5EAC0",color:"#7A5010",border:"none",borderRadius:10,fontSize:12,fontWeight:700}}>
                 Recurring ({recur.length})
               </button>
             )}
@@ -628,7 +593,7 @@ function App(){
               <div style={{fontSize:12,fontWeight:800,color:"#9D5783",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:14}}>New Transaction</div>
               <div style={{display:"flex",gap:6,marginBottom:14}}>
                 {[["expense","Expense"],["income","Income"]].map(([k,l])=>(
-                  <button key={k} onClick={()=>setNewTxn(p=>({...p,kind:k}))} style={{border:"2px solid "+(newTxn.kind===k?"#AEACEB":"#F0F0F8"),borderRadius:10,padding:"7px 18px",fontSize:13,cursor:"pointer",fontFamily:"inherit",background:newTxn.kind===k?"#AEACEB":"white",color:newTxn.kind===k?"white":"#aaa",fontWeight:newTxn.kind===k?800:500}}>{l}</button>
+                  <button key={k} onClick={()=>setNewTxn(p=>({...p,kind:k}))} style={{border:"2px solid "+(newTxn.kind===k?"#AEACEB":"#F0EDE8"),borderRadius:10,padding:"7px 18px",fontSize:13,cursor:"pointer",fontFamily:"inherit",background:newTxn.kind===k?"#AEACEB":"white",color:newTxn.kind===k?"white":"#aaa",fontWeight:newTxn.kind===k?800:500}}>{l}</button>
                 ))}
               </div>
               <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
@@ -688,7 +653,7 @@ function App(){
                         </div>
                         <div style={{display:"flex",alignItems:"center",gap:5,paddingLeft:14}}>
                           <span style={{fontSize:10,padding:"2px 7px",borderRadius:6,background:ts.bg,color:ts.text,fontWeight:700}}>{t.kind==="income"?"Income":t.txnType}</span>
-                          {cat&&<span style={{fontSize:10,color:"#C0C8D0",fontWeight:600}}>{cat.name}</span>}
+                          {cat&&<span style={{fontSize:10,color:"#C0B8B0",fontWeight:600}}>{cat.name}</span>}
                           <span style={{fontSize:10,color:"#D0C8C0"}}>{t.date.slice(5)}</span>
                         </div>
                       </div>
@@ -729,51 +694,132 @@ function App(){
     const totals={
       inc:(incomes||[]).reduce((s,v)=>s+n(v),0),
       out:txns.filter(t=>t.kind==="expense").reduce((s,t)=>s+n(t.amount),0),
-      fixed:txns.filter(t=>t.recurring&&t.kind==="expense").reduce((s,t)=>s+n(t.amount),0),
     };
+    const net=totals.inc-totals.out;
     const monthlyData=MONTHS.map((m,i)=>{
       const mt=allTxns[i]||[];
-      return{m,inc:n(incomes[i]),out:mt.filter(t=>t.kind==="expense").reduce((s,t)=>s+n(t.amount),0)};
+      return{m,short:m.slice(0,3),inc:n(incomes[i]),out:mt.filter(t=>t.kind==="expense").reduce((s,t)=>s+n(t.amount),0)};
     });
+    const activeMonths=monthlyData.filter(d=>d.inc>0||d.out>0);
+    const maxVal=Math.max(...monthlyData.map(d=>Math.max(d.inc,d.out)),1);
+    const chartH=120;
+
+    // SVG line chart paths
+    const pts=(arr)=>arr.map((d,i)=>{
+      const x=i/(arr.length-1||1)*100;
+      const y=100-Math.min(arr[i]/maxVal,1)*100;
+      return `${x},${y}`;
+    }).join(" ");
+    const incPts=monthlyData.map(d=>d.inc);
+    const outPts=monthlyData.map(d=>d.out);
+    const toPath=(arr)=>{
+      return arr.map((v,i)=>{
+        const x=i/(arr.length-1||1)*100;
+        const y=100-Math.min(v/maxVal,1)*100;
+        return (i===0?"M":"L")+x.toFixed(1)+" "+y.toFixed(1);
+      }).join(" ");
+    };
+    const incPath=toPath(incPts);
+    const outPath=toPath(outPts);
+    // Area fill path (income)
+    const firstX=0, lastX=100;
+    const firstY=(100-Math.min(incPts[0]/maxVal,1)*100).toFixed(1);
+    const lastY=(100-Math.min(incPts[incPts.length-1]/maxVal,1)*100).toFixed(1);
+    const incArea=incPath+" L100 100 L0 100 Z";
+    const outArea=outPath+" L100 100 L0 100 Z";
+
     return(
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
+
+        {/* Summary header */}
         <div style={{...S.card,background:"linear-gradient(135deg,#9D5783,#AEACEB)",border:"none"}}>
-          <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.7)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6}}>{year} Summary</div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
-            {[{l:"Income",v:totals.inc,c:"#F0DB7D"},{l:"Spent",v:totals.out,c:"#FFB7D5"},{l:"Net",v:totals.inc-totals.out,c:(totals.inc-totals.out)>=0?"#9CB071":"#FD9FA2"}].map(s=>(
+          <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.7)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:8}}>{year} Summary</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:16}}>
+            {[{l:"Income",v:totals.inc,c:"#F0DB7D"},{l:"Spent",v:totals.out,c:"#FFB7D5"},{l:"Net",v:net,c:net>=0?"#9CB071":"#FD9FA2"}].map(s=>(
               <div key={s.l}>
                 <div style={{fontSize:9,fontWeight:700,color:"rgba(255,255,255,0.6)",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>{s.l}</div>
-                <div style={{fontSize:mob?18:24,fontWeight:900,color:s.c}}>{moneyS(Math.abs(s.v))}</div>
+                <div style={{fontSize:mob?18:22,fontWeight:900,color:s.c}}>{s.v<0?"-":""}{moneyS(Math.abs(s.v))}</div>
               </div>
             ))}
           </div>
+
+          {/* Line chart inside gradient card */}
+          {activeMonths.length>1&&(
+            <div style={{position:"relative",height:chartH}}>
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{width:"100%",height:chartH,display:"block"}}>
+                {/* Grid lines */}
+                {[25,50,75].map(y=>(
+                  <line key={y} x1="0" y1={y} x2="100" y2={y} stroke="rgba(255,255,255,0.1)" strokeWidth="0.5"/>
+                ))}
+                {/* Income area */}
+                <path d={incArea} fill="rgba(240,219,125,0.15)"/>
+                {/* Spent area */}
+                <path d={outArea} fill="rgba(255,183,213,0.15)"/>
+                {/* Income line */}
+                <path d={incPath} fill="none" stroke="#F0DB7D" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                {/* Spent line */}
+                <path d={outPath} fill="none" stroke="#FFB7D5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                {/* Dots on income */}
+                {incPts.map((v,i)=>{
+                  const x=i/(incPts.length-1||1)*100;
+                  const y=100-Math.min(v/maxVal,1)*100;
+                  return v>0?<circle key={i} cx={x} cy={y} r="1.4" fill="#F0DB7D"/>:null;
+                })}
+                {/* Dots on spent */}
+                {outPts.map((v,i)=>{
+                  const x=i/(outPts.length-1||1)*100;
+                  const y=100-Math.min(v/maxVal,1)*100;
+                  return v>0?<circle key={i} cx={x} cy={y} r="1.4" fill="#FFB7D5"/>:null;
+                })}
+              </svg>
+              {/* Month labels */}
+              <div style={{display:"flex",justifyContent:"space-between",marginTop:4}}>
+                {monthlyData.map((d,i)=>(
+                  <span key={i} style={{fontSize:7,fontWeight:600,color:"rgba(255,255,255,0.45)",flex:1,textAlign:"center"}}>{d.short}</span>
+                ))}
+              </div>
+              {/* Legend */}
+              <div style={{display:"flex",gap:12,marginTop:6}}>
+                {[{l:"Income",c:"#F0DB7D"},{l:"Spent",c:"#FFB7D5"}].map(s=>(
+                  <div key={s.l} style={{display:"flex",alignItems:"center",gap:4}}>
+                    <div style={{width:16,height:2,borderRadius:1,background:s.c}}/>
+                    <span style={{fontSize:9,fontWeight:600,color:"rgba(255,255,255,0.6)"}}>{s.l}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Monthly breakdown rows */}
         <div style={S.card}>
           <div style={{fontSize:12,fontWeight:800,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:14}}>Monthly</div>
-          {monthlyData.filter(d=>d.inc>0||d.out>0).map(d=>(
+          {activeMonths.map(d=>(
             <div key={d.m} style={{marginBottom:10}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
                 <span style={{fontSize:12,fontWeight:700,color:"#555"}}>{d.m}</span>
                 <div style={{display:"flex",gap:12}}>
-                  <span style={{fontSize:12,fontWeight:700,color:"#3A5010"}}>{moneyS(d.inc)}</span>
-                  <span style={{fontSize:12,fontWeight:700,color:"#8A1060"}}>{moneyS(d.out)}</span>
-                  <span style={{fontSize:12,fontWeight:800,color:d.inc>=d.out?"#3A5010":"#c04040"}}>{moneyS(d.inc-d.out)}</span>
+                  <span style={{fontSize:12,fontWeight:600,color:"#3A5010"}}>{moneyS(d.inc)}</span>
+                  <span style={{fontSize:12,fontWeight:600,color:"#8A1060"}}>{moneyS(d.out)}</span>
+                  <span style={{fontSize:12,fontWeight:800,color:d.inc>=d.out?"#3A5010":"#c04040"}}>{d.inc>=d.out?"+":"-"}{moneyS(Math.abs(d.inc-d.out))}</span>
                 </div>
               </div>
               <Bar value={d.out} max={d.inc||1} color={d.out>d.inc?"#FD9FA2":"#9CB071"} h={4}/>
             </div>
           ))}
         </div>
+
+        {/* All years */}
         {allYearsData.length>1&&(
           <div style={S.card}>
             <div style={{fontSize:12,fontWeight:800,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:12}}>All Years</div>
             {allYearsData.map(d=>(
-              <div key={d.year} onClick={()=>switchYear(d.year)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid #F5F5FA",cursor:"pointer"}}>
+              <div key={d.year} onClick={()=>switchYear(d.year)} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid #F0EDE8",cursor:"pointer"}}>
                 <span style={{fontSize:13,fontWeight:700,color:d.year===year?"#9D5783":"#555"}}>{d.year}</span>
                 <div style={{display:"flex",gap:10}}>
-                  <span style={{fontSize:12,fontWeight:700,color:"#3A5010"}}>{moneyS(d.totalInc)}</span>
-                  <span style={{fontSize:12,fontWeight:700,color:"#8A1060"}}>{moneyS(d.totalSpent)}</span>
-                  <span style={{fontSize:12,fontWeight:800,color:d.net>=0?"#3A5010":"#c04040"}}>{moneyS(Math.abs(d.net))}</span>
+                  <span style={{fontSize:11,fontWeight:600,color:"#3A5010"}}>{moneyS(d.totalInc)}</span>
+                  <span style={{fontSize:11,fontWeight:600,color:"#8A1060"}}>{moneyS(d.totalSpent)}</span>
+                  <span style={{fontSize:12,fontWeight:800,color:d.net>=0?"#3A5010":"#c04040"}}>{d.net>=0?"+ ":"– "}{moneyS(Math.abs(d.net))}</span>
                 </div>
               </div>
             ))}
@@ -794,7 +840,8 @@ function App(){
   },[incomes,allTxns,year]);
 
   return(
-    <div style={{fontFamily:"'Nunito',sans-serif",fontWeight:500,background:"#FAF7F2",minHeight:"100vh",padding:mob?"14px 12px":"24px 18px",color:"#1a1a1a"}}>
+    <div style={{fontFamily:"'Nunito',sans-serif",fontWeight:500,background:"#F3EFE8",minHeight:"100vh",color:"#1a1a1a"}}>
+      <div style={{maxWidth:600,margin:"0 auto",padding:mob?"14px 12px":"24px 18px"}}>
 
       {/* Edit Alloc Modal */}
       {showAlloc&&(
@@ -830,25 +877,28 @@ function App(){
             </select>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:6,marginTop:1}}>
-            <p style={{fontSize:11,color:"#C0B8C8",fontWeight:700,letterSpacing:"0.05em",textTransform:"uppercase"}}>Vanni</p>
+            <p style={{fontSize:11,color:"#C0B4C4",fontWeight:700,letterSpacing:"0.05em",textTransform:"uppercase"}}>Vanni</p>
             <div title={syncStatus} style={{width:6,height:6,borderRadius:"50%",background:syncStatus==="synced"?"#9CB071":syncStatus==="syncing"?"#F0DB7D":"#FD9FA2",transition:"background 0.3s"}}/>
           </div>
         </div>
         <div style={{display:"flex",gap:6,alignItems:"center"}}>
-          <div style={{width:24,height:24,borderRadius:"50%",background:"#FFB7D5",opacity:0.7}}/>
-          <div style={{width:16,height:16,borderRadius:"50%",background:"#F0DB7D",opacity:0.8}}/>
-          <div style={{width:20,height:20,borderRadius:"50%",background:"#9CB071",opacity:0.6}}/>
+          <div style={{width:10,height:10,borderRadius:"50%",background:"#FFB7D5"}}/>
+          <div style={{width:7,height:7,borderRadius:"50%",background:"#F0DB7D"}}/>
+          <div style={{width:8,height:8,borderRadius:"50%",background:"#9CB071"}}/>
         </div>
       </div>
 
       {/* Nav */}
-      <div className="hscroll" style={{marginBottom:16}}>
-        <div style={{display:"flex",gap:3,background:"#F0F0F8",borderRadius:14,padding:4,width:"fit-content"}}>
-          {VIEWS.map(([k,icon])=>(
-            <button key={k} className="tbtn" onClick={()=>setView(k)} style={{padding:"7px 13px",borderRadius:10,fontSize:12,fontWeight:view===k?800:600,background:view===k?"white":"transparent",color:view===k?"#1a1a1a":"#A0A8B8",boxShadow:view===k?"0 2px 6px rgba(0,0,0,0.08)":"none",whiteSpace:"nowrap"}}>
-              {k==="home"?"Home":k==="month"?"Month":k==="investments"?"Invest":k==="yearly"?"Yearly":k==="recur"?"Recurring":k==="goals"?"Goals":"Categories"}
-            </button>
-          ))}
+      <div className="hscroll" style={{marginBottom:20}}>
+        <div style={{display:"flex",gap:0,borderBottom:"2px solid #EDE8E0",width:"100%",minWidth:"max-content"}}>
+          {[["home","Home"],["month","Month"],["investments","Invest"],["yearly","Year"],["recur","Recurring"],["goals","Goals"],["cats","Categories"]].map(([k,label])=>{
+            const active=view===k;
+            return(
+              <button key={k} className="tbtn" onClick={()=>setView(k)} style={{padding:"10px 14px",fontSize:12,fontWeight:active?800:500,color:active?"#9D5783":"#B0A898",background:"none",borderBottom:active?"2px solid #9D5783":"2px solid transparent",marginBottom:"-2px",whiteSpace:"nowrap",letterSpacing:active?"0.01em":"0"}}>
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -869,81 +919,71 @@ function App(){
           </div>
         </div>
       )}
-      {view==="month"&&<div style={{height:3,background:"#F0F0F8",marginBottom:16,borderRadius:"0 0 4px 4px"}}/>}
+      {view==="month"&&<div style={{height:3,background:"#F0EDE8",marginBottom:16,borderRadius:"0 0 4px 4px"}}/>}
 
       {/* View content */}
       <div onTouchStart={onTS} onTouchMove={onTM} onTouchEnd={onTE} style={{userSelect:"none"}}>
         {/* HOME */}
         {view==="home"&&(()=>{
           return(
-            <div style={{display:"flex",flexDirection:"column",gap:16}}>
-              {/* Net worth circle + glance */}
-              <div style={{display:"flex",gap:12,alignItems:"stretch"}}>
-                <div style={{background:"linear-gradient(145deg,#9CB071,#AEACEB)",borderRadius:24,padding:"20px 16px",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minWidth:mob?130:150,flexShrink:0,position:"relative",overflow:"hidden",boxShadow:"0 6px 20px rgba(156,176,113,0.3)"}}>
-                  <div style={{fontSize:9,fontWeight:700,color:"rgba(255,255,255,0.75)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:8}}>Net Worth</div>
-                  <div style={{position:"relative",width:mob?84:96,height:mob?84:96,marginBottom:10}}>
-                    <svg viewBox="0 0 100 100" style={{width:"100%",height:"100%",transform:"rotate(-90deg)"}}>
-                      <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="9"/>
-                      <circle cx="50" cy="50" r="42" fill="none" stroke="white" strokeWidth="9" strokeDasharray={`${Math.min((netWorth/500000)*264,264)} 264`} strokeLinecap="round"/>
-                    </svg>
-                    <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                      <div style={{fontSize:mob?12:14,fontWeight:900,color:"white",textAlign:"center",lineHeight:1.1}}>{moneyS(netWorth)}</div>
-                    </div>
-                  </div>
-                  <div style={{display:"flex",flexDirection:"column",gap:4,width:"100%"}}>
-                    {[{l:"Invest",v:totalInvested,dot:"#F0DB7D"},{l:"Goals",v:totalSaved,dot:"#FFB7D5"}].map(s=>(
-                      <div key={s.l} style={{display:"flex",alignItems:"center",gap:5}}>
-                        <div style={{width:6,height:6,borderRadius:"50%",background:s.dot,flexShrink:0}}/>
-                        <div style={{fontSize:9,fontWeight:600,color:"rgba(255,255,255,0.7)",flex:1}}>{s.l}</div>
-                        <div style={{fontSize:10,fontWeight:800,color:"white"}}>{moneyS(s.v)}</div>
+            <div style={{display:"flex",flexDirection:"column",gap:28}}>
+
+              {/* ── Net Worth Circle ── */}
+              <div style={{display:"flex",flexDirection:"column",alignItems:"center",paddingTop:8}}>
+                <div style={{width:mob?160:180,height:mob?160:180,borderRadius:"50%",background:"linear-gradient(145deg,#9D5783,#AEACEB)",boxShadow:"0 10px 36px rgba(157,87,131,0.3)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2}}>
+                  <div style={{fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.6)",textTransform:"uppercase",letterSpacing:"0.1em"}}>Net Worth</div>
+                  <div style={{fontSize:mob?24:28,fontWeight:900,color:"white",lineHeight:1.1,letterSpacing:"-0.02em"}}>{moneyS(netWorth)}</div>
+                  <div style={{display:"flex",gap:10,marginTop:6}}>
+                    {[{l:"Inv",v:totalInvested,dot:"#F0DB7D"},{l:"Goals",v:totalSaved,dot:"#FFB7D5"}].map(s=>(
+                      <div key={s.l} style={{display:"flex",alignItems:"center",gap:3}}>
+                        <div style={{width:5,height:5,borderRadius:"50%",background:s.dot}}/>
+                        <span style={{fontSize:8,fontWeight:700,color:"rgba(255,255,255,0.75)"}}>{s.l} {moneyS(s.v)}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div style={{flex:1,display:"flex",flexDirection:"column",gap:8}}>
-                  <div style={{fontSize:11,fontWeight:800,color:"#9D5783",textTransform:"uppercase",letterSpacing:"0.08em"}}>{year} at a glance</div>
-                  {thisYear.hasData?(
-                    <>
-                      {[
-                        {l:"Income",v:thisYear.totalInc,bg:"#B7CEEC",c:"#1A3D60"},
-                        {l:"Spent",v:thisYear.totalSpent,bg:"#FFB7D5",c:"#701040"},
-                        {l:"Net",v:thisYear.net,bg:thisYear.net>=0?"#9CB071":"#FD9FA2",c:thisYear.net>=0?"#2A4A10":"#801010"},
-                      ].map(s=>(
-                        <div key={s.l} style={{background:s.bg,borderRadius:12,padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                          <span style={{fontSize:11,fontWeight:800,color:s.c,textTransform:"uppercase",letterSpacing:"0.05em"}}>{s.l}</span>
-                          <span style={{fontSize:mob?13:15,fontWeight:900,color:s.c}}>{s.v<0?"-":""}{moneyS(Math.abs(s.v))}</span>
-                        </div>
-                      ))}
-                    </>
-                  ):(
-                    <div style={{fontSize:12,color:"#C0C8D0",padding:"10px 0",fontWeight:600}}>No data for {year}</div>
-                  )}
+              </div>
+
+              {/* ── Year at a glance ── */}
+              <div style={{paddingBottom:4}}>
+                <div style={{fontSize:10,fontWeight:700,color:"#B0A898",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:14,textAlign:"center"}}>{year} at a glance</div>
+                <div style={{display:"flex",justifyContent:"space-around"}}>
+                  {[
+                    {l:"Income", v:thisYear.totalInc, c:"#3A5080"},
+                    {l:"Spent",  v:thisYear.totalSpent, c:"#8A1060"},
+                    {l:thisYear.net>=0?"Saved":"Over", v:Math.abs(thisYear.net||0), c:thisYear.net>=0?"#3A5010":"#c04040"},
+                  ].map(s=>(
+                    <div key={s.l} style={{textAlign:"center"}}>
+                      <div style={{fontSize:mob?18:22,fontWeight:900,color:s.c,lineHeight:1}}>{moneyS(s.v)}</div>
+                      <div style={{fontSize:10,fontWeight:600,color:"#B0A898",marginTop:4,textTransform:"uppercase",letterSpacing:"0.06em"}}>{s.l}</div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Investment accounts */}
+              {/* ── Investments ── */}
               {investments.length>0&&(
-                <div style={S.card}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-                    <div style={{fontSize:12,fontWeight:800,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:"0.06em"}}>Investments</div>
-                    <button className="tbtn" onClick={()=>setView("investments")} style={{fontSize:11,fontWeight:700,color:"#9D5783",background:"none",padding:0}}>Manage →</button>
+                <div>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+                    <div style={{fontSize:10,fontWeight:700,color:"#B0A898",textTransform:"uppercase",letterSpacing:"0.1em"}}>Investments</div>
+                    <button className="tbtn" onClick={()=>setView("investments")} style={{fontSize:11,fontWeight:700,color:"#9D5783",background:"none",padding:0}}>All →</button>
                   </div>
-                  {investments.map(inv=>{
+                  {investments.map((inv,i)=>{
                     const latest=inv.entries&&inv.entries.length>0?inv.entries[inv.entries.length-1].value:0;
                     const first=inv.entries&&inv.entries.length>0?inv.entries[0].value:0;
                     const gain=latest-first;
                     return(
-                      <div key={inv.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid #F5F5FA"}}>
+                      <div key={inv.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingBottom:12,marginBottom:12,borderBottom:i<investments.length-1?"1px solid #EDE8E0":"none"}}>
                         <div style={{display:"flex",alignItems:"center",gap:10}}>
-                          <div style={{width:10,height:10,borderRadius:"50%",background:inv.color,flexShrink:0}}/>
+                          <div style={{width:9,height:9,borderRadius:3,background:inv.color,flexShrink:0}}/>
                           <div>
-                            <div style={{fontSize:13,fontWeight:700}}>{inv.name}</div>
-                            <div style={{fontSize:10,color:"#bbb",fontWeight:600}}>{inv.type}</div>
+                            <div style={{fontSize:13,fontWeight:700,color:"#1a1a1a"}}>{inv.name}</div>
+                            <div style={{fontSize:10,color:"#C0B8B0",fontWeight:500}}>{inv.type}</div>
                           </div>
                         </div>
                         <div style={{textAlign:"right"}}>
-                          <div style={{fontSize:14,fontWeight:900}}>{moneyS(latest)}</div>
-                          {gain!==0&&<div style={{fontSize:10,fontWeight:700,color:gain>0?"#3A5010":"#c04040"}}>{gain>0?"+":""}{moneyS(gain)}</div>}
+                          <div style={{fontSize:14,fontWeight:800,color:"#1a1a1a"}}>{moneyS(latest)}</div>
+                          {gain!==0&&<div style={{fontSize:10,fontWeight:600,color:gain>0?"#3A5010":"#c04040"}}>{gain>0?"+":""}{moneyS(gain)}</div>}
                         </div>
                       </div>
                     );
@@ -951,66 +991,56 @@ function App(){
                 </div>
               )}
 
-              {/* Goals */}
+              {/* ── Goals ── */}
               {activeGoals.length>0&&(
-                <div style={S.card}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-                    <div style={{fontSize:12,fontWeight:800,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:"0.06em"}}>Goals</div>
+                <div>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+                    <div style={{fontSize:10,fontWeight:700,color:"#B0A898",textTransform:"uppercase",letterSpacing:"0.1em"}}>Goals</div>
                     <button className="tbtn" onClick={()=>setView("goals")} style={{fontSize:11,fontWeight:700,color:"#9D5783",background:"none",padding:0}}>All →</button>
                   </div>
-                  {activeGoals.slice(0,3).map(g=><GoalMini key={g.id} goal={g}/>)}
-                </div>
-              )}
-
-              {/* Monthly savings strip */}
-              <div style={S.card}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-                  <div style={{fontSize:12,fontWeight:800,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:"0.06em"}}>{year} Monthly</div>
-                  <button className="tbtn" onClick={()=>setView("yearly")} style={{fontSize:11,fontWeight:700,color:"#9D5783",background:"none",padding:0}}>Details →</button>
-                </div>
-                <div style={{display:"flex",gap:4,alignItems:"flex-end",height:56}}>
-                  {MONTHS.map((_,i)=>{
-                    const mInc=n(incomes[i]);
-                    const mSp=(allTxns[i]||[]).filter(t=>t.kind==="expense").reduce((s,t)=>s+n(t.amount),0);
-                    const net=mInc-mSp;
-                    const hasData=mInc>0||mSp>0;
-                    const maxVal=Math.max(...MONTHS.map((_,j)=>{const a=n(incomes[j]);const b=(allTxns[j]||[]).filter(t=>t.kind==="expense").reduce((s,t)=>s+n(t.amount),0);return Math.abs(a-b);}),1);
-                    const h=hasData?Math.max(Math.abs(net)/maxVal*44,3):3;
-                    const col=!hasData?"#F0F0F8":net>=0?"#9CB071":"#FD9FA2";
+                  {activeGoals.map((g,gi)=>{
+                    const DOTS=["#F0DB7D","#FFB7D5","#9CB071","#B7CEEC","#AEACEB","#FD9FA2"];
+                    const dot=DOTS[gi%DOTS.length];
+                    const pct=n(g.target)>0?Math.min(g.saved/n(g.target)*100,100):0;
+                    const rem=Math.max(n(g.target)-g.saved,0);
                     return(
-                      <div key={i} onClick={()=>{setMi(i);setView("month");}} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,cursor:"pointer"}}>
-                        <div style={{width:"100%",height:h,borderRadius:"3px 3px 0 0",background:col,transition:"height 0.3s"}}/>
-                        <span style={{fontSize:8,fontWeight:i===mi?800:600,color:i===mi?"#9D5783":"#C0C8D0"}}>{MONTHS[i].slice(0,1)}</span>
+                      <div key={g.id} style={{marginBottom:14}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
+                          <div style={{display:"flex",alignItems:"center",gap:8}}>
+                            <div style={{width:8,height:8,borderRadius:2,background:dot,flexShrink:0}}/>
+                            <span style={{fontSize:13,fontWeight:600,color:"#1a1a1a"}}>{g.name}</span>
+                          </div>
+                          <div style={{textAlign:"right"}}>
+                            <span style={{fontSize:13,fontWeight:800,color:"#1a1a1a"}}>{Math.round(pct)}%</span>
+                            <span style={{fontSize:10,fontWeight:500,color:"#C0B8B0",marginLeft:6}}>{rem>0?moneyS(rem)+" left":"🎉"}</span>
+                          </div>
+                        </div>
+                        <div style={{background:"#EDE8E0",borderRadius:99,height:4,overflow:"hidden"}}>
+                          <div style={{width:pct+"%",height:"100%",borderRadius:99,background:dot,transition:"width 0.4s"}}/>
+                        </div>
                       </div>
                     );
                   })}
                 </div>
-                <div style={{display:"flex",justifyContent:"space-between",marginTop:8}}>
-                  <span style={{fontSize:11,fontWeight:700,color:"#B0B8C0"}}>
-                    {MONTHS.filter((_,i)=>n(incomes[i])>0).length} months tracked
-                  </span>
-                  <span style={{fontSize:11,fontWeight:800,color:thisYear.net>=0?"#3A5010":"#c04040"}}>
-                    {thisYear.net>=0?"Saved ":"Over "}{moneyS(Math.abs(thisYear.net||0))} YTD
-                  </span>
-                </div>
-              </div>
+              )}
 
-              {/* All years */}
+              {/* ── Year History ── */}
               {allYearsData.length>0&&(
-                <div style={S.card}>
-                  <div style={{fontSize:12,fontWeight:800,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:12}}>Year History</div>
-                  {allYearsData.map(d=>(
-                    <div key={d.year} onClick={()=>{switchYear(d.year);setView("yearly");}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"9px 0",borderBottom:"1px solid #F5F5FA",cursor:"pointer"}}>
+                <div>
+                  <div style={{fontSize:10,fontWeight:700,color:"#B0A898",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12}}>Year History</div>
+                  {allYearsData.map((d,i)=>(
+                    <div key={d.year} onClick={()=>{switchYear(d.year);setView("yearly");}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingBottom:12,marginBottom:12,borderBottom:i<allYearsData.length-1?"1px solid #EDE8E0":"none",cursor:"pointer"}}>
                       <span style={{fontSize:13,fontWeight:700,color:d.year===year?"#9D5783":"#555"}}>{d.year}</span>
-                      <div style={{display:"flex",gap:10}}>
-                        <span style={{fontSize:12,fontWeight:700,color:"#3A5010"}}>{moneyS(d.totalInc)}</span>
-                        <span style={{fontSize:12,fontWeight:700,color:"#8A1060"}}>{moneyS(d.totalSpent)}</span>
-                        <span style={{fontSize:12,fontWeight:800,color:d.net>=0?"#3A5010":"#c04040"}}>{moneyS(Math.abs(d.net))}</span>
+                      <div style={{display:"flex",gap:12,alignItems:"center"}}>
+                        <span style={{fontSize:11,fontWeight:500,color:"#C0B8B0"}}>In {moneyS(d.totalInc)}</span>
+                        <span style={{fontSize:11,fontWeight:500,color:"#C0B8B0"}}>Out {moneyS(d.totalSpent)}</span>
+                        <span style={{fontSize:12,fontWeight:800,color:d.net>=0?"#3A5010":"#c04040"}}>{d.net>=0?"+ ":"– "}{moneyS(Math.abs(d.net))}</span>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
+
             </div>
           );
         })()}
@@ -1020,73 +1050,60 @@ function App(){
 
         {/* INVESTMENTS */}
         {view==="investments"&&(
-          <div style={{display:"flex",flexDirection:"column",gap:14}}>
-            {/* Big gradient total box */}
+          <div style={{display:"flex",flexDirection:"column",gap:20}}>
+            {/* Header summary */}
             {investments.length>0&&(()=>{
               const firstVal=investments.reduce((s,inv)=>s+(inv.entries&&inv.entries.length>0?inv.entries[0].value:0),0);
               const totalGain=totalInvested-firstVal;
               const totalGainPct=firstVal>0?(totalGain/firstVal*100):0;
+              // Donut segments
+              const segs=investments.map(inv=>({value:inv.entries&&inv.entries.length>0?inv.entries[inv.entries.length-1].value:0,color:inv.color})).filter(s=>s.value>0);
               return(
-                <div style={{background:"linear-gradient(135deg,#9D5783,#AEACEB)",borderRadius:24,padding:mob?"22px 20px":"28px 28px 24px",boxShadow:"0 8px 28px rgba(157,87,131,0.28)"}}>
-                  <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.7)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:10}}>Total Invested</div>
-                  <div style={{fontSize:mob?38:52,fontWeight:900,color:"white",lineHeight:1,marginBottom:8,letterSpacing:"-0.02em"}}>{moneyS(totalInvested)}</div>
-                  {totalGain!==0&&(
-                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16}}>
-                      <span style={{fontSize:14,fontWeight:800,color:totalGain>0?"#D4F0B0":"#FFD0D0"}}>{totalGain>0?"▲":"▼"} {moneyS(Math.abs(totalGain))}</span>
-                      <span style={{fontSize:12,fontWeight:700,color:"rgba(255,255,255,0.55)"}}>all time ({totalGainPct>0?"+":""}{totalGainPct.toFixed(1)}%)</span>
-                    </div>
-                  )}
-                  <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                    {investments.map(inv=>{
-                      const latest=inv.entries&&inv.entries.length>0?inv.entries[inv.entries.length-1].value:0;
-                      const pct=totalInvested>0?Math.round(latest/totalInvested*100):0;
-                      return(
-                        <div key={inv.id} style={{display:"flex",alignItems:"center",gap:5,background:"rgba(255,255,255,0.15)",borderRadius:99,padding:"5px 10px"}}>
-                          <div style={{width:7,height:7,borderRadius:"50%",background:inv.color,flexShrink:0}}/>
-                          <span style={{fontSize:11,fontWeight:700,color:"white"}}>{inv.name}</span>
-                          <span style={{fontSize:11,fontWeight:800,color:"rgba(255,255,255,0.7)"}}>{pct}%</span>
-                        </div>
-                      );
-                    })}
+                <div style={{display:"flex",alignItems:"center",gap:20,paddingBottom:20,borderBottom:"1px solid #EDE8E0"}}>
+                  <DonutChart segments={segs.length>0?segs:[{value:1,color:"#F0F0F0"}]} size={mob?90:100} thickness={14}/>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:10,fontWeight:600,color:"#B0A898",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:4}}>Total Invested</div>
+                    <div style={{fontSize:mob?28:34,fontWeight:900,color:"#1a1a1a",lineHeight:1,letterSpacing:"-0.02em",marginBottom:6}}>{moneyS(totalInvested)}</div>
+                    {totalGain!==0&&(
+                      <div style={{display:"flex",alignItems:"center",gap:6}}>
+                        <span style={{fontSize:13,fontWeight:800,color:totalGain>0?"#3A5010":"#c04040"}}>{totalGain>0?"▲":"▼"} {moneyS(Math.abs(totalGain))}</span>
+                        <span style={{fontSize:11,fontWeight:500,color:"#B0A898"}}>all time · {totalGainPct>0?"+":""}{totalGainPct.toFixed(1)}%</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
             })()}
-            {investments.length>0&&(
-              <div style={{display:"grid",gridTemplateColumns:mob?"repeat(2,1fr)":"repeat(4,1fr)",gap:10}}>
-                {investments.map(inv=>{
-                  const latest=inv.entries&&inv.entries.length>0?inv.entries[inv.entries.length-1].value:0;
-                  const prev=inv.entries&&inv.entries.length>1?inv.entries[inv.entries.length-2].value:latest;
-                  const change=latest-prev;
-                  return(
-                    <div key={inv.id} className="bucket-card" style={{background:inv.color,borderRadius:18,padding:mob?"14px 12px":"18px 16px 14px",boxShadow:"0 4px 14px rgba(0,0,0,0.1)"}}>
-                      <div style={{fontSize:9,fontWeight:700,color:"rgba(0,0,0,0.45)",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>{inv.type}</div>
-                      <div style={{fontSize:mob?16:20,fontWeight:900,color:"#1a1a1a",marginBottom:2}}>{moneyS(latest)}</div>
-                      <div style={{fontSize:10,fontWeight:600,color:"rgba(0,0,0,0.45)"}}>{inv.name}</div>
-                      {change!==0&&<div style={{fontSize:10,fontWeight:700,color:change>0?"#2A4A10":"#c04040",marginTop:4}}>{change>0?"+":""}{moneyS(change)}</div>}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-            {investments.map(inv=>{
+            {/* Account list */}
+            {investments.map((inv,idx)=>{
               const latest=inv.entries&&inv.entries.length>0?inv.entries[inv.entries.length-1].value:0;
               const first=inv.entries&&inv.entries.length>0?inv.entries[0].value:0;
               const gain=latest-first;
-              const pct=first>0?(gain/first*100):0;
+              const gainPct=first>0?(gain/first*100):0;
+              const sharePct=totalInvested>0?Math.round(latest/totalInvested*100):0;
               return(
-                <div key={inv.id} style={{...S.card,borderLeft:"4px solid "+inv.color}}>
+                <div key={inv.id} style={{paddingBottom:20,borderBottom:idx<investments.length-1?"1px solid #EDE8E0":"none"}}>
+                  {/* Account header row */}
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
-                    <div>
-                      <div style={{fontSize:15,fontWeight:800,marginBottom:2}}>{inv.name}</div>
-                      <span style={{fontSize:11,padding:"2px 8px",borderRadius:99,background:inv.color+"33",color:"#1a1a1a",fontWeight:700}}>{inv.type}</span>
+                    <div style={{display:"flex",alignItems:"center",gap:10}}>
+                      <div style={{width:12,height:36,borderRadius:6,background:inv.color,flexShrink:0}}/>
+                      <div>
+                        <div style={{fontSize:15,fontWeight:800,color:"#1a1a1a",lineHeight:1.2}}>{inv.name}</div>
+                        <div style={{fontSize:10,fontWeight:600,color:"#B0A898",marginTop:2}}>{inv.type} · {sharePct}% of portfolio</div>
+                      </div>
                     </div>
                     <div style={{textAlign:"right"}}>
-                      <div style={{fontSize:18,fontWeight:900}}>{moneyS(latest)}</div>
-                      {gain!==0&&<div style={{fontSize:11,fontWeight:700,color:gain>0?"#3A5010":"#c04040"}}>{gain>0?"+":""}{moneyS(gain)} ({gain>0?"+":""}{pct.toFixed(1)}%)</div>}
+                      <div style={{fontSize:18,fontWeight:900,color:"#1a1a1a"}}>{moneyS(latest)}</div>
+                      {gain!==0&&<div style={{fontSize:11,fontWeight:600,color:gain>0?"#3A5010":"#c04040"}}>{gain>0?"+":""}{moneyS(gain)} ({gainPct>0?"+":""}{gainPct.toFixed(1)}%)</div>}
                     </div>
                   </div>
-                  {inv.entries&&inv.entries.length>=2&&<LineChart entries={inv.entries.slice(-12)} color={inv.color}/>}
+                  {/* Portfolio share bar */}
+                  <div style={{background:"#EDE8E0",borderRadius:99,height:4,overflow:"hidden",marginBottom:12}}>
+                    <div style={{width:sharePct+"%",height:"100%",borderRadius:99,background:inv.color,transition:"width 0.4s"}}/>
+                  </div>
+                  {/* Mini line chart */}
+                  {inv.entries&&inv.entries.length>=2&&<LineChart entries={inv.entries} color={inv.color}/>}
+                  {/* Update row */}
                   <div style={{display:"flex",gap:8,marginTop:12,alignItems:"center"}}>
                     <div style={{position:"relative",flex:1}}><DS/><input style={dInp({fontSize:16})} placeholder="Update value" value={updateVals[inv.id]||""} onChange={e=>setUpdateVals(p=>({...p,[inv.id]:e.target.value}))}/></div>
                     <button className="tbtn" onClick={()=>{
@@ -1095,8 +1112,8 @@ function App(){
                       const entry={date:new Date().toISOString().slice(0,10),value:v};
                       setInvestments(p=>p.map(i=>i.id===inv.id?{...i,entries:[...(i.entries||[]),entry]}:i));
                       setUpdateVals(p=>({...p,[inv.id]:""}));
-                    }} style={{padding:"8px 16px",background:inv.color,color:"#1a1a1a",borderRadius:10,fontWeight:800,fontSize:12}}>Save</button>
-                    <button className="xbtn" style={{fontSize:18}} onPointerDown={e=>{e.preventDefault();setInvestments(p=>p.filter(i=>i.id!==inv.id))}}>×</button>
+                    }} style={{padding:"8px 18px",background:"#9D5783",color:"white",borderRadius:10,fontWeight:800,fontSize:12}}>Save</button>
+                    <button className="xbtn" style={{fontSize:18,color:"#C0B8B0"}} onPointerDown={e=>{e.preventDefault();setInvestments(p=>p.filter(i=>i.id!==inv.id))}}>×</button>
                   </div>
                 </div>
               );
@@ -1138,7 +1155,7 @@ function App(){
             {activeGoals.length>0&&(
               <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12}}>
                 {activeGoals.map((goal,gi)=>{
-                  const GCOLS=["#FFB7D5","#F0DB7D","#9CB071","#B7CEEC","#AEACEB","#FD9FA2","#F9E4BC","#ACC2D9"];
+                  const GCOLS=["#FFB7D5","#F0DB7D","#9CB071","#B7CEEC","#AEACEB","#FD9FA2","#F5EAC0","#B7CEEC"];
                   const col=GCOLS[gi%GCOLS.length];
                   const rem=Math.max(n(goal.target)-goal.saved,0);
                   const pct=n(goal.target)>0?Math.min(goal.saved/n(goal.target)*100,100):0;
@@ -1171,7 +1188,7 @@ function App(){
                 })}
               </div>
             )}
-            <div style={{...S.card,border:"2px dashed #D0D0E8",boxShadow:"none"}}>
+            <div style={{...S.card,border:"2px dashed #E0DCEC",boxShadow:"none"}}>
               <div style={{fontSize:12,fontWeight:800,color:"#B0B8C0",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:14}}>New Goal</div>
               <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
                 <div style={{flex:"2 1 140px"}}><FL>Name</FL><input style={inp} placeholder="e.g. Europe Trip" value={newGoal.name} onChange={e=>setNewGoal(p=>({...p,name:e.target.value}))}/></div>
@@ -1186,7 +1203,7 @@ function App(){
                   {showArchived?"▾":"▸"} {archGoals.length} archived
                 </button>
                 {showArchived&&archGoals.map(goal=>(
-                  <div key={goal.id} style={{...S.card,opacity:0.6,borderLeft:"4px solid #D0D0E8",marginBottom:10}}>
+                  <div key={goal.id} style={{...S.card,opacity:0.6,borderLeft:"4px solid #E0DCEC",marginBottom:10}}>
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <div><div style={{fontSize:14,fontWeight:700,color:"#888"}}>{goal.name}</div><div style={{fontSize:11,color:"#bbb",fontWeight:600}}>🎉 {money(goal.saved)} saved</div></div>
                       <div style={{display:"flex",gap:8}}>
@@ -1207,7 +1224,7 @@ function App(){
             <div style={S.card}>
               <div style={{fontSize:12,fontWeight:800,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:14}}>Recurring Transactions</div>
               {recur.length===0?<p style={{fontSize:13,color:"#ccc",fontWeight:600}}>No recurring transactions yet.</p>:recur.map((r,i)=>(
-                <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid #F5F5FA"}}>
+                <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid #F0EDE8"}}>
                   <div>
                     <div style={{fontSize:13,fontWeight:700}}>{r.desc}</div>
                     <div style={{fontSize:10,fontWeight:600,color:"#bbb"}}>{r.txnType}</div>
@@ -1219,7 +1236,7 @@ function App(){
                 </div>
               ))}
             </div>
-            <div style={{...S.card,border:"2px dashed #D0D0E8",boxShadow:"none"}}>
+            <div style={{...S.card,border:"2px dashed #E0DCEC",boxShadow:"none"}}>
               <div style={{fontSize:12,fontWeight:800,color:"#B0B8C0",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:14}}>Add Recurring</div>
               <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
                 <div style={{flex:"2 1 140px"}}><FL>Description</FL><input style={inp} placeholder="e.g. Netflix" value={newRecur.desc} onChange={e=>setNewRecur(p=>({...p,desc:e.target.value}))}/></div>
@@ -1234,30 +1251,44 @@ function App(){
         {/* CATEGORIES */}
         {view==="cats"&&(
           <div style={{display:"flex",flexDirection:"column",gap:14}}>
-            <div style={S.card}>
-              <div style={{fontSize:12,fontWeight:800,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:14}}>Categories</div>
-              {["Need","Want"].map(type=>(
-                <div key={type} style={{marginBottom:16}}>
-                  <div style={{fontSize:11,fontWeight:800,color:"#9D5783",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:8}}>{type}s</div>
-                  {cats.filter(c=>c.type===type).map(c=>(
-                    <div key={c.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid #F5F5FA"}}>
-                      <span style={{fontSize:13,fontWeight:600}}>{c.name}</span>
-                      <button className="xbtn" onPointerDown={e=>{e.preventDefault();setCats(p=>p.filter(x=>x.id!==c.id))}}>×</button>
+            {["Need","Want"].map(type=>{
+              const typeCats=cats.filter(cat=>cat.type===type);
+              const bg=type==="Need"?"#F0DB7D":"#FFB7D5";
+              const labelCol=type==="Need"?"#7A5800":"#8A1060";
+              return(
+                <div key={type}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <div style={{width:10,height:10,borderRadius:3,background:bg}}/>
+                      <span style={{fontSize:12,fontWeight:800,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:"0.06em"}}>{type}s</span>
+                      <span style={{fontSize:11,fontWeight:600,color:"#B0B8C0"}}>{typeCats.length}</span>
                     </div>
-                  ))}
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8,marginBottom:4}}>
+                    {typeCats.map(cat=>(
+                      <div key={cat.id} style={{background:"white",borderRadius:12,padding:"10px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",boxShadow:"0 1px 4px rgba(0,0,0,0.06)",border:"1.5px solid #F0EDE8"}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                          <div style={{width:7,height:7,borderRadius:2,background:bg,flexShrink:0}}/>
+                          <span style={{fontSize:12,fontWeight:600,color:"#2a2a2a"}}>{cat.name}</span>
+                        </div>
+                        <button className="xbtn" onPointerDown={e=>{e.preventDefault();setCats(p=>p.filter(x=>x.id!==cat.id))}} style={{fontSize:14,color:"#C0B8B0"}}>×</button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
-            </div>
-            <div style={{...S.card,border:"2px dashed #D0D0E8",boxShadow:"none"}}>
-              <div style={{fontSize:12,fontWeight:800,color:"#B0B8C0",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:14}}>Add Category</div>
-              <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
+              );
+            })}
+            <div style={{background:"white",borderRadius:16,padding:"16px",border:"1.5px dashed #D8D4CE",marginTop:4}}>
+              <div style={{fontSize:11,fontWeight:700,color:"#B0A898",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:12}}>New Category</div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"flex-end"}}>
                 <div style={{flex:"2 1 140px"}}><FL>Name</FL><input style={inp} placeholder="e.g. Gym" value={newCat.name} onChange={e=>setNewCat(p=>({...p,name:e.target.value}))}/></div>
                 <div style={{flex:"1 1 100px"}}><FL>Type</FL><select style={{...inp,cursor:"pointer",fontSize:16}} value={newCat.type} onChange={e=>setNewCat(p=>({...p,type:e.target.value}))}><option>Need</option><option>Want</option></select></div>
-                <button className="tbtn" onClick={()=>{if(!newCat.name.trim())return;setCats(p=>[...p,{...newCat,id:Date.now()}]);setNewCat({name:"",type:"Need"});}} style={{padding:"8px 20px",background:"#9CB071",color:"white",borderRadius:10,fontWeight:800}}>+ Add</button>
+                <button className="tbtn" onClick={()=>{if(!newCat.name.trim())return;setCats(p=>[...p,{...newCat,id:Date.now()}]);setNewCat({name:"",type:"Need"});}} style={{padding:"10px 22px",background:"#9D5783",color:"white",borderRadius:10,fontWeight:800,fontSize:13}}>+ Add</button>
               </div>
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );
