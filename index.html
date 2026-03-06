@@ -137,7 +137,8 @@ function dInp(extra){return{...S.inp,paddingLeft:28,...extra};}
 // ── LINE CHART for investments ─────────────────────────────
 function LineChart({entries,color}){
   const [hover,setHover]=useState(null);
-  if(!entries||entries.length<2)return null;
+  if(!entries||entries.length<1)return null;
+  if(entries.length===1){const W=300,H=60;return(<svg viewBox={`0 0 ${W} ${H}`} style={{width:"100%",height:60,display:"block"}}><circle cx={W/2} cy={H/2} r={4} fill={color}/></svg>);}
   const vals=entries.map(e=>e.value);
   const mn=Math.min(...vals)*0.97, mx=Math.max(...vals)*1.01;
   const range=mx-mn||1;
@@ -204,7 +205,7 @@ function JointLineChart({investments}){
   const allDates=[...new Set(
     investments.flatMap(inv=>(inv.entries||[]).map(e=>e.date))
   )].sort();
-  if(allDates.length<2)return(
+  if(allDates.length<1)return(
     <div style={{textAlign:"center",padding:"20px 0",fontSize:12,color:"#C0B8B0",fontWeight:600}}>
       Add accounts and save monthly values to start tracking history
     </div>
@@ -484,7 +485,7 @@ function App(){
     needs:exTxns.filter(t=>t.txnType==="Need").reduce((s,t)=>s+n(t.amount),0),
     wants:exTxns.filter(t=>t.txnType==="Want").reduce((s,t)=>s+n(t.amount),0),
     savings:exTxns.filter(t=>t.txnType==="Saving").reduce((s,t)=>s+n(t.amount),0),
-    total:exTxns.reduce((s,t)=>s+n(t.amount),0),
+    get total(){return this.needs+this.wants+this.savings+B.joint+B.mom;},
   };
   const fTxns=filter==="all"?mTxns:filter==="recurring"?mTxns.filter(t=>t.recurring):filter==="income"?mTxns.filter(t=>t.kind==="income"):mTxns.filter(t=>t.txnType===filter);
   const recApplied=recurOverrides[mi];
@@ -570,7 +571,7 @@ function App(){
             <div>
               <div style={{fontSize:11,fontWeight:700,color:"rgba(0,0,0,0.45)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:4}}>{MONTHS[mi]} {year}</div>
               <div style={{fontSize:mob?30:36,fontWeight:900,color:"#1a1a1a",lineHeight:1,marginBottom:6}}>{B.inc>0?moneyS(B.inc):"—"}</div>
-              {Sp.total>0&&<div style={{fontSize:12,fontWeight:600,color:"rgba(0,0,0,0.45)"}}>{moneyS(Sp.total)} spent · {B.inc>Sp.total?moneyS(B.inc-Sp.total)+" left":"over budget"}</div>}
+              {B.inc>0&&<div style={{fontSize:12,fontWeight:600,color:"rgba(0,0,0,0.45)"}}>{moneyS(Sp.total)} spent · {(()=>{const rem=B.inc-Sp.total;return rem>=0?moneyS(rem)+" left":<span style={{color:"#c04040",fontWeight:800}}>{moneyS(Math.abs(rem))} over</span>;})()}</div>}
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:8,alignItems:"flex-end"}}>
               <div style={{background:"rgba(255,255,255,0.55)",borderRadius:12,padding:"8px 12px",display:"flex",alignItems:"center",gap:8}}>
@@ -1233,11 +1234,20 @@ function App(){
                       const v=n(updateVals[inv.id]);
                       if(!v)return;
                       const month=new Date().toISOString().slice(0,7); // YYYY-MM
+                      // Calculate deposit = new value minus last known value
+                      const lastVal=inv.entries&&inv.entries.length>0?inv.entries[inv.entries.length-1].value:0;
+                      const deposit=Math.max(v-lastVal,0);
                       setInvestments(p=>p.map(i=>{
                         if(i.id!==inv.id)return i;
                         const existing=(i.entries||[]).filter(e=>e.date!==month);
                         return{...i,entries:[...existing,{date:month,value:v}].sort((a,b)=>a.date.localeCompare(b.date))};
                       }));
+                      // Add deposit as a Saving expense in current month
+                      if(deposit>0){
+                        const today=new Date().toISOString().slice(0,10);
+                        const txn={id:Date.now()+Math.random(),desc:"→ "+inv.name,amount:String(deposit),txnType:"Saving",catId:"",date:today,recurring:false,kind:"expense"};
+                        setAllTxns(p=>p.map((arr,i)=>i===mi?[...arr,txn]:arr));
+                      }
                       setUpdateVals(p=>({...p,[inv.id]:""}));
                     }} style={{padding:"8px 18px",background:"#C8C6F0",color:"#5A507A",borderRadius:10,fontWeight:800,fontSize:12}}>Save</button>
                     <button className="xbtn" style={{fontSize:18,color:"#C0B8B0"}} onPointerDown={e=>{e.preventDefault();setInvestments(p=>p.filter(i=>i.id!==inv.id))}}>×</button>
