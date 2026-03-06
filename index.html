@@ -466,13 +466,16 @@ function App(){
   // Computed
   const inc=n(incomes[mi]);
   const pc=paychecks[mi]||2;
+  const jointAmt=Math.round(n(alloc.joint)*pc);
+  const momAmt=Math.round(n(alloc.mom)*pc);
+  const discretionary=Math.max(inc-jointAmt-momAmt,0);
   const B={
     inc,pc,
-    needs:Math.round(inc*n(alloc.needs)/100),
-    wants:Math.round(inc*n(alloc.wants)/100),
-    savings:Math.round(inc*n(alloc.savings)/100),
-    joint:Math.round(n(alloc.joint)*pc),
-    mom:Math.round(n(alloc.mom)*pc),
+    needs:Math.round(discretionary*n(alloc.needs)/100),
+    wants:Math.round(discretionary*n(alloc.wants)/100),
+    savings:Math.round(discretionary*n(alloc.savings)/100),
+    joint:jointAmt,
+    mom:momAmt,
   };
   const mTxns=allTxns[mi]||[];
   const inTxns=mTxns.filter(t=>t.kind==="income");
