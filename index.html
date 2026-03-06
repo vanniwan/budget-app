@@ -616,14 +616,13 @@ function App(){
                   const over=B.inc>0&&spent>budget&&budget>0;
                   const pct=budget>0?Math.min(spent/budget*100,100):0;
                   const rem=budget-spent;
-                  const cardBg=over?"#FD9FA2":bg;
-                  // Arc SVG: 180° semicircle fill
-                  const R=28, circ=Math.PI*R; // half circle circumference
+                  const cardBg=over?"linear-gradient(145deg,#FD9FA2,#F5C0C0)":"linear-gradient(145deg,"+bg+","+bg+"88)";
+                  const R=28, circ=Math.PI*R;
                   const fill=Math.min(pct/100,1)*circ;
                   return(
-                    <div key={key} className="bucket-card" style={{background:cardBg,borderRadius:20,padding:"14px 12px 12px",boxShadow:"0 4px 16px rgba(0,0,0,0.08)",display:"flex",flexDirection:"column",alignItems:"center",gap:0}}>
+                    <div key={key} className="bucket-card" style={{background:cardBg,borderRadius:20,padding:"14px 12px 10px",boxShadow:"0 4px 16px rgba(0,0,0,0.08)",display:"flex",flexDirection:"column",alignItems:"center",gap:0}}>
                       <div style={{fontSize:9,fontWeight:700,color:"rgba(0,0,0,0.4)",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:6}}>{label}</div>
-                      {/* Semicircle arc */}
+                      {/* Semicircle arc with spent in centre */}
                       <div style={{position:"relative",width:68,height:36,marginBottom:4}}>
                         <svg width="68" height="36" viewBox="0 0 68 36">
                           <path d="M4,34 A30,30 0 0,1 64,34" fill="none" stroke="rgba(0,0,0,0.12)" strokeWidth="7" strokeLinecap="round"/>
@@ -631,12 +630,19 @@ function App(){
                             strokeDasharray={`${fill} ${circ}`} style={{transition:"stroke-dasharray 0.5s"}}/>
                         </svg>
                         <div style={{position:"absolute",bottom:0,left:0,right:0,textAlign:"center",fontSize:mob?13:15,fontWeight:900,color:"#1a1a1a",lineHeight:1}}>
-                          {B.inc>0?moneyS(budget):"—"}
+                          {moneyS(spent)}
                         </div>
                       </div>
-                      {B.inc>0&&<div style={{fontSize:9,fontWeight:700,color:over?"#901010":"rgba(0,0,0,0.4)",textAlign:"center"}}>
-                        {over?moneyS(Math.abs(rem))+" over":moneyS(Math.abs(rem))+" left"}
-                      </div>}
+                      {/* Budget allocated */}
+                      <div style={{fontSize:9,fontWeight:600,color:"rgba(0,0,0,0.4)",marginBottom:1}}>
+                        {B.inc>0?moneyS(budget)+" budget":"—"}
+                      </div>
+                      {/* Left or over */}
+                      {B.inc>0&&budget>0&&(
+                        <div style={{fontSize:9,fontWeight:800,color:over?"#901010":"rgba(0,0,0,0.5)"}}>
+                          {over?moneyS(Math.abs(rem))+" over":moneyS(rem)+" left"}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
