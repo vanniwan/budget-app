@@ -195,6 +195,133 @@ function LineChart({entries,color}){
   );
 }
 
+// ── JOINT LINE CHART for all investments ──────────────────
+function JointLineChart({investments}){
+  const [hover,setHover]=useState(null); // {invIdx, ptIdx}
+  if(!investments||investments.length===0)return null;
+
+  // Collect all unique dates across all investments, sorted
+  const allDates=[...new Set(
+    investments.flatMap(inv=>(inv.entries||[]).map(e=>e.date))
+  )].sort();
+  if(allDates.length<2)return(
+    <div style={{textAlign:"center",padding:"20px 0",fontSize:12,color:"#C0B8B0",fontWeight:600}}>
+      Add accounts and save monthly values to start tracking history
+    </div>
+  );
+
+  // For each investment, get value at each date (carry-forward last known)
+  const series=investments.map(inv=>{
+    const entries=inv.entries||[];
+    return{
+      color:inv.color,
+      name:inv.name,
+      vals:allDates.map(d=>{
+        const past=entries.filter(e=>e.date<=d);
+        return past.length>0?past[past.length-1].value:null;
+      }),
+    };
+  });
+
+  const CW=300,CH=110,PAD={t:10,b:8,l:4,r:4};
+  const allVals=series.flatMap(s=>s.vals.filter(v=>v!==null));
+  if(allVals.length===0)return null;
+  const mn=Math.min(...allVals)*0.97;
+  const mx=Math.max(...allVals)*1.005;
+  const range=mx-mn||1;
+
+  const toX=i=>PAD.l+(i/(allDates.length-1))*(CW-PAD.l-PAD.r);
+  const toY=v=>PAD.t+((1-(v-mn)/range)*(CH-PAD.t-PAD.b));
+
+  const moneyF=v=>v>=1000?"$"+(v/1000).toFixed(1)+"k":"$"+Math.round(v);
+
+  return(
+    <div style={{marginBottom:4}}>
+      <svg viewBox={`0 0 ${CW} ${CH}`} style={{width:"100%",height:CH,display:"block",overflow:"visible"}}>
+        {/* Grid lines */}
+        {[25,50,75].map(pct=>{
+          const y=PAD.t+(pct/100)*(CH-PAD.t-PAD.b);
+          return <line key={pct} x1={PAD.l} y1={y} x2={CW-PAD.r} y2={y} stroke="#EDE8E0" strokeWidth="0.5"/>;
+        })}
+        {/* Area fills */}
+        {series.map((s,si)=>{
+          const validPts=s.vals.map((v,i)=>v!==null?{x:toX(i),y:toY(v)}:null).filter(Boolean);
+          if(validPts.length<2)return null;
+          const firstValidIdx=s.vals.findIndex(v=>v!==null);
+          const lastValidIdx=s.vals.length-1-[...s.vals].reverse().findIndex(v=>v!==null);
+          const linePts=allDates.map((_,i)=>{
+            if(i<firstValidIdx||i>lastValidIdx)return null;
+            const v=s.vals[i];
+            if(v===null)return null;
+            return{x:toX(i),y:toY(v)};
+          }).filter(Boolean);
+          if(linePts.length<2)return null;
+          const areaD=`M${linePts[0].x},${linePts[0].y}`+linePts.slice(1).map(p=>`L${p.x},${p.y}`).join("")+`L${linePts[linePts.length-1].x},${CH-PAD.b} L${linePts[0].x},${CH-PAD.b} Z`;
+          return <path key={si} d={areaD} fill={s.color} opacity="0.08"/>;
+        })}
+        {/* Lines + dots */}
+        {series.map((s,si)=>{
+          const firstValidIdx=s.vals.findIndex(v=>v!==null);
+          const lastValidIdx=s.vals.length-1-[...s.vals].reverse().findIndex(v=>v!==null);
+          const linePts=allDates.map((_,i)=>{
+            if(i<firstValidIdx||i>lastValidIdx)return null;
+            const v=s.vals[i];
+            if(v===null)return null;
+            return{x:toX(i),y:toY(v),v,i};
+          }).filter(Boolean);
+          if(linePts.length<2)return null;
+          const lineD="M"+linePts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" L");
+          return(
+            <g key={si}>
+              <path d={lineD} fill="none" stroke={s.color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              {linePts.map((p,pi)=>(
+                <g key={pi} onMouseEnter={()=>setHover({si,pi})} onMouseLeave={()=>setHover(null)}
+                   onTouchStart={()=>setHover({si,pi})} onTouchEnd={()=>setTimeout(()=>setHover(null),1500)}>
+                  <circle cx={p.x} cy={p.y} r={hover&&hover.si===si&&hover.pi===pi?4:2.5}
+                    fill={hover&&hover.si===si&&hover.pi===pi?s.color:"white"}
+                    stroke={s.color} strokeWidth="1.5"/>
+                  <circle cx={p.x} cy={p.y} r={7} fill="transparent"/>
+                </g>
+              ))}
+            </g>
+          );
+        })}
+        {/* Hover tooltip */}
+        {hover!==null&&(()=>{
+          const s=series[hover.si];
+          const firstValidIdx=s.vals.findIndex(v=>v!==null);
+          const lastValidIdx=s.vals.length-1-[...s.vals].reverse().findIndex(v=>v!==null);
+          const linePts=allDates.map((_,i)=>{if(i<firstValidIdx||i>lastValidIdx)return null;const v=s.vals[i];if(v===null)return null;return{x:toX(i),y:toY(v),v,i};}).filter(Boolean);
+          const p=linePts[hover.pi];
+          if(!p)return null;
+          const tipX=Math.max(28,Math.min(p.x,CW-28));
+          const tipY=p.y>30?p.y-18:p.y+14;
+          return(
+            <g>
+              <line x1={p.x} y1={PAD.t} x2={p.x} y2={CH-PAD.b} stroke={s.color} strokeWidth="0.5" strokeDasharray="2,2"/>
+              <rect x={tipX-24} y={tipY-9} width={48} height={14} rx="4" fill={s.color}/>
+              <text x={tipX} y={tipY+1} fontSize="7" fill="white" fontFamily="Nunito,sans-serif" textAnchor="middle" fontWeight="700">{moneyF(p.v)}</text>
+            </g>
+          );
+        })()}
+        {/* Date labels at start + end */}
+        <text x={PAD.l} y={CH} fontSize="6" fill="#C0B8B0" fontFamily="Nunito,sans-serif">{allDates[0].slice(5)}</text>
+        <text x={CW-PAD.r} y={CH} fontSize="6" fill="#C0B8B0" fontFamily="Nunito,sans-serif" textAnchor="end">{allDates[allDates.length-1].slice(5)}</text>
+      </svg>
+      {/* Legend */}
+      <div style={{display:"flex",flexWrap:"wrap",gap:"6px 12px",marginTop:6}}>
+        {investments.map((inv,i)=>(
+          <div key={i} style={{display:"flex",alignItems:"center",gap:4}}>
+            <div style={{width:14,height:2.5,borderRadius:2,background:inv.color}}/>
+            <span style={{fontSize:9,fontWeight:600,color:"#B0A898"}}>{inv.name}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
 // ── Main App ──────────────────────────────────────────────
 function App(){
   const mob=window.innerWidth<600;
@@ -609,18 +736,18 @@ function App(){
                     <input type="checkbox" style={{accentColor:"#9CB071"}} checked={newTxn.recurring} onChange={e=>setNewTxn(p=>({...p,recurring:e.target.checked}))}/>Recurring
                   </label>
                 )}
-                <button className="tbtn" onClick={addTxn} style={{padding:"8px 22px",background:"#9CB071",color:"white",borderRadius:10,fontWeight:800,fontSize:13}}>Add</button>
+                <button className="tbtn" onClick={addTxn} style={{padding:"8px 22px",background:"#AEACEB",color:"white",borderRadius:10,fontWeight:800,fontSize:13}}>Add</button>
               </div>
             </div>
           )}
 
           {/* Receipt */}
-          <div style={{background:"white",borderRadius:"16px 16px 0 0",boxShadow:"0 -2px 0 #E8E0D4, 0 4px 20px rgba(0,0,0,0.07)",overflow:"hidden"}}>
-            {/* Receipt header */}
-            <div style={{background:tabCol,padding:"14px 18px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
+          <div style={{background:tabCol,borderRadius:20,boxShadow:"0 4px 20px rgba(0,0,0,0.1)",overflow:"hidden"}}>
+            {/* Header */}
+            <div style={{padding:"16px 18px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
               <div>
                 <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.7)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:2}}>{MONTHS[mi]} {year}</div>
-                <div style={{fontSize:13,fontWeight:800,color:"white"}}>{mTxns.length} transaction{mTxns.length!==1?"s":""}</div>
+                <div style={{fontSize:15,fontWeight:900,color:"white"}}>{mTxns.length} transaction{mTxns.length!==1?"s":""}</div>
               </div>
               <div className="hscroll" style={{display:"flex",gap:4}}>
                 {[["all","All"],["Need","Need"],["Want","Want"],["Saving","Save"],["income","Income"],["recurring","🔁"]].map(([k,l])=>(
@@ -628,12 +755,8 @@ function App(){
                 ))}
               </div>
             </div>
-
-            {/* Zigzag tear */}
-            <div style={{height:10,background:tabCol,WebkitMaskImage:"radial-gradient(circle at 50% 0%,transparent 10px,black 10px)",maskImage:"radial-gradient(circle at 50% 0%,transparent 10px,black 10px)"}}/>
-
-            {/* Receipt body */}
-            <div style={{padding:"4px 18px 0"}}>
+            {/* Body */}
+            <div style={{background:"rgba(255,255,255,0.92)",borderRadius:"16px 16px 0 0",padding:"4px 18px 0"}}>
               {fTxns.length===0?(
                 <div style={{textAlign:"center",padding:"32px 0"}}>
                   <div style={{fontSize:28,marginBottom:8}}>💸</div>
@@ -666,21 +789,14 @@ function App(){
                 })
               )}
             </div>
-
-            {/* Receipt footer */}
+            {/* Footer */}
             {fTxns.length>0&&(
-              <>
-                <div style={{margin:"0 18px",borderTop:"2px dashed #EDE8E0",paddingTop:12,paddingBottom:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div style={{background:"rgba(255,255,255,0.92)",padding:"0 18px 16px"}}>
+                <div style={{borderTop:"2px dashed #EDE8E0",paddingTop:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <span style={{fontSize:12,color:"#B0A898",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.06em"}}>Total spent</span>
                   <span style={{fontSize:18,fontWeight:900,color:"#1a1a1a",fontVariantNumeric:"tabular-nums"}}>{money(fTxns.filter(t=>t.kind==="expense").reduce((s,t)=>s+n(t.amount),0))}</span>
                 </div>
-                {/* Barcode decoration */}
-                <div style={{display:"flex",justifyContent:"center",paddingBottom:16,gap:1}}>
-                  {Array.from({length:40},(_,i)=>(
-                    <div key={i} style={{width:i%3===0?2:1,height:i%5===0?22:14,background:"#D8D0C8",borderRadius:1}}/>
-                  ))}
-                </div>
-              </>
+              </div>
             )}
           </div>
         </div>
@@ -704,41 +820,33 @@ function App(){
     const maxVal=Math.max(...monthlyData.map(d=>Math.max(d.inc,d.out)),1);
     const chartH=120;
 
-    // SVG line chart paths
-    const pts=(arr)=>arr.map((d,i)=>{
-      const x=i/(arr.length-1||1)*100;
-      const y=100-Math.min(arr[i]/maxVal,1)*100;
-      return `${x},${y}`;
-    }).join(" ");
+    // SVG line chart paths — use fixed pixel coords, no preserveAspectRatio:none
+    const CW=300, CH=90, PAD={t:6,b:6,l:4,r:4};
     const incPts=monthlyData.map(d=>d.inc);
     const outPts=monthlyData.map(d=>d.out);
-    const toPath=(arr)=>{
-      return arr.map((v,i)=>{
-        const x=i/(arr.length-1||1)*100;
-        const y=100-Math.min(v/maxVal,1)*100;
-        return (i===0?"M":"L")+x.toFixed(1)+" "+y.toFixed(1);
-      }).join(" ");
-    };
-    const incPath=toPath(incPts);
-    const outPath=toPath(outPts);
-    // Area fill path (income)
-    const firstX=0, lastX=100;
-    const firstY=(100-Math.min(incPts[0]/maxVal,1)*100).toFixed(1);
-    const lastY=(100-Math.min(incPts[incPts.length-1]/maxVal,1)*100).toFixed(1);
-    const incArea=incPath+" L100 100 L0 100 Z";
-    const outArea=outPath+" L100 100 L0 100 Z";
+    const toCoords=(arr)=>arr.map((v,i)=>({
+      x: PAD.l+(i/(arr.length-1||1))*(CW-PAD.l-PAD.r),
+      y: PAD.t+((1-Math.min(v/maxVal,1))*(CH-PAD.t-PAD.b)),
+    }));
+    const toPath=(coords)=>coords.map((p,i)=>(i===0?"M":"L")+p.x.toFixed(1)+" "+p.y.toFixed(1)).join(" ");
+    const incCoords=toCoords(incPts);
+    const outCoords=toCoords(outPts);
+    const incPath=toPath(incCoords);
+    const outPath=toPath(outCoords);
+    const incArea=incPath+` L${(CW-PAD.r).toFixed(1)} ${CH} L${PAD.l} ${CH} Z`;
+    const outArea=outPath+` L${(CW-PAD.r).toFixed(1)} ${CH} L${PAD.l} ${CH} Z`;
 
     return(
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
 
         {/* Summary header */}
-        <div style={{...S.card,background:"linear-gradient(135deg,#9D5783,#AEACEB)",border:"none"}}>
-          <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.7)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:8}}>{year} Summary</div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:16}}>
-            {[{l:"Income",v:totals.inc,c:"#F0DB7D"},{l:"Spent",v:totals.out,c:"#FFB7D5"},{l:"Net",v:net,c:net>=0?"#9CB071":"#FD9FA2"}].map(s=>(
-              <div key={s.l}>
-                <div style={{fontSize:9,fontWeight:700,color:"rgba(255,255,255,0.6)",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>{s.l}</div>
-                <div style={{fontSize:mob?18:22,fontWeight:900,color:s.c}}>{s.v<0?"-":""}{moneyS(Math.abs(s.v))}</div>
+        <div style={{...S.card,background:"linear-gradient(135deg,#B7CEEC,#AEACEB)",border:"none"}}>
+          <div style={{fontSize:11,fontWeight:700,color:"rgba(0,0,0,0.45)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:8}}>{year} Summary</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:16}}>
+            {[{l:"Income",v:totals.inc,bg:"rgba(255,255,255,0.5)",c:"#1a1a1a"},{l:"Spent",v:totals.out,bg:"rgba(255,255,255,0.35)",c:"#1a1a1a"},{l:"Net",v:net,bg:net>=0?"rgba(156,176,113,0.4)":"rgba(253,159,162,0.4)",c:"#1a1a1a"}].map(s=>(
+              <div key={s.l} style={{background:s.bg,borderRadius:12,padding:"10px 10px 8px"}}>
+                <div style={{fontSize:9,fontWeight:700,color:"rgba(0,0,0,0.4)",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>{s.l}</div>
+                <div style={{fontSize:mob?15:18,fontWeight:900,color:s.c,lineHeight:1}}>{s.v<0?"-":""}{moneyS(Math.abs(s.v))}</div>
               </div>
             ))}
           </div>
@@ -746,36 +854,28 @@ function App(){
           {/* Line chart inside gradient card */}
           {activeMonths.length>1&&(
             <div style={{position:"relative",height:chartH}}>
-              <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{width:"100%",height:chartH,display:"block"}}>
+              <svg viewBox={`0 0 ${CW} ${CH}`} style={{width:"100%",height:chartH,display:"block"}}>
                 {/* Grid lines */}
-                {[25,50,75].map(y=>(
-                  <line key={y} x1="0" y1={y} x2="100" y2={y} stroke="rgba(255,255,255,0.1)" strokeWidth="0.5"/>
-                ))}
+                {[25,50,75].map(pct=>{
+                  const y=PAD.t+(pct/100)*(CH-PAD.t-PAD.b);
+                  return <line key={pct} x1={PAD.l} y1={y} x2={CW-PAD.r} y2={y} stroke="rgba(0,0,0,0.06)" strokeWidth="0.5"/>;
+                })}
                 {/* Income area */}
                 <path d={incArea} fill="rgba(240,219,125,0.15)"/>
                 {/* Spent area */}
                 <path d={outArea} fill="rgba(255,183,213,0.15)"/>
                 {/* Income line */}
-                <path d={incPath} fill="none" stroke="#F0DB7D" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d={incPath} fill="none" stroke="#F0DB7D" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
                 {/* Spent line */}
-                <path d={outPath} fill="none" stroke="#FFB7D5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d={outPath} fill="none" stroke="#FFB7D5" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
                 {/* Dots on income */}
-                {incPts.map((v,i)=>{
-                  const x=i/(incPts.length-1||1)*100;
-                  const y=100-Math.min(v/maxVal,1)*100;
-                  return v>0?<circle key={i} cx={x} cy={y} r="1.4" fill="#F0DB7D"/>:null;
-                })}
-                {/* Dots on spent */}
-                {outPts.map((v,i)=>{
-                  const x=i/(outPts.length-1||1)*100;
-                  const y=100-Math.min(v/maxVal,1)*100;
-                  return v>0?<circle key={i} cx={x} cy={y} r="1.4" fill="#FFB7D5"/>:null;
-                })}
+                {incCoords.map((p,i)=>incPts[i]>0?<circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#F0DB7D"/>:null)}
+                {outCoords.map((p,i)=>outPts[i]>0?<circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#FFB7D5"/>:null)}
               </svg>
               {/* Month labels */}
               <div style={{display:"flex",justifyContent:"space-between",marginTop:4}}>
                 {monthlyData.map((d,i)=>(
-                  <span key={i} style={{fontSize:7,fontWeight:600,color:"rgba(255,255,255,0.45)",flex:1,textAlign:"center"}}>{d.short}</span>
+                  <span key={i} style={{fontSize:7,fontWeight:600,color:"rgba(0,0,0,0.3)",flex:1,textAlign:"center"}}>{d.short}</span>
                 ))}
               </div>
               {/* Legend */}
@@ -783,7 +883,7 @@ function App(){
                 {[{l:"Income",c:"#F0DB7D"},{l:"Spent",c:"#FFB7D5"}].map(s=>(
                   <div key={s.l} style={{display:"flex",alignItems:"center",gap:4}}>
                     <div style={{width:16,height:2,borderRadius:1,background:s.c}}/>
-                    <span style={{fontSize:9,fontWeight:600,color:"rgba(255,255,255,0.6)"}}>{s.l}</span>
+                    <span style={{fontSize:9,fontWeight:600,color:"rgba(0,0,0,0.45)"}}>{s.l}</span>
                   </div>
                 ))}
               </div>
@@ -961,83 +1061,96 @@ function App(){
                 </div>
               </div>
 
-              {/* ── Investments ── */}
-              {investments.length>0&&(
-                <div>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-                    <div style={{fontSize:10,fontWeight:700,color:"#B0A898",textTransform:"uppercase",letterSpacing:"0.1em"}}>Investments</div>
-                    <button className="tbtn" onClick={()=>setView("investments")} style={{fontSize:11,fontWeight:700,color:"#9D5783",background:"none",padding:0}}>All →</button>
-                  </div>
-                  {investments.map((inv,i)=>{
-                    const latest=inv.entries&&inv.entries.length>0?inv.entries[inv.entries.length-1].value:0;
-                    const first=inv.entries&&inv.entries.length>0?inv.entries[0].value:0;
-                    const gain=latest-first;
-                    return(
-                      <div key={inv.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingBottom:12,marginBottom:12,borderBottom:i<investments.length-1?"1px solid #EDE8E0":"none"}}>
-                        <div style={{display:"flex",alignItems:"center",gap:10}}>
-                          <div style={{width:9,height:9,borderRadius:3,background:inv.color,flexShrink:0}}/>
-                          <div>
-                            <div style={{fontSize:13,fontWeight:700,color:"#1a1a1a"}}>{inv.name}</div>
-                            <div style={{fontSize:10,color:"#C0B8B0",fontWeight:500}}>{inv.type}</div>
-                          </div>
-                        </div>
-                        <div style={{textAlign:"right"}}>
-                          <div style={{fontSize:14,fontWeight:800,color:"#1a1a1a"}}>{moneyS(latest)}</div>
-                          {gain!==0&&<div style={{fontSize:10,fontWeight:600,color:gain>0?"#3A5010":"#c04040"}}>{gain>0?"+":""}{moneyS(gain)}</div>}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              {/* ── Investments + Goals + Year History combined gradient block ── */}
+              {(investments.length>0||activeGoals.length>0||allYearsData.length>0)&&(
+                <div style={{background:"linear-gradient(160deg,#EDE8F5 0%,#F5EFE8 50%,#EAF0E4 100%)",borderRadius:24,padding:"20px 18px",display:"flex",flexDirection:"column",gap:20}}>
 
-              {/* ── Goals ── */}
-              {activeGoals.length>0&&(
-                <div>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-                    <div style={{fontSize:10,fontWeight:700,color:"#B0A898",textTransform:"uppercase",letterSpacing:"0.1em"}}>Goals</div>
-                    <button className="tbtn" onClick={()=>setView("goals")} style={{fontSize:11,fontWeight:700,color:"#9D5783",background:"none",padding:0}}>All →</button>
-                  </div>
-                  {activeGoals.map((g,gi)=>{
-                    const DOTS=["#F0DB7D","#FFB7D5","#9CB071","#B7CEEC","#AEACEB","#FD9FA2"];
-                    const dot=DOTS[gi%DOTS.length];
-                    const pct=n(g.target)>0?Math.min(g.saved/n(g.target)*100,100):0;
-                    const rem=Math.max(n(g.target)-g.saved,0);
-                    return(
-                      <div key={g.id} style={{marginBottom:14}}>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
-                          <div style={{display:"flex",alignItems:"center",gap:8}}>
-                            <div style={{width:8,height:8,borderRadius:2,background:dot,flexShrink:0}}/>
-                            <span style={{fontSize:13,fontWeight:600,color:"#1a1a1a"}}>{g.name}</span>
-                          </div>
-                          <div style={{textAlign:"right"}}>
-                            <span style={{fontSize:13,fontWeight:800,color:"#1a1a1a"}}>{Math.round(pct)}%</span>
-                            <span style={{fontSize:10,fontWeight:500,color:"#C0B8B0",marginLeft:6}}>{rem>0?moneyS(rem)+" left":"🎉"}</span>
-                          </div>
-                        </div>
-                        <div style={{background:"#EDE8E0",borderRadius:99,height:4,overflow:"hidden"}}>
-                          <div style={{width:pct+"%",height:"100%",borderRadius:99,background:dot,transition:"width 0.4s"}}/>
-                        </div>
+                  {/* Investments */}
+                  {investments.length>0&&(
+                    <div>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+                        <div style={{fontSize:10,fontWeight:700,color:"rgba(0,0,0,0.35)",textTransform:"uppercase",letterSpacing:"0.1em"}}>Investments</div>
+                        <button className="tbtn" onClick={()=>setView("investments")} style={{fontSize:11,fontWeight:700,color:"#9D5783",background:"none",padding:0}}>All →</button>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* ── Year History ── */}
-              {allYearsData.length>0&&(
-                <div>
-                  <div style={{fontSize:10,fontWeight:700,color:"#B0A898",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12}}>Year History</div>
-                  {allYearsData.map((d,i)=>(
-                    <div key={d.year} onClick={()=>{switchYear(d.year);setView("yearly");}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingBottom:12,marginBottom:12,borderBottom:i<allYearsData.length-1?"1px solid #EDE8E0":"none",cursor:"pointer"}}>
-                      <span style={{fontSize:13,fontWeight:700,color:d.year===year?"#9D5783":"#555"}}>{d.year}</span>
-                      <div style={{display:"flex",gap:12,alignItems:"center"}}>
-                        <span style={{fontSize:11,fontWeight:500,color:"#C0B8B0"}}>In {moneyS(d.totalInc)}</span>
-                        <span style={{fontSize:11,fontWeight:500,color:"#C0B8B0"}}>Out {moneyS(d.totalSpent)}</span>
-                        <span style={{fontSize:12,fontWeight:800,color:d.net>=0?"#3A5010":"#c04040"}}>{d.net>=0?"+ ":"– "}{moneyS(Math.abs(d.net))}</span>
-                      </div>
+                      {investments.map((inv,i)=>{
+                        const latest=inv.entries&&inv.entries.length>0?inv.entries[inv.entries.length-1].value:0;
+                        const first=inv.entries&&inv.entries.length>0?inv.entries[0].value:0;
+                        const gain=latest-first;
+                        return(
+                          <div key={inv.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingBottom:12,marginBottom:12,borderBottom:i<investments.length-1?"1px solid rgba(0,0,0,0.07)":"none"}}>
+                            <div style={{display:"flex",alignItems:"center",gap:10}}>
+                              <div style={{width:9,height:9,borderRadius:3,background:inv.color,flexShrink:0}}/>
+                              <div>
+                                <div style={{fontSize:13,fontWeight:700,color:"#1a1a1a"}}>{inv.name}</div>
+                                <div style={{fontSize:10,color:"#B0A898",fontWeight:500}}>{inv.type}</div>
+                              </div>
+                            </div>
+                            <div style={{textAlign:"right"}}>
+                              <div style={{fontSize:14,fontWeight:800,color:"#1a1a1a"}}>{moneyS(latest)}</div>
+                              {gain!==0&&<div style={{fontSize:10,fontWeight:600,color:gain>0?"#3A5010":"#c04040"}}>{gain>0?"+":""}{moneyS(gain)}</div>}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  ))}
+                  )}
+
+                  {/* Divider */}
+                  {investments.length>0&&activeGoals.length>0&&<div style={{height:1,background:"rgba(0,0,0,0.07)"}}/>}
+
+                  {/* Goals */}
+                  {activeGoals.length>0&&(
+                    <div>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+                        <div style={{fontSize:10,fontWeight:700,color:"rgba(0,0,0,0.35)",textTransform:"uppercase",letterSpacing:"0.1em"}}>Goals</div>
+                        <button className="tbtn" onClick={()=>setView("goals")} style={{fontSize:11,fontWeight:700,color:"#9D5783",background:"none",padding:0}}>All →</button>
+                      </div>
+                      {activeGoals.map((g,gi)=>{
+                        const DOTS=["#F0DB7D","#FFB7D5","#9CB071","#B7CEEC","#AEACEB","#FD9FA2"];
+                        const dot=DOTS[gi%DOTS.length];
+                        const pct=n(g.target)>0?Math.min(g.saved/n(g.target)*100,100):0;
+                        const rem=Math.max(n(g.target)-g.saved,0);
+                        return(
+                          <div key={g.id} style={{marginBottom:14}}>
+                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
+                              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                                <div style={{width:8,height:8,borderRadius:2,background:dot,flexShrink:0}}/>
+                                <span style={{fontSize:13,fontWeight:600,color:"#1a1a1a"}}>{g.name}</span>
+                              </div>
+                              <div style={{textAlign:"right"}}>
+                                <span style={{fontSize:13,fontWeight:800,color:"#1a1a1a"}}>{Math.round(pct)}%</span>
+                                <span style={{fontSize:10,fontWeight:500,color:"#B0A898",marginLeft:6}}>{rem>0?moneyS(rem)+" left":"🎉"}</span>
+                              </div>
+                            </div>
+                            <div style={{background:"rgba(0,0,0,0.1)",borderRadius:99,height:4,overflow:"hidden"}}>
+                              <div style={{width:pct+"%",height:"100%",borderRadius:99,background:dot,transition:"width 0.4s"}}/>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Divider */}
+                  {allYearsData.length>0&&(investments.length>0||activeGoals.length>0)&&<div style={{height:1,background:"rgba(0,0,0,0.07)"}}/>}
+
+                  {/* Year History */}
+                  {allYearsData.length>0&&(
+                    <div>
+                      <div style={{fontSize:10,fontWeight:700,color:"rgba(0,0,0,0.35)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:12}}>Year History</div>
+                      {allYearsData.map((d,i)=>(
+                        <div key={d.year} onClick={()=>{switchYear(d.year);setView("yearly");}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingBottom:12,marginBottom:12,borderBottom:i<allYearsData.length-1?"1px solid rgba(0,0,0,0.07)":"none",cursor:"pointer"}}>
+                          <span style={{fontSize:13,fontWeight:700,color:d.year===year?"#9D5783":"#555"}}>{d.year}</span>
+                          <div style={{display:"flex",gap:12,alignItems:"center"}}>
+                            <span style={{fontSize:11,fontWeight:500,color:"#B0A898"}}>In {moneyS(d.totalInc)}</span>
+                            <span style={{fontSize:11,fontWeight:500,color:"#B0A898"}}>Out {moneyS(d.totalSpent)}</span>
+                            <span style={{fontSize:12,fontWeight:800,color:d.net>=0?"#3A5010":"#c04040"}}>{d.net>=0?"+ ":"– "}{moneyS(Math.abs(d.net))}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                 </div>
               )}
 
@@ -1051,6 +1164,13 @@ function App(){
         {/* INVESTMENTS */}
         {view==="investments"&&(
           <div style={{display:"flex",flexDirection:"column",gap:20}}>
+            {/* Joint line chart */}
+            {investments.length>0&&investments.length>0&&(
+              <div style={{...S.card,paddingBottom:12,background:"linear-gradient(135deg,#F0DB7D,#F5EAC0)",border:"none"}}>
+                <div style={{fontSize:11,fontWeight:800,color:"rgba(0,0,0,0.5)",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:12}}>Portfolio History</div>
+                <JointLineChart investments={investments}/>
+              </div>
+            )}
             {/* Header summary */}
             {investments.length>0&&(()=>{
               const firstVal=investments.reduce((s,inv)=>s+(inv.entries&&inv.entries.length>0?inv.entries[0].value:0),0);
@@ -1109,8 +1229,12 @@ function App(){
                     <button className="tbtn" onClick={()=>{
                       const v=n(updateVals[inv.id]);
                       if(!v)return;
-                      const entry={date:new Date().toISOString().slice(0,10),value:v};
-                      setInvestments(p=>p.map(i=>i.id===inv.id?{...i,entries:[...(i.entries||[]),entry]}:i));
+                      const month=new Date().toISOString().slice(0,7); // YYYY-MM
+                      setInvestments(p=>p.map(i=>{
+                        if(i.id!==inv.id)return i;
+                        const existing=(i.entries||[]).filter(e=>e.date!==month);
+                        return{...i,entries:[...existing,{date:month,value:v}].sort((a,b)=>a.date.localeCompare(b.date))};
+                      }));
                       setUpdateVals(p=>({...p,[inv.id]:""}));
                     }} style={{padding:"8px 18px",background:"#9D5783",color:"white",borderRadius:10,fontWeight:800,fontSize:12}}>Save</button>
                     <button className="xbtn" style={{fontSize:18,color:"#C0B8B0"}} onPointerDown={e=>{e.preventDefault();setInvestments(p=>p.filter(i=>i.id!==inv.id))}}>×</button>
@@ -1142,7 +1266,7 @@ function App(){
                     setInvestments(p=>[...p,inv]);
                     setNewInv({name:"",type:"TFSA",color:INV_COLORS[0],startVal:""});
                     setShowAddInv(false);
-                  }} style={{padding:"8px 20px",background:"#9CB071",color:"white",borderRadius:10,fontWeight:800,fontSize:13}}>Add</button>
+                  }} style={{padding:"8px 20px",background:"#AEACEB",color:"white",borderRadius:10,fontWeight:800,fontSize:13}}>Add</button>
                 </div>
               </div>
             )}
@@ -1150,43 +1274,94 @@ function App(){
         )}
 
         {/* GOALS */}
-        {view==="goals"&&(
+        {view==="goals"&&(()=>{
+          const [activeGoalIdx,setActiveGoalIdx]=useState(0);
+          const visGoal=activeGoals[activeGoalIdx]||null;
+          const GCOLS=["#FFB7D5","#F0DB7D","#9CB071","#B7CEEC","#AEACEB","#FD9FA2","#F5EAC0"];
+          return(
           <div style={{display:"flex",flexDirection:"column",gap:16}}>
             {activeGoals.length>0&&(
-              <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12}}>
-                {activeGoals.map((goal,gi)=>{
-                  const GCOLS=["#FFB7D5","#F0DB7D","#9CB071","#B7CEEC","#AEACEB","#FD9FA2","#F5EAC0","#B7CEEC"];
+              <>
+                {/* Horizontal tab strip */}
+                <div className="hscroll" style={{display:"flex",gap:8}}>
+                  {activeGoals.map((g,gi)=>{
+                    const col=GCOLS[gi%GCOLS.length];
+                    const pct=n(g.target)>0?Math.min(g.saved/n(g.target)*100,100):0;
+                    const active=gi===activeGoalIdx;
+                    return(
+                      <button key={g.id} onClick={()=>setActiveGoalIdx(gi)} style={{
+                        flexShrink:0,border:"none",cursor:"pointer",fontFamily:"inherit",
+                        background:active?col:"white",
+                        borderRadius:14,
+                        padding:"10px 16px",
+                        boxShadow:active?"0 4px 14px rgba(0,0,0,0.12)":"0 1px 4px rgba(0,0,0,0.06)",
+                        border:active?"none":"1.5px solid #EDE8E0",
+                        transform:active?"scale(1.03)":"scale(1)",
+                        transition:"all 0.18s",
+                        textAlign:"left",
+                        minWidth:110,
+                      }}>
+                        <div style={{fontSize:12,fontWeight:800,color:active?"#1a1a1a":"#888",marginBottom:4,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:120}}>{g.name}</div>
+                        {/* Mini progress bar */}
+                        <div style={{background:active?"rgba(0,0,0,0.12)":"#EDE8E0",borderRadius:99,height:3,overflow:"hidden",marginBottom:4}}>
+                          <div style={{width:pct+"%",height:"100%",borderRadius:99,background:active?"rgba(0,0,0,0.3)":col,transition:"width 0.4s"}}/>
+                        </div>
+                        <div style={{fontSize:10,fontWeight:700,color:active?"rgba(0,0,0,0.5)":"#B0A898"}}>{Math.round(pct)}%</div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Active goal detail card */}
+                {visGoal&&(()=>{
+                  const gi=activeGoalIdx;
                   const col=GCOLS[gi%GCOLS.length];
-                  const rem=Math.max(n(goal.target)-goal.saved,0);
-                  const pct=n(goal.target)>0?Math.min(goal.saved/n(goal.target)*100,100):0;
+                  const rem=Math.max(n(visGoal.target)-visGoal.saved,0);
+                  const pct=n(visGoal.target)>0?Math.min(visGoal.saved/n(visGoal.target)*100,100):0;
                   const done=rem===0;
                   return(
-                    <div key={goal.id} style={{background:col,borderRadius:20,padding:"18px 16px 14px",position:"relative",overflow:"hidden",boxShadow:"0 4px 16px rgba(0,0,0,0.08)"}}>
-                      <button className="xbtn" onPointerDown={e=>{e.preventDefault();delGoal(goal.id)}} style={{position:"absolute",top:10,right:10,fontSize:16,color:"rgba(0,0,0,0.3)"}}>×</button>
-                      <div style={{fontSize:13,fontWeight:800,color:"#1a1a1a",marginBottom:2,paddingRight:20}}>{goal.name}</div>
-                      <div style={{fontSize:10,fontWeight:600,color:"rgba(0,0,0,0.45)",marginBottom:12}}>{done?"🎉 Complete!":money(rem)+" to go"}</div>
-                      <div style={{fontSize:32,fontWeight:900,color:"#1a1a1a",lineHeight:1,marginBottom:8}}>{Math.round(pct)}<span style={{fontSize:16}}>%</span></div>
-                      <div style={{background:"rgba(255,255,255,0.5)",borderRadius:99,height:6,overflow:"hidden",marginBottom:10}}>
-                        <div style={{width:pct+"%",height:"100%",borderRadius:99,background:"rgba(0,0,0,0.2)",transition:"width 0.4s"}}/>
-                      </div>
-                      <div style={{display:"flex",justifyContent:"space-between",fontSize:11,fontWeight:700,color:"rgba(0,0,0,0.5)",marginBottom:done?0:10}}>
-                        <span><b style={{color:"#1a1a1a"}}>{moneyS(goal.saved)}</b> saved</span>
-                        <span>of <b style={{color:"#1a1a1a"}}>{moneyS(goal.target)}</b></span>
+                    <div style={{background:col,borderRadius:24,padding:"22px 20px 18px",boxShadow:"0 6px 24px rgba(0,0,0,0.1)",position:"relative"}}>
+                      <button className="xbtn" onPointerDown={e=>{e.preventDefault();delGoal(visGoal.id)}} style={{position:"absolute",top:14,right:14,fontSize:18,color:"rgba(0,0,0,0.3)"}}>×</button>
+                      <div style={{fontSize:16,fontWeight:900,color:"#1a1a1a",marginBottom:4,paddingRight:24}}>{visGoal.name}</div>
+                      <div style={{fontSize:11,fontWeight:600,color:"rgba(0,0,0,0.45)",marginBottom:18}}>{done?"🎉 Complete!":moneyS(rem)+" to go"}</div>
+                      {/* Big progress arc */}
+                      <div style={{display:"flex",alignItems:"center",gap:20,marginBottom:16}}>
+                        <div style={{position:"relative",width:100,height:100,flexShrink:0}}>
+                          <svg width="100" height="100" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="10"/>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(0,0,0,0.25)" strokeWidth="10"
+                              strokeDasharray={`${Math.min(pct/100,1)*251.2} 251.2`}
+                              strokeLinecap="round" transform="rotate(-90 50 50)" style={{transition:"stroke-dasharray 0.5s"}}/>
+                          </svg>
+                          <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+                            <div style={{fontSize:22,fontWeight:900,color:"#1a1a1a",lineHeight:1}}>{Math.round(pct)}<span style={{fontSize:12}}>%</span></div>
+                          </div>
+                        </div>
+                        <div style={{flex:1}}>
+                          <div style={{marginBottom:10}}>
+                            <div style={{fontSize:10,fontWeight:600,color:"rgba(0,0,0,0.4)",marginBottom:2}}>SAVED</div>
+                            <div style={{fontSize:22,fontWeight:900,color:"#1a1a1a"}}>{moneyS(visGoal.saved)}</div>
+                          </div>
+                          <div>
+                            <div style={{fontSize:10,fontWeight:600,color:"rgba(0,0,0,0.4)",marginBottom:2}}>TARGET</div>
+                            <div style={{fontSize:16,fontWeight:800,color:"rgba(0,0,0,0.6)"}}>{moneyS(visGoal.target)}</div>
+                          </div>
+                        </div>
                       </div>
                       {!done&&(
                         <div style={{display:"flex",gap:6,alignItems:"center"}}>
                           <div style={{position:"relative",flex:1}}>
-                            <span style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",fontSize:12,color:"rgba(0,0,0,0.4)",fontWeight:700}}>$</span>
-                            <input style={{border:"none",background:"rgba(255,255,255,0.6)",borderRadius:8,padding:"7px 8px 7px 20px",fontSize:16,fontFamily:"inherit",outline:"none",width:"100%",boxSizing:"border-box",color:"#1a1a1a",fontWeight:700}} placeholder="0.00" value={addSav[goal.id]||""} onChange={e=>setAddSav(p=>({...p,[goal.id]:e.target.value}))}/>
+                            <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:13,color:"rgba(0,0,0,0.4)",fontWeight:700}}>$</span>
+                            <input style={{border:"none",background:"rgba(255,255,255,0.7)",borderRadius:10,padding:"10px 10px 10px 24px",fontSize:16,fontFamily:"inherit",outline:"none",width:"100%",boxSizing:"border-box",color:"#1a1a1a",fontWeight:700}} placeholder="Add savings…" value={addSav[visGoal.id]||""} onChange={e=>setAddSav(p=>({...p,[visGoal.id]:e.target.value}))}/>
                           </div>
-                          <button className="tbtn" onClick={()=>saveGoal(goal.id)} style={{padding:"7px 12px",background:"rgba(255,255,255,0.7)",color:"#1a1a1a",border:"none",borderRadius:8,fontWeight:800,fontSize:12}}>+ Save</button>
+                          <button className="tbtn" onClick={()=>saveGoal(visGoal.id)} style={{padding:"10px 16px",background:"rgba(0,0,0,0.18)",color:"#1a1a1a",border:"none",borderRadius:10,fontWeight:800,fontSize:13}}>+ Save</button>
                         </div>
                       )}
-                      {done&&<button onClick={()=>archGoal(goal.id)} style={{fontSize:11,padding:"5px 14px",borderRadius:99,background:"rgba(255,255,255,0.6)",color:"#1a1a1a",border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:700}}>Archive ✓</button>}
+                      {done&&<button onClick={()=>archGoal(visGoal.id)} style={{fontSize:12,padding:"8px 18px",borderRadius:99,background:"rgba(255,255,255,0.7)",color:"#1a1a1a",border:"none",cursor:"pointer",fontFamily:"inherit",fontWeight:800}}>Archive ✓</button>}
                     </div>
                   );
-                })}
-              </div>
+                })()}
+              </>
             )}
             <div style={{...S.card,border:"2px dashed #E0DCEC",boxShadow:"none"}}>
               <div style={{fontSize:12,fontWeight:800,color:"#B0B8C0",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:14}}>New Goal</div>
@@ -1194,7 +1369,7 @@ function App(){
                 <div style={{flex:"2 1 140px"}}><FL>Name</FL><input style={inp} placeholder="e.g. Europe Trip" value={newGoal.name} onChange={e=>setNewGoal(p=>({...p,name:e.target.value}))}/></div>
                 <div style={{flex:"1 1 100px"}}><FL>Target</FL><div style={{position:"relative"}}><DS/><input style={dInp({fontSize:16})} placeholder="5000" value={newGoal.target} onChange={e=>setNewGoal(p=>({...p,target:e.target.value}))}/></div></div>
                 <div style={{flex:"1 1 100px"}}><FL>Already saved</FL><div style={{position:"relative"}}><DS/><input style={dInp({fontSize:16})} placeholder="0" value={newGoal.saved} onChange={e=>setNewGoal(p=>({...p,saved:e.target.value}))}/></div></div>
-                <button className="tbtn" onClick={()=>{if(!newGoal.name.trim()||!newGoal.target)return;setGoals(p=>[...p,{...newGoal,id:Date.now(),saved:n(newGoal.saved),archived:false}]);setNewGoal({name:"",target:"",saved:""});}} style={{padding:"8px 20px",background:"#9CB071",color:"white",borderRadius:10,fontWeight:800}}>+ Add</button>
+                <button className="tbtn" onClick={()=>{if(!newGoal.name.trim()||!newGoal.target)return;setGoals(p=>[...p,{...newGoal,id:Date.now(),saved:n(newGoal.saved),archived:false}]);setNewGoal({name:"",target:"",saved:""});}} style={{padding:"8px 20px",background:"#AEACEB",color:"white",borderRadius:10,fontWeight:800}}>+ Add</button>
               </div>
             </div>
             {archGoals.length>0&&(
@@ -1216,33 +1391,58 @@ function App(){
               </div>
             )}
           </div>
-        )}
+          );
+        })()}
 
         {/* RECURRING */}
         {view==="recur"&&(
           <div style={{display:"flex",flexDirection:"column",gap:14}}>
-            <div style={S.card}>
-              <div style={{fontSize:12,fontWeight:800,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:14}}>Recurring Transactions</div>
-              {recur.length===0?<p style={{fontSize:13,color:"#ccc",fontWeight:600}}>No recurring transactions yet.</p>:recur.map((r,i)=>(
-                <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid #F0EDE8"}}>
-                  <div>
-                    <div style={{fontSize:13,fontWeight:700}}>{r.desc}</div>
-                    <div style={{fontSize:10,fontWeight:600,color:"#bbb"}}>{r.txnType}</div>
-                  </div>
-                  <div style={{display:"flex",alignItems:"center",gap:10}}>
-                    <span style={{fontSize:14,fontWeight:800}}>{money(r.amount)}</span>
-                    <button className="xbtn" onPointerDown={e=>{e.preventDefault();setRecur(p=>p.filter((_,j)=>j!==i))}}>×</button>
-                  </div>
+            {/* Summary pill */}
+            {recur.length>0&&(
+              <div style={{background:"linear-gradient(135deg,#AEACEB,#B7CEEC)",borderRadius:20,padding:"16px 20px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div>
+                  <div style={{fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.7)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:4}}>Monthly recurring</div>
+                  <div style={{fontSize:28,fontWeight:900,color:"white",lineHeight:1}}>{moneyS(recur.reduce((s,r)=>s+n(r.amount),0))}</div>
                 </div>
-              ))}
+                <div style={{fontSize:36,opacity:0.4}}>🔁</div>
+              </div>
+            )}
+            {/* Recurring list */}
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {recur.length===0?(
+                <div style={{...S.card,textAlign:"center",padding:"32px 16px"}}>
+                  <div style={{fontSize:28,marginBottom:8}}>🔁</div>
+                  <p style={{fontSize:13,color:"#C0B8B0",fontWeight:600}}>No recurring transactions yet</p>
+                </div>
+              ):recur.map((r,i)=>{
+                const tc=TYPE_COLORS[r.txnType]||TYPE_COLORS.Need;
+                return(
+                  <div key={i} style={{background:"white",borderRadius:16,padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",boxShadow:"0 2px 8px rgba(0,0,0,0.06)",borderLeft:"4px solid "+tc.accent}}>
+                    <div style={{display:"flex",alignItems:"center",gap:12}}>
+                      <div style={{width:36,height:36,borderRadius:10,background:tc.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                        <span style={{fontSize:16}}>🔁</span>
+                      </div>
+                      <div>
+                        <div style={{fontSize:14,fontWeight:700,color:"#1a1a1a"}}>{r.desc}</div>
+                        <span style={{fontSize:10,padding:"2px 8px",borderRadius:6,background:tc.bg,color:tc.text,fontWeight:700}}>{r.txnType}</span>
+                      </div>
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:10}}>
+                      <span style={{fontSize:16,fontWeight:900,color:"#1a1a1a",fontVariantNumeric:"tabular-nums"}}>{money(r.amount)}</span>
+                      <button className="xbtn" onPointerDown={e=>{e.preventDefault();setRecur(p=>p.filter((_,j)=>j!==i))}}>×</button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
+            {/* Add form */}
             <div style={{...S.card,border:"2px dashed #E0DCEC",boxShadow:"none"}}>
               <div style={{fontSize:12,fontWeight:800,color:"#B0B8C0",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:14}}>Add Recurring</div>
               <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
                 <div style={{flex:"2 1 140px"}}><FL>Description</FL><input style={inp} placeholder="e.g. Netflix" value={newRecur.desc} onChange={e=>setNewRecur(p=>({...p,desc:e.target.value}))}/></div>
                 <div style={{flex:"1 1 100px"}}><FL>Amount</FL><div style={{position:"relative"}}><DS/><input style={dInp({fontSize:16})} placeholder="0.00" value={newRecur.amount} onChange={e=>setNewRecur(p=>({...p,amount:e.target.value}))}/></div></div>
                 <div style={{flex:"1 1 100px"}}><FL>Type</FL><select style={{...inp,cursor:"pointer",fontSize:16}} value={newRecur.txnType} onChange={e=>setNewRecur(p=>({...p,txnType:e.target.value}))}><option>Need</option><option>Want</option><option>Saving</option></select></div>
-                <button className="tbtn" onClick={()=>{if(!newRecur.desc||!newRecur.amount)return;setRecur(p=>[...p,{...newRecur,id:Date.now(),recurring:true,kind:"expense"}]);setNewRecur({desc:"",amount:"",txnType:"Need",catId:""}); }} style={{padding:"8px 20px",background:"#9CB071",color:"white",borderRadius:10,fontWeight:800}}>+ Add</button>
+                <button className="tbtn" onClick={()=>{if(!newRecur.desc||!newRecur.amount)return;setRecur(p=>[...p,{...newRecur,id:Date.now(),recurring:true,kind:"expense"}]);setNewRecur({desc:"",amount:"",txnType:"Need",catId:""}); }} style={{padding:"8px 20px",background:"#AEACEB",color:"white",borderRadius:10,fontWeight:800}}>+ Add</button>
               </div>
             </div>
           </div>
