@@ -814,10 +814,9 @@ function App(){
     // Each month's total out = transactions + joint + mom allocations
     const monthlyData=MONTHS.map((m,i)=>{
       const mt=allTxns[i]||[];
-      const pc=paychecks[i]||2;
-      const fixedOut=Math.round(n(alloc.joint)*pc)+Math.round(n(alloc.mom)*pc);
+      const monthInc=n(incomes[i]);
       const txnOut=mt.filter(t=>t.kind==="expense").reduce((s,t)=>s+n(t.amount),0);
-      return{m,short:m.slice(0,3),inc:n(incomes[i]),out:txnOut+fixedOut};
+      return{m,short:m.slice(0,3),inc:monthInc,out:txnOut};
     });
     const totals={
       inc:monthlyData.reduce((s,d)=>s+d.inc,0),
@@ -1181,15 +1180,15 @@ function App(){
               // Donut segments
               const segs=investments.map(inv=>({value:inv.entries&&inv.entries.length>0?inv.entries[inv.entries.length-1].value:0,color:inv.color})).filter(s=>s.value>0);
               return(
-                <div style={{display:"flex",alignItems:"center",gap:20,paddingBottom:20,borderBottom:"1px solid #EDE8E0"}}>
-                  <DonutChart segments={segs.length>0?segs:[{value:1,color:"#F0F0F0"}]} size={mob?90:100} thickness={14}/>
+                <div style={{background:"linear-gradient(135deg,#B7CEEC,#AEACEB)",borderRadius:20,padding:"20px 20px 18px",marginBottom:20,display:"flex",alignItems:"center",gap:20}}>
+                  <DonutChart segments={segs.length>0?segs:[{value:1,color:"rgba(255,255,255,0.3)"}]} size={mob?90:100} thickness={14}/>
                   <div style={{flex:1}}>
-                    <div style={{fontSize:10,fontWeight:600,color:"#B0A898",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:4}}>Total Invested</div>
-                    <div style={{fontSize:mob?28:34,fontWeight:900,color:"#1a1a1a",lineHeight:1,letterSpacing:"-0.02em",marginBottom:6}}>{moneyS(totalInvested)}</div>
+                    <div style={{fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.7)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:4}}>Total Invested</div>
+                    <div style={{fontSize:mob?28:34,fontWeight:900,color:"white",lineHeight:1,letterSpacing:"-0.02em",marginBottom:6}}>{moneyS(totalInvested)}</div>
                     {totalGain!==0&&(
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <span style={{fontSize:13,fontWeight:800,color:totalGain>0?"#3A5010":"#c04040"}}>{totalGain>0?"▲":"▼"} {moneyS(Math.abs(totalGain))}</span>
-                        <span style={{fontSize:11,fontWeight:500,color:"#B0A898"}}>all time · {totalGainPct>0?"+":""}{totalGainPct.toFixed(1)}%</span>
+                        <span style={{fontSize:13,fontWeight:800,color:totalGain>0?"rgba(255,255,255,0.95)":"rgba(253,159,162,0.95)"}}>{totalGain>0?"▲":"▼"} {moneyS(Math.abs(totalGain))}</span>
+                        <span style={{fontSize:11,fontWeight:500,color:"rgba(255,255,255,0.6)"}}>all time · {totalGainPct>0?"+":""}{totalGainPct.toFixed(1)}%</span>
                       </div>
                     )}
                   </div>
