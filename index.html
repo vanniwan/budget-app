@@ -515,41 +515,48 @@ function App(){
 
         {/* Budget allocation */}
         {B.inc>0&&(
-          <div style={{borderRadius:22,overflow:"hidden",boxShadow:"0 4px 16px rgba(0,0,0,0.08)"}}>
+          <div style={{...S.card,padding:"14px 16px"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+              <div style={{fontSize:11,fontWeight:800,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:"0.06em"}}>Budget</div>
+              <button className="tbtn" onClick={()=>{setEditAlloc({...alloc});setShowAlloc(true);}} style={{fontSize:11,fontWeight:600,color:"#9D5783",background:"none",padding:0}}>Edit →</button>
+            </div>
             {/* Top row: Needs / Wants / Savings */}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)"}}>
+            <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:10}}>
               {[
-                {l:"Needs",   v:B.needs,   spent:Sp.needs,   bg:"#F0DB7D",c:"#7A5800"},
-                {l:"Wants",   v:B.wants,   spent:Sp.wants,   bg:"#FFB7D5",c:"#8A1040"},
-                {l:"Savings", v:B.savings, spent:Sp.savings, bg:"#9CB071",c:"#3A5010"},
-              ].map((s,i)=>{
+                {l:"Needs",   v:B.needs,   spent:Sp.needs,   dot:"#F0DB7D"},
+                {l:"Wants",   v:B.wants,   spent:Sp.wants,   dot:"#FFB7D5"},
+                {l:"Savings", v:B.savings, spent:Sp.savings, dot:"#9CB071"},
+              ].map(s=>{
                 const over=s.spent>s.v&&s.v>0;
                 const pct=s.v>0?Math.min(s.spent/s.v*100,100):0;
                 const rem=s.v-s.spent;
                 return(
-                  <div key={s.l} style={{background:over?"#FD9FA2":s.bg,padding:"14px 14px 12px",borderRight:i<2?"2px solid rgba(255,255,255,0.5)":"none"}}>
-                    <div style={{fontSize:9,fontWeight:700,color:over?"#901010":s.c,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:5}}>{s.l}</div>
-                    <div style={{fontSize:mob?16:19,fontWeight:900,color:"#1a1a1a",marginBottom:8}}>{moneyS(s.v)}</div>
-                    <div style={{background:"rgba(0,0,0,0.12)",borderRadius:99,height:4,overflow:"hidden",marginBottom:4}}>
-                      <div style={{width:pct+"%",height:"100%",borderRadius:99,background:over?"rgba(140,0,0,0.4)":"rgba(0,0,0,0.3)",transition:"width 0.4s"}}/>
+                  <div key={s.l}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                      <div style={{width:8,height:8,borderRadius:2,background:over?"#FD9FA2":s.dot,flexShrink:0}}/>
+                      <span style={{fontSize:12,fontWeight:600,color:"#555",flex:1}}>{s.l}</span>
+                      <span style={{fontSize:12,fontWeight:800,color:over?"#c04040":"#1a1a1a"}}>{moneyS(s.v)}</span>
+                      <span style={{fontSize:11,fontWeight:600,color:over?"#c04040":"#B0B8C0",minWidth:60,textAlign:"right"}}>
+                        {over?moneyS(Math.abs(rem))+" over":moneyS(Math.abs(rem))+" left"}
+                      </span>
                     </div>
-                    <div style={{fontSize:9,fontWeight:700,color:over?"#901010":"rgba(0,0,0,0.4)"}}>
-                      {over?moneyS(Math.abs(rem))+" over":moneyS(Math.abs(rem))+" left"}
+                    <div style={{background:"#F0EDE8",borderRadius:99,height:4,overflow:"hidden"}}>
+                      <div style={{width:pct+"%",height:"100%",borderRadius:99,background:over?"#FD9FA2":s.dot,transition:"width 0.4s"}}/>
                     </div>
                   </div>
                 );
               })}
             </div>
             {/* Bottom row: Joint + Mom */}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",borderTop:"2px solid rgba(255,255,255,0.5)"}}>
+            <div style={{display:"flex",gap:6,paddingTop:10,borderTop:"1px solid #F0EDE8"}}>
               {[
-                {l:"Joint", v:B.joint, bg:"#B7CEEC", c:"#2A5080", sub:"per paycheque"},
-                {l:"Mom",   v:B.mom,   bg:"#AEACEB", c:"#3A3880", sub:"per paycheque"},
-              ].map((s,i)=>(
-                <div key={s.l} style={{background:s.bg,padding:"12px 14px",borderRight:i===0?"2px solid rgba(255,255,255,0.5)":"none"}}>
-                  <div style={{fontSize:9,fontWeight:700,color:s.c,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>{s.l}</div>
-                  <div style={{fontSize:mob?18:22,fontWeight:900,color:"#1a1a1a"}}>{moneyS(s.v)}</div>
-                  <div style={{fontSize:9,fontWeight:600,color:"rgba(0,0,0,0.35)",marginTop:3}}>{s.sub}</div>
+                {l:"Joint", v:B.joint, dot:"#B7CEEC"},
+                {l:"Mom",   v:B.mom,   dot:"#AEACEB"},
+              ].map(s=>(
+                <div key={s.l} style={{flex:1,display:"flex",alignItems:"center",gap:7,background:"#F8F5F0",borderRadius:10,padding:"8px 10px"}}>
+                  <div style={{width:8,height:8,borderRadius:2,background:s.dot,flexShrink:0}}/>
+                  <span style={{fontSize:11,fontWeight:600,color:"#888",flex:1}}>{s.l}</span>
+                  <span style={{fontSize:13,fontWeight:800,color:"#1a1a1a"}}>{moneyS(s.v)}</span>
                 </div>
               ))}
             </div>
@@ -558,22 +565,26 @@ function App(){
 
         {/* Goals strip */}
         {activeGoals.length>0&&(
-          <div style={S.card}>
+          <div style={{...S.card,padding:"14px 16px"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-              <div style={{fontSize:12,fontWeight:800,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:"0.06em"}}>Goals</div>
+              <div style={{fontSize:11,fontWeight:800,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:"0.06em"}}>Goals</div>
               <button className="tbtn" onClick={()=>setView("goals")} style={{fontSize:11,fontWeight:700,color:"#9D5783",background:"none",padding:0}}>All →</button>
             </div>
-            <div style={{display:"flex",gap:8,overflowX:"auto"}}>
-              {activeGoals.map((g,gi)=>{
-                const GCOLS=[["#F0DB7D","#7A5800"],["#FFB7D5","#8A1040"],["#9CB071","#3A5010"],["#B7CEEC","#2A5080"],["#AEACEB","#3A3880"]];
-                const [bg,tc]=GCOLS[gi%GCOLS.length];
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {activeGoals.slice(0,3).map((g,gi)=>{
+                const DOTS=["#F0DB7D","#FFB7D5","#9CB071","#B7CEEC","#AEACEB"];
+                const dot=DOTS[gi%DOTS.length];
                 const pct=n(g.target)>0?Math.min(g.saved/n(g.target)*100,100):0;
                 return(
-                  <div key={g.id} style={{background:bg,borderRadius:14,padding:"10px 14px",minWidth:90,flexShrink:0}}>
-                    <div style={{fontSize:10,fontWeight:700,color:tc,marginBottom:4,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:100}}>{g.name}</div>
-                    <div style={{fontSize:20,fontWeight:900,color:"#1a1a1a"}}>{Math.round(pct)}<span style={{fontSize:11}}>%</span></div>
-                    <div style={{background:"rgba(0,0,0,0.1)",borderRadius:99,height:3,marginTop:5,overflow:"hidden"}}>
-                      <div style={{width:pct+"%",height:"100%",background:"rgba(0,0,0,0.25)",borderRadius:99}}/>
+                  <div key={g.id}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                      <div style={{width:8,height:8,borderRadius:2,background:dot,flexShrink:0}}/>
+                      <span style={{fontSize:12,fontWeight:600,color:"#555",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{g.name}</span>
+                      <span style={{fontSize:12,fontWeight:800,color:"#1a1a1a"}}>{Math.round(pct)}%</span>
+                      <span style={{fontSize:11,fontWeight:600,color:"#B0B8C0"}}>{moneyS(g.saved)}</span>
+                    </div>
+                    <div style={{background:"#F0EDE8",borderRadius:99,height:4,overflow:"hidden"}}>
+                      <div style={{width:pct+"%",height:"100%",borderRadius:99,background:dot,transition:"width 0.4s"}}/>
                     </div>
                   </div>
                 );
