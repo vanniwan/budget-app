@@ -765,7 +765,7 @@ function App(){
             <div style={{padding:"16px 18px 12px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
               <div>
                 <div style={{fontSize:11,fontWeight:700,color:"rgba(255,255,255,0.7)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:2}}>{MONTHS[mi]} {year}</div>
-                <div style={{fontSize:15,fontWeight:900,color:"white"}}>{mTxns.length} transaction{mTxns.length!==1?"s":""}</div>
+                <div style={{fontSize:15,fontWeight:900,color:"#1a1a1a"}}>{mTxns.length} transaction{mTxns.length!==1?"s":""}</div>
               </div>
               <div className="hscroll" style={{display:"flex",gap:4}}>
                 {[["all","All"],["Need","Need"],["Want","Want"],["Saving","Save"],["income","Income"],["recurring","🔁"]].map(([k,l])=>(
@@ -1291,7 +1291,7 @@ function App(){
               // Donut segments
               const segs=investments.map(inv=>({value:inv.entries&&inv.entries.length>0?inv.entries[inv.entries.length-1].value:0,color:inv.color})).filter(s=>s.value>0);
               return(
-                <div style={{background:"linear-gradient(135deg,#D4CFFF,#EAE8FF)",borderRadius:20,padding:"20px 20px 18px",marginBottom:20,display:"flex",alignItems:"center",gap:20}}>
+                <div style={{background:"linear-gradient(135deg,#D4CFFF,#B7CEEC)",borderRadius:20,padding:"20px 20px 18px",marginBottom:20,display:"flex",alignItems:"center",gap:20}}>
                   <DonutChart segments={segs.length>0?segs:[{value:1,color:"rgba(255,255,255,0.3)"}]} size={mob?90:100} thickness={14}/>
                   <div style={{flex:1}}>
                     <div style={{fontSize:10,fontWeight:700,color:"rgba(90,80,122,0.7)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:4}}>Total Invested</div>
@@ -1415,14 +1415,13 @@ function App(){
                     const active=gi===activeGoalIdx;
                     return(
                       <button key={g.id} onClick={()=>setActiveGoalIdx(gi)} style={{
-                        flexShrink:0,border:"none",cursor:"pointer",fontFamily:"inherit",
+                        flexShrink:0,cursor:"pointer",fontFamily:"inherit",
                         background:active?col:"white",
                         borderRadius:14,
                         padding:"10px 16px",
-                        boxShadow:active?"0 4px 14px rgba(0,0,0,0.12)":"0 1px 4px rgba(0,0,0,0.06)",
-                        border:active?"none":"1.5px solid #EDE8E0",
-                        transform:active?"scale(1.03)":"scale(1)",
-                        transition:"all 0.18s",
+                        boxShadow:active?"0 4px 14px rgba(0,0,0,0.12)":"none",
+                        border:active?"2.5px solid rgba(0,0,0,0.12)":"1.5px solid #EDE8E0",
+                        transition:"background 0.18s,box-shadow 0.18s,border 0.18s",
                         textAlign:"left",
                         minWidth:110,
                       }}>
@@ -1520,58 +1519,94 @@ function App(){
         })()}
 
         {/* RECURRING */}
-        {view==="recur"&&(
+        {view==="recur"&&(()=>{
+          const recurTotal=recur.reduce((s,r)=>s+n(r.amount),0);
+          const byType={Need:recur.filter(r=>r.txnType==="Need"),Want:recur.filter(r=>r.txnType==="Want"),Saving:recur.filter(r=>r.txnType==="Saving")};
+          const typeInfo={Need:{label:"Needs",col:"#F0DB7D",text:"#7A5800"},Want:{label:"Wants",col:"#FFB7D5",text:"#8A1060"},Saving:{label:"Savings",col:"#9CB071",text:"#3A5010"}};
+          return(
           <div style={{display:"flex",flexDirection:"column",gap:14}}>
-            {/* Summary pill */}
-            {recur.length>0&&(
-              <div style={{background:"linear-gradient(135deg,#AEACEB,#B7CEEC)",borderRadius:20,padding:"16px 20px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <div>
-                  <div style={{fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.7)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:4}}>Monthly recurring</div>
-                  <div style={{fontSize:28,fontWeight:900,color:"white",lineHeight:1}}>{moneyS(recur.reduce((s,r)=>s+n(r.amount),0))}</div>
-                </div>
-                <div style={{fontSize:36,opacity:0.4}}>🔁</div>
-              </div>
-            )}
-            {/* Recurring list */}
-            <div style={{display:"flex",flexDirection:"column",gap:8}}>
-              {recur.length===0?(
-                <div style={{...S.card,textAlign:"center",padding:"32px 16px"}}>
-                  <div style={{fontSize:28,marginBottom:8}}>🔁</div>
-                  <p style={{fontSize:13,color:"#C0B8B0",fontWeight:600}}>No recurring transactions yet</p>
-                </div>
-              ):recur.map((r,i)=>{
-                const tc=TYPE_COLORS[r.txnType]||TYPE_COLORS.Need;
-                return(
-                  <div key={i} style={{background:"white",borderRadius:16,padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",boxShadow:"0 2px 8px rgba(0,0,0,0.06)",borderLeft:"4px solid "+tc.accent}}>
-                    <div style={{display:"flex",alignItems:"center",gap:12}}>
-                      <div style={{width:36,height:36,borderRadius:10,background:tc.bg,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                        <span style={{fontSize:16}}>🔁</span>
-                      </div>
-                      <div>
-                        <div style={{fontSize:14,fontWeight:700,color:"#1a1a1a"}}>{r.desc}</div>
-                        <span style={{fontSize:10,padding:"2px 8px",borderRadius:6,background:tc.bg,color:tc.text,fontWeight:700}}>{r.txnType}</span>
-                      </div>
+
+            {/* Hero card */}
+            <div style={{background:"linear-gradient(135deg,#D4CFFF,#B7CEEC)",borderRadius:24,padding:"22px 20px 20px",boxShadow:"0 4px 20px rgba(0,0,0,0.08)"}}>
+              <div style={{fontSize:10,fontWeight:700,color:"rgba(0,0,0,0.45)",textTransform:"uppercase",letterSpacing:"0.12em",marginBottom:6}}>Monthly Recurring</div>
+              <div style={{fontSize:36,fontWeight:900,color:"#1a1a1a",lineHeight:1,marginBottom:16}}>{moneyS(recurTotal)}</div>
+              {/* Type breakdown pills */}
+              <div style={{display:"flex",gap:8}}>
+                {["Need","Want","Saving"].map(t=>{
+                  const tot=byType[t].reduce((s,r)=>s+n(r.amount),0);
+                  if(tot===0)return null;
+                  const ti=typeInfo[t];
+                  return(
+                    <div key={t} style={{background:"rgba(255,255,255,0.45)",borderRadius:12,padding:"8px 12px",flex:1}}>
+                      <div style={{fontSize:9,fontWeight:700,color:"rgba(0,0,0,0.4)",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:2}}>{ti.label}</div>
+                      <div style={{fontSize:15,fontWeight:900,color:"#1a1a1a"}}>{moneyS(tot)}</div>
                     </div>
-                    <div style={{display:"flex",alignItems:"center",gap:10}}>
-                      <span style={{fontSize:16,fontWeight:900,color:"#1a1a1a",fontVariantNumeric:"tabular-nums"}}>{money(r.amount)}</span>
-                      <button className="xbtn" onPointerDown={e=>{e.preventDefault();setRecur(p=>p.filter((_,j)=>j!==i))}}>×</button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Grouped list by type */}
+            {recur.length===0?(
+              <div style={{...S.card,textAlign:"center",padding:"40px 16px"}}>
+                <div style={{fontSize:32,marginBottom:10}}>🔁</div>
+                <div style={{fontSize:13,color:"#C0B8B0",fontWeight:600}}>No recurring transactions yet</div>
+              </div>
+            ):(
+              ["Need","Want","Saving"].map(t=>{
+                const items=byType[t];
+                if(items.length===0)return null;
+                const ti=typeInfo[t];
+                return(
+                  <div key={t}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,paddingLeft:4}}>
+                      <div style={{width:8,height:8,borderRadius:2,background:ti.col}}/>
+                      <span style={{fontSize:11,fontWeight:800,color:"rgba(0,0,0,0.4)",textTransform:"uppercase",letterSpacing:"0.08em"}}>{ti.label}</span>
+                      <span style={{fontSize:11,fontWeight:700,color:"rgba(0,0,0,0.3)"}}>· {moneyS(items.reduce((s,r)=>s+n(r.amount),0))}/mo</span>
+                    </div>
+                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                      {items.map((r,i)=>{
+                        const globalIdx=recur.indexOf(r);
+                        return(
+                          <div key={i} style={{background:"white",borderRadius:16,padding:"14px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",boxShadow:"0 1px 6px rgba(0,0,0,0.06)",borderLeft:"4px solid "+ti.col}}>
+                            <div style={{display:"flex",alignItems:"center",gap:12}}>
+                              <div style={{width:38,height:38,borderRadius:12,background:ti.col+"33",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                                <div style={{width:12,height:12,borderRadius:3,background:ti.col}}/>
+                              </div>
+                              <div>
+                                <div style={{fontSize:14,fontWeight:700,color:"#1a1a1a",marginBottom:2}}>{r.desc}</div>
+                                <span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:ti.col+"44",color:ti.text,fontWeight:800}}>{t}</span>
+                              </div>
+                            </div>
+                            <div style={{display:"flex",alignItems:"center",gap:10}}>
+                              <span style={{fontSize:16,fontWeight:900,color:"#1a1a1a"}}>{money(r.amount)}</span>
+                              <button className="xbtn" onPointerDown={e=>{e.preventDefault();setRecur(p=>p.filter((_,j)=>j!==globalIdx))}}>×</button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );
-              })}
-            </div>
+              })
+            )}
+
             {/* Add form */}
-            <div style={{...S.card,border:"2px dashed #E0DCEC",boxShadow:"none"}}>
-              <div style={{fontSize:12,fontWeight:800,color:"#B0B8C0",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:14}}>Add Recurring</div>
-              <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"flex-end"}}>
-                <div style={{flex:"2 1 140px"}}><FL>Description</FL><input style={inp} placeholder="e.g. Netflix" value={newRecur.desc} onChange={e=>setNewRecur(p=>({...p,desc:e.target.value}))}/></div>
-                <div style={{flex:"1 1 100px"}}><FL>Amount</FL><div style={{position:"relative"}}><DS/><input style={dInp({fontSize:16})} placeholder="0.00" value={newRecur.amount} onChange={e=>setNewRecur(p=>({...p,amount:e.target.value}))}/></div></div>
-                <div style={{flex:"1 1 100px"}}><FL>Type</FL><select style={{...inp,cursor:"pointer",fontSize:16}} value={newRecur.txnType} onChange={e=>setNewRecur(p=>({...p,txnType:e.target.value}))}><option>Need</option><option>Want</option><option>Saving</option></select></div>
-                <button className="tbtn" onClick={()=>{if(!newRecur.desc||!newRecur.amount)return;setRecur(p=>[...p,{...newRecur,id:Date.now(),recurring:true,kind:"expense"}]);setNewRecur({desc:"",amount:"",txnType:"Need",catId:""}); }} style={{padding:"8px 20px",background:"#C8C6F0",color:"#5A507A",borderRadius:10,fontWeight:800}}>+ Add</button>
+            <div style={{background:"linear-gradient(145deg,#F5F3FF,#F0F5FF)",borderRadius:20,padding:"18px 16px",border:"1.5px dashed #C8C6F0"}}>
+              <div style={{fontSize:11,fontWeight:800,color:"#9D9AC0",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:14}}>Add Recurring</div>
+              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                <input style={{...inp,fontSize:15}} placeholder="Description e.g. Netflix" value={newRecur.desc} onChange={e=>setNewRecur(p=>({...p,desc:e.target.value}))}/>
+                <div style={{display:"flex",gap:8}}>
+                  <div style={{position:"relative",flex:1}}><DS/><input style={dInp({fontSize:15})} placeholder="Amount" value={newRecur.amount} onChange={e=>setNewRecur(p=>({...p,amount:e.target.value}))}/></div>
+                  <select style={{...inp,cursor:"pointer",fontSize:14,flex:"0 0 100px"}} value={newRecur.txnType} onChange={e=>setNewRecur(p=>({...p,txnType:e.target.value}))}><option>Need</option><option>Want</option><option>Saving</option></select>
+                </div>
+                <button className="tbtn" onClick={()=>{if(!newRecur.desc||!newRecur.amount)return;setRecur(p=>[...p,{...newRecur,id:Date.now(),recurring:true,kind:"expense"}]);setNewRecur({desc:"",amount:"",txnType:"Need",catId:""}); }} style={{padding:"12px",background:"#C8C6F0",color:"#5A507A",borderRadius:12,fontWeight:800,fontSize:14,width:"100%"}}>+ Add Recurring</button>
               </div>
             </div>
+
           </div>
-        )}
+          );
+        })()}
 
         {/* CATEGORIES */}
         {view==="cats"&&(
