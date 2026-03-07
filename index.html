@@ -122,9 +122,10 @@ const S={
 function DonutChart({segments,size=110,thickness=20}){
   const r=(size-thickness)/2,cx=size/2,cy=size/2,circ=2*Math.PI*r;
   const total=segments.reduce((s,g)=>s+g.value,0);
-  if(!total)return <svg width={size} height={size}><circle cx={cx} cy={cy} r={r} fill="none" stroke="#F0EDE8" strokeWidth={thickness}/></svg>;
+  if(!total)return <svg width={size} height={size}><circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth={thickness}/></svg>;
+  const gap=2;
   let off=0;
-  return <svg width={size} height={size}>{segments.map((seg,i)=>{const dash=(seg.value/total)*circ;const el=<circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={seg.color} strokeWidth={thickness} strokeDasharray={`${dash} ${circ-dash}`} strokeDashoffset={-off} transform={`rotate(-90 ${cx} ${cy})`}/>;off+=dash;return el;})}</svg>;
+  return <svg width={size} height={size}>{segments.map((seg,i)=>{const dash=Math.max((seg.value/total)*circ-gap,0);const el=<circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={seg.color} strokeWidth={thickness} strokeDasharray={`${dash} ${circ-dash}`} strokeDashoffset={-off} transform={`rotate(-90 ${cx} ${cy})`} strokeLinecap="round"/>;off+=(seg.value/total)*circ;return el;})}</svg>;
 }
 function Bar({value,max,color,h=6}){
   const pct=max>0?Math.min(value/max*100,100):0;
@@ -462,6 +463,7 @@ function App(){
   const [newInv,setNewInv]=useState({name:"",type:"TFSA",color:INV_COLORS[0],startVal:""});
   const [showAddInv,setShowAddInv]=useState(false);
   const [activeGoalIdx,setActiveGoalIdx]=useState(0);
+  const [catTab,setCatTab]=useState("month");
   const [updateVals,setUpdateVals]=useState({});
 
   // Computed
@@ -666,35 +668,41 @@ function App(){
           );
         })()}
 
-        {/* Goals strip */}
-        {activeGoals.length>0&&(
-          <div style={{...S.card,padding:"14px 16px"}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-              <div style={{fontSize:11,fontWeight:800,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:"0.06em"}}>Goals</div>
-              <button className="tbtn" onClick={()=>setView("goals")} style={{fontSize:11,fontWeight:700,color:"#9D5783",background:"none",padding:0}}>All →</button>
-            </div>
-            <div style={{display:"flex",flexDirection:"column",gap:8}}>
-              {activeGoals.slice(0,3).map((g,gi)=>{
-                const DOTS=["#F0DB7D","#FFB7D5","#9CB071","#B7CEEC","#AEACEB"];
-                const dot=DOTS[gi%DOTS.length];
-                const pct=n(g.target)>0?Math.min(g.saved/n(g.target)*100,100):0;
-                return(
-                  <div key={g.id}>
-                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-                      <div style={{width:8,height:8,borderRadius:2,background:dot,flexShrink:0}}/>
-                      <span style={{fontSize:12,fontWeight:600,color:"#555",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{g.name}</span>
-                      <span style={{fontSize:12,fontWeight:800,color:"#1a1a1a"}}>{Math.round(pct)}%</span>
-                      <span style={{fontSize:11,fontWeight:600,color:"#B0B8C0"}}>{moneyS(g.saved)}</span>
-                    </div>
-                    <div style={{background:"#F0EDE8",borderRadius:99,height:4,overflow:"hidden"}}>
-                      <div style={{width:pct+"%",height:"100%",borderRadius:99,background:dot,transition:"width 0.4s"}}/>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+        {/* Category + Goals side by side */}
+        <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+          {/* Category */}
+          <div style={{flex:"0 0 62%",minWidth:0}}>
+            {CatBreakdown({exTxns,allTxns,cats,catTab,setCatTab,year,moneyS})}
           </div>
-        )}
+          {/* Goals */}
+          {activeGoals.length>0&&(
+            <div style={{flex:1,background:"linear-gradient(145deg,#EDE8F5,#F5EFE8)",borderRadius:20,padding:"14px 14px",minWidth:0,boxShadow:"0 2px 8px rgba(0,0,0,0.05)",alignSelf:"stretch"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                <div style={{fontSize:11,fontWeight:800,color:"rgba(0,0,0,0.5)",textTransform:"uppercase",letterSpacing:"0.06em"}}>Goals</div>
+                <button className="tbtn" onClick={()=>setView("goals")} style={{fontSize:11,fontWeight:700,color:"#9D5783",background:"none",padding:0}}>All →</button>
+              </div>
+              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                {activeGoals.slice(0,3).map((g,gi)=>{
+                  const DOTS=["#F0DB7D","#FFB7D5","#9CB071","#B7CEEC","#AEACEB"];
+                  const dot=DOTS[gi%DOTS.length];
+                  const pct=n(g.target)>0?Math.min(g.saved/n(g.target)*100,100):0;
+                  return(
+                    <div key={g.id}>
+                      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
+                        <div style={{width:7,height:7,borderRadius:2,background:dot,flexShrink:0}}/>
+                        <span style={{fontSize:11,fontWeight:700,color:"#1a1a1a",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{g.name}</span>
+                        <span style={{fontSize:11,fontWeight:800,color:"#1a1a1a"}}>{Math.round(pct)}%</span>
+                      </div>
+                      <div style={{background:"rgba(0,0,0,0.08)",borderRadius:99,height:4,overflow:"hidden"}}>
+                        <div style={{width:pct+"%",height:"100%",borderRadius:99,background:dot,transition:"width 0.4s"}}/>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Extra income */}
         {inTxns.length>0&&(
@@ -814,6 +822,93 @@ function App(){
     );
   }
 
+  // ── CatBreakdown ──────────────────────────────────────────
+  function CatBreakdown({exTxns,allTxns,cats,catTab,setCatTab,year,moneyS}){
+    const CAT_PALETTE=["#F0DB7D","#FFB7D5","#9CB071","#B7CEEC","#AEACEB","#FD9FA2","#E8C56A","#C4A8EB","#7BCBB8","#F4A8C0","#A8C870","#9AB8D8"];
+    // Month bg: warm peach-pink gradient; Year bg: soft sage-lavender gradient
+    const monthBg="linear-gradient(145deg,#FFE8F0,#FFF3E0)";
+    const yearBg="linear-gradient(145deg,#E8F0E8,#EDE8F5)";
+    const isYear=catTab==="year";
+    const cardBg=isYear?yearBg:monthBg;
+    const catTotals=cats.map(cat=>{
+      const spent=(exTxns||[]).filter(t=>Number(t.catId)===cat.id).reduce((s,t)=>s+n(t.amount),0);
+      return{...cat,spent};
+    }).filter(c=>c.spent>0).sort((a,b)=>b.spent-a.spent);
+    const yearCatTotals=cats.map(cat=>{
+      const spent=(allTxns||[]).flat().filter(t=>t.kind==="expense"&&Number(t.catId)===cat.id).reduce((s,t)=>s+n(t.amount),0);
+      return{...cat,spent};
+    }).filter(c=>c.spent>0).sort((a,b)=>b.spent-a.spent);
+    if(catTotals.length===0&&yearCatTotals.length===0)return null;
+    const rows=isYear?yearCatTotals:catTotals;
+    const total=rows.reduce((s,c)=>s+c.spent,0);
+    if(rows.length===0)return null;
+    // Donut chart
+    const R=52,CX=64,CY=64,SW=18,circ=2*Math.PI*R;
+    let cumPct=0;
+    const donutSegs=rows.map((cat,i)=>{
+      const pct=total>0?cat.spent/total:0;
+      const offset=circ*(1-cumPct);
+      const dash=circ*pct;
+      cumPct+=pct;
+      return{...cat,pct,dash,offset,bg:CAT_PALETTE[i%CAT_PALETTE.length]};
+    });
+    return(
+      <div style={{background:cardBg,borderRadius:24,padding:"20px 18px",boxShadow:"0 2px 12px rgba(0,0,0,0.06)"}}>
+        {/* Header + toggle */}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
+          <div>
+            <div style={{fontSize:11,fontWeight:800,color:"rgba(0,0,0,0.5)",textTransform:"uppercase",letterSpacing:"0.08em"}}>Spending by Category</div>
+            <div style={{fontSize:10,fontWeight:600,color:"rgba(0,0,0,0.35)",marginTop:2}}>{moneyS(total)} total</div>
+          </div>
+          <div style={{display:"flex",gap:3,background:"rgba(255,255,255,0.6)",borderRadius:10,padding:3}}>
+            {[["month","Month"],["year","Year"]].map(([k,l])=>(
+              <button key={k} onClick={()=>setCatTab(k)} style={{border:"none",cursor:"pointer",fontFamily:"inherit",borderRadius:8,padding:"4px 12px",fontSize:11,fontWeight:700,background:catTab===k?"white":"transparent",color:catTab===k?"#1a1a1a":"rgba(0,0,0,0.4)",boxShadow:catTab===k?"0 1px 4px rgba(0,0,0,0.1)":"none",transition:"all 0.15s"}}>
+                {l}
+              </button>
+            ))}
+          </div>
+        </div>
+        {/* Donut + legend side by side */}
+        <div style={{display:"flex",gap:18,alignItems:"center"}}>
+          {/* Donut */}
+          <div style={{flexShrink:0,position:"relative",width:140,height:140}}>
+            <svg width="140" height="140" viewBox="0 0 140 140">
+              {(()=>{
+                const cx=70,cy=70,r=62;
+                let angle=-Math.PI/2;
+                return rows.map((cat,i)=>{
+                  const bg=CAT_PALETTE[i%CAT_PALETTE.length];
+                  const slice=total>0?(cat.spent/total)*2*Math.PI:0;
+                  const x1=cx+r*Math.cos(angle),y1=cy+r*Math.sin(angle);
+                  angle+=slice;
+                  const x2=cx+r*Math.cos(angle),y2=cy+r*Math.sin(angle);
+                  const large=slice>Math.PI?1:0;
+                  return <path key={i} d={`M${cx},${cy} L${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${large},1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`} fill={bg} stroke="none"/>;
+                });
+              })()}
+            </svg>
+          </div>
+          {/* Legend rows */}
+          <div style={{flex:1,display:"flex",flexDirection:"column",gap:7,minWidth:0}}>
+            {rows.map((cat,i)=>{
+              const pct=total>0?Math.round(cat.spent/total*100):0;
+              const bg=CAT_PALETTE[i%CAT_PALETTE.length];
+              return(
+                <div key={cat.id} style={{display:"flex",alignItems:"center",gap:8}}>
+                  <div style={{width:10,height:10,borderRadius:3,background:bg,flexShrink:0}}/>
+                  <span style={{fontSize:11,fontWeight:700,color:"#1a1a1a",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{cat.name}</span>
+                  <span style={{fontSize:11,fontWeight:600,color:"rgba(0,0,0,0.4)",flexShrink:0,marginRight:4}}>{moneyS(cat.spent)}</span>
+                  <span style={{fontSize:11,fontWeight:800,color:"#1a1a1a",flexShrink:0,minWidth:28,textAlign:"right"}}>{pct}%</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+      </div>
+    );
+  }
+
   // ── YearlyView ────────────────────────────────────────────
   function YearlyView(){
     const txns=(allTxns||[]).flat();
@@ -833,45 +928,51 @@ function App(){
     const maxVal=Math.max(...monthlyData.map(d=>Math.max(d.inc,d.out)),1);
     const chartH=120;
 
-    // SVG line chart paths — use fixed pixel coords, no preserveAspectRatio:none
-    const CW=300, CH=90, PAD={t:6,b:6,l:4,r:4};
-    const incPts=monthlyData.map(d=>d.inc);
-    const outPts=monthlyData.map(d=>d.out);
-    const toCoords=(arr)=>arr.map((v,i)=>({
-      x: PAD.l+(i/(arr.length-1||1))*(CW-PAD.l-PAD.r),
-      y: PAD.t+((1-Math.min(v/maxVal,1))*(CH-PAD.t-PAD.b)),
-    }));
-    const toPath=(coords)=>coords.map((p,i)=>(i===0?"M":"L")+p.x.toFixed(1)+" "+p.y.toFixed(1)).join(" ");
-    const incCoords=toCoords(incPts);
-    const outCoords=toCoords(outPts);
+    // SVG line chart — always span all 12 months Jan→Dec
+    const CW=300, CH=90, PAD={t:8,b:6,l:4,r:4};
+    const N=12; // always 12 months
+    const toX=i=>PAD.l+(i/(N-1))*(CW-PAD.l-PAD.r);
+    const toY=v=>PAD.t+((1-Math.min(v/maxVal,1))*(CH-PAD.t-PAD.b));
+    const incCoords=monthlyData.map((d,i)=>({x:toX(i),y:toY(d.inc),v:d.inc}));
+    const outCoords=monthlyData.map((d,i)=>({x:toX(i),y:toY(d.out),v:d.out}));
+    const toPath=coords=>coords.map((p,i)=>(i===0?"M":"L")+p.x.toFixed(1)+" "+p.y.toFixed(1)).join(" ");
     const incPath=toPath(incCoords);
     const outPath=toPath(outCoords);
-    const incArea=incPath+` L${(CW-PAD.r).toFixed(1)} ${CH} L${PAD.l} ${CH} Z`;
-    const outArea=outPath+` L${(CW-PAD.r).toFixed(1)} ${CH} L${PAD.l} ${CH} Z`;
+    const incArea=incPath+` L${toX(N-1).toFixed(1)} ${CH} L${toX(0).toFixed(1)} ${CH} Z`;
+    const outArea=outPath+` L${toX(N-1).toFixed(1)} ${CH} L${toX(0).toFixed(1)} ${CH} Z`;
 
     return(
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
 
         {/* Summary header */}
-        <div style={{...S.card,background:"linear-gradient(135deg,#B7CEEC,#AEACEB)",border:"none"}}>
-          <div style={{fontSize:11,fontWeight:700,color:"rgba(0,0,0,0.45)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:8}}>{year} Summary</div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:16}}>
-            {[{l:"Income",v:totals.inc,bg:"rgba(255,255,255,0.5)",c:"#1a1a1a"},{l:"Spent",v:totals.out,bg:"rgba(255,255,255,0.35)",c:"#1a1a1a"},{l:"Net",v:net,bg:net>=0?"rgba(156,176,113,0.4)":"rgba(253,159,162,0.4)",c:"#1a1a1a"}].map(s=>(
-              <div key={s.l} style={{background:s.bg,borderRadius:12,padding:"10px 10px 8px"}}>
-                <div style={{fontSize:9,fontWeight:700,color:"rgba(0,0,0,0.4)",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:4}}>{s.l}</div>
-                <div style={{fontSize:mob?15:18,fontWeight:900,color:s.c,lineHeight:1}}>{s.v<0?"-":""}{moneyS(Math.abs(s.v))}</div>
-              </div>
-            ))}
+        <div style={{borderRadius:24,overflow:"hidden",boxShadow:"0 4px 20px rgba(0,0,0,0.08)"}}>
+          {/* Top bar: year + stats */}
+          <div style={{background:"linear-gradient(135deg,#F0DB7D,#FFB7D5)",padding:"18px 20px 14px"}}>
+            <div style={{fontSize:11,fontWeight:800,color:"rgba(0,0,0,0.45)",textTransform:"uppercase",letterSpacing:"0.12em",marginBottom:12}}>{year} at a glance</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+              {[{l:"Income",v:totals.inc},{l:"Spent",v:totals.out},{l:"Net",v:net}].map(s=>(
+                <div key={s.l} style={{background:"rgba(255,255,255,0.55)",borderRadius:14,padding:"10px 10px 8px",backdropFilter:"blur(4px)"}}>
+                  <div style={{fontSize:9,fontWeight:700,color:"rgba(0,0,0,0.4)",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:3}}>{s.l}</div>
+                  <div style={{fontSize:mob?14:17,fontWeight:900,color:s.l==="Net"?(net>=0?"#3A5010":"#c04040"):"#1a1a1a",lineHeight:1}}>{s.v<0?"-":""}{moneyS(Math.abs(s.v))}</div>
+                </div>
+              ))}
+            </div>
           </div>
+          {/* Chart area on white */}
+          <div style={{background:"white",padding:"14px 20px 6px"}}>
 
           {/* Line chart inside gradient card */}
-          {activeMonths.length>1&&(
+          {maxVal>1&&(
             <div style={{position:"relative",height:chartH}}>
               <svg viewBox={`0 0 ${CW} ${CH}`} style={{width:"100%",height:chartH,display:"block"}}>
-                {/* Grid lines */}
-                {[25,50,75].map(pct=>{
+                {/* Grid lines + Y labels */}
+                {[0,50,100].map(pct=>{
                   const y=PAD.t+(pct/100)*(CH-PAD.t-PAD.b);
-                  return <line key={pct} x1={PAD.l} y1={y} x2={CW-PAD.r} y2={y} stroke="rgba(0,0,0,0.06)" strokeWidth="0.5"/>;
+                  const val=maxVal*(1-pct/100);
+                  return <g key={pct}>
+                    <line x1={28} y1={y} x2={CW-PAD.r} y2={y} stroke="rgba(0,0,0,0.06)" strokeWidth="0.5"/>
+                    <text x={24} y={y+2} fontSize="6" fill="rgba(0,0,0,0.3)" fontFamily="Nunito,sans-serif" textAnchor="end">{val>0?moneyS(val):""}</text>
+                  </g>;
                 })}
                 {/* Income area */}
                 <path d={incArea} fill="rgba(240,219,125,0.15)"/>
@@ -882,8 +983,8 @@ function App(){
                 {/* Spent line */}
                 <path d={outPath} fill="none" stroke="#FFB7D5" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
                 {/* Dots on income */}
-                {incCoords.map((p,i)=>incPts[i]>0?<circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#F0DB7D"/>:null)}
-                {outCoords.map((p,i)=>outPts[i]>0?<circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#FFB7D5"/>:null)}
+                {incCoords.map((p,i)=>p.v>0?<circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#F0DB7D"/>:null)}
+                {outCoords.map((p,i)=>p.v>0?<circle key={i} cx={p.x} cy={p.y} r="2.5" fill="#FFB7D5"/>:null)}
               </svg>
               {/* Month labels */}
               <div style={{display:"flex",justifyContent:"space-between",marginTop:4}}>
@@ -902,11 +1003,15 @@ function App(){
               </div>
             </div>
           )}
+          </div>
         </div>
 
+        {/* Category breakdown */}
+        {CatBreakdown({exTxns:txns.filter(t=>t.kind==="expense"),allTxns,cats,catTab,setCatTab,year,moneyS})}
+
         {/* Monthly breakdown rows */}
-        <div style={S.card}>
-          <div style={{fontSize:12,fontWeight:800,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:14}}>Monthly</div>
+        <div style={{...S.card,background:"linear-gradient(145deg,#F5F0FF,#EFF5F0)"}}>
+          <div style={{fontSize:12,fontWeight:800,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:14}}>Monthly Breakdown</div>
           {activeMonths.map(d=>(
             <div key={d.m} style={{marginBottom:10}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
@@ -1186,15 +1291,15 @@ function App(){
               // Donut segments
               const segs=investments.map(inv=>({value:inv.entries&&inv.entries.length>0?inv.entries[inv.entries.length-1].value:0,color:inv.color})).filter(s=>s.value>0);
               return(
-                <div style={{background:"linear-gradient(135deg,#B7CEEC,#AEACEB)",borderRadius:20,padding:"20px 20px 18px",marginBottom:20,display:"flex",alignItems:"center",gap:20}}>
+                <div style={{background:"linear-gradient(135deg,#D4CFFF,#EAE8FF)",borderRadius:20,padding:"20px 20px 18px",marginBottom:20,display:"flex",alignItems:"center",gap:20}}>
                   <DonutChart segments={segs.length>0?segs:[{value:1,color:"rgba(255,255,255,0.3)"}]} size={mob?90:100} thickness={14}/>
                   <div style={{flex:1}}>
-                    <div style={{fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.7)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:4}}>Total Invested</div>
-                    <div style={{fontSize:mob?28:34,fontWeight:900,color:"white",lineHeight:1,letterSpacing:"-0.02em",marginBottom:6}}>{moneyS(totalInvested)}</div>
+                    <div style={{fontSize:10,fontWeight:700,color:"rgba(90,80,122,0.7)",textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:4}}>Total Invested</div>
+                    <div style={{fontSize:mob?28:34,fontWeight:900,color:"#3A3060",lineHeight:1,letterSpacing:"-0.02em",marginBottom:6}}>{moneyS(totalInvested)}</div>
                     {totalGain!==0&&(
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <span style={{fontSize:13,fontWeight:800,color:totalGain>0?"rgba(255,255,255,0.95)":"rgba(253,159,162,0.95)"}}>{totalGain>0?"▲":"▼"} {moneyS(Math.abs(totalGain))}</span>
-                        <span style={{fontSize:11,fontWeight:500,color:"rgba(255,255,255,0.6)"}}>all time · {totalGainPct>0?"+":""}{totalGainPct.toFixed(1)}%</span>
+                        <span style={{fontSize:13,fontWeight:800,color:totalGain>0?"#4A7A20":"#c04040"}}>{totalGain>0?"▲":"▼"} {moneyS(Math.abs(totalGain))}</span>
+                        <span style={{fontSize:11,fontWeight:500,color:"rgba(90,80,122,0.5)"}}>all time · {totalGainPct>0?"+":""}{totalGainPct.toFixed(1)}%</span>
                       </div>
                     )}
                   </div>
@@ -1303,7 +1408,7 @@ function App(){
             {activeGoals.length>0&&(
               <>
                 {/* Horizontal tab strip */}
-                <div className="hscroll" style={{display:"flex",gap:8}}>
+                <div className="hscroll" style={{display:"flex",gap:8,minHeight:60}}>
                   {activeGoals.map((g,gi)=>{
                     const col=GCOLS[gi%GCOLS.length];
                     const pct=n(g.target)>0?Math.min(g.saved/n(g.target)*100,100):0;
@@ -1340,7 +1445,7 @@ function App(){
                   const pct=n(visGoal.target)>0?Math.min(visGoal.saved/n(visGoal.target)*100,100):0;
                   const done=rem===0;
                   return(
-                    <div style={{background:`linear-gradient(145deg,${col},${col}88)`,borderRadius:24,padding:"22px 20px 18px",boxShadow:"0 6px 24px rgba(0,0,0,0.1)",position:"relative"}}>
+                    <div style={{background:`linear-gradient(145deg,${col},${col}88)`,borderRadius:24,padding:"22px 20px 18px",boxShadow:"0 6px 24px rgba(0,0,0,0.1)",position:"relative",minHeight:220}}>
                       <button className="xbtn" onPointerDown={e=>{e.preventDefault();delGoal(visGoal.id)}} style={{position:"absolute",top:14,right:14,fontSize:18,color:"rgba(0,0,0,0.3)"}}>×</button>
                       <div style={{fontSize:16,fontWeight:900,color:"#1a1a1a",marginBottom:4,paddingRight:24}}>{visGoal.name}</div>
                       <div style={{fontSize:11,fontWeight:600,color:"rgba(0,0,0,0.45)",marginBottom:18}}>{done?"🎉 Complete!":moneyS(rem)+" to go"}</div>
