@@ -340,7 +340,7 @@ function App(){
 
   // Per-year state
   const [incomes,setIncomes_]=useState(()=>load(`bud_incomes_${year}`,Array(12).fill("")));
-  const [allTxns,setAllTxns_]=useState(()=>load(`bud_txns_${year}`,makeSeedTxns(year)));
+  const [allTxns,setAllTxns_]=useState(()=>{const d=load(`bud_txns_${year}`,makeSeedTxns(year));return Array.from({length:12},(_,i)=>d[i]||[]);});
   const [paychecks,setPaychecks_]=useState(()=>load(`bud_paychecks_${year}`,Array(12).fill(2)));
   const [recurOverrides,setRecurOverrides_]=useState(()=>load(`bud_recurApplied_${year}`,Array(12).fill(false)));
 
@@ -443,7 +443,7 @@ function App(){
   function switchYear(y){
     setYear(y);
     setIncomes_(load(`bud_incomes_${y}`,Array(12).fill("")));
-    setAllTxns_(load(`bud_txns_${y}`,makeSeedTxns(y)));
+    const td=load(`bud_txns_${y}`,makeSeedTxns(y));setAllTxns_(Array.from({length:12},(_,i)=>td[i]||[]));
     setPaychecks_(load(`bud_paychecks_${y}`,Array(12).fill(2)));
     setRecurOverrides_(load(`bud_recurApplied_${y}`,Array(12).fill(false)));
     setMi(0);
@@ -505,7 +505,7 @@ function App(){
     const t={...newTxn,id:Date.now()};
     if(t.catId)t.catId=Number(t.catId);
     setAllTxns(p=>p.map((arr,i)=>i===mi?[...arr,t]:arr));
-    setNewTxn({desc:"",amount:"",txnType:"Need",catId:"",date:new Date().toISOString().slice(0,10),recurring:false,kind:"expense"});
+    const mm=String(mi+1).padStart(2,'0');setNewTxn({desc:"",amount:"",txnType:"Need",catId:"",date:`${year}-${mm}-01`,recurring:false,kind:"expense"});
     setShowAdd(false);
   }
   function delTxn(id){setAllTxns(p=>p.map((arr,i)=>i===mi?arr.filter(t=>t.id!==id):arr));}
