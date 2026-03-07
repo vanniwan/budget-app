@@ -464,6 +464,8 @@ function App(){
   const [showAddInv,setShowAddInv]=useState(false);
   const [activeGoalIdx,setActiveGoalIdx]=useState(0);
   const [catTab,setCatTab]=useState("month");
+  const [editTxnId,setEditTxnId]=useState(null);
+  const [editTxnData,setEditTxnData]=useState({});
   const [updateVals,setUpdateVals]=useState({});
 
   // Computed
@@ -507,6 +509,10 @@ function App(){
     setShowAdd(false);
   }
   function delTxn(id){setAllTxns(p=>p.map((arr,i)=>i===mi?arr.filter(t=>t.id!==id):arr));}
+  function saveEditTxn(){
+    setAllTxns(p=>p.map((arr,i)=>i===mi?arr.map(t=>t.id===editTxnId?{...t,...editTxnData,amount:n(editTxnData.amount)}:t):arr));
+    setEditTxnId(null);setEditTxnData({});
+  }
   function applyRecur(){
     const mm=String(mi+1).padStart(2,"0");
     const toAdd=recur.map(r=>({...r,id:Date.now()+Math.random(),date:`${year}-${mm}-01`}));
@@ -781,8 +787,32 @@ function App(){
                 fTxns.map((t,i)=>{
                   const cat=cats.find(c=>c.id===t.catId);
                   const ts=t.kind==="income"?TYPE_COLORS.income:(TYPE_COLORS[t.txnType]||TYPE_COLORS.Need);
+                  const isEditing=editTxnId===t.id;
+                  if(isEditing){
+                    return(
+                      <div key={t.id} style={{padding:"12px 0",borderBottom:i<fTxns.length-1?"1px dashed #EDE8E0":"none"}}>
+                        <div style={{background:"#F8F5FF",borderRadius:14,padding:"12px",border:"1.5px solid #C8C6F0"}}>
+                          <div style={{fontSize:10,fontWeight:800,color:"#9D9AC0",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:10}}>Edit Transaction</div>
+                          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                            <input style={{...inp,fontSize:14}} value={editTxnData.desc??t.desc} onChange={e=>setEditTxnData(p=>({...p,desc:e.target.value}))} placeholder="Description"/>
+                            <div style={{display:"flex",gap:8}}>
+                              <div style={{position:"relative",flex:1}}><DS/><input style={dInp({fontSize:14})} value={editTxnData.amount??t.amount} onChange={e=>setEditTxnData(p=>({...p,amount:e.target.value}))} placeholder="Amount"/></div>
+                              {t.kind==="expense"&&<select style={{...inp,flex:"0 0 90px",fontSize:13,cursor:"pointer"}} value={editTxnData.txnType??t.txnType} onChange={e=>setEditTxnData(p=>({...p,txnType:e.target.value}))}><option>Need</option><option>Want</option><option>Saving</option></select>}
+                            </div>
+                            {t.kind==="expense"&&<select style={{...inp,fontSize:13,cursor:"pointer"}} value={editTxnData.catId??t.catId??""} onChange={e=>setEditTxnData(p=>({...p,catId:e.target.value}))}><option value="">No category</option><optgroup label="Needs">{cats.filter(c=>c.type==="Need").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup><optgroup label="Wants">{cats.filter(c=>c.type==="Want").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup></select>}
+                            <input type="date" style={{...inp,fontSize:13}} value={editTxnData.date??t.date} onChange={e=>setEditTxnData(p=>({...p,date:e.target.value}))}/>
+                            <div style={{display:"flex",gap:8}}>
+                              <button onClick={saveEditTxn} style={{flex:1,padding:"9px",background:"#C8C6F0",color:"#5A507A",border:"none",borderRadius:10,fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>Save</button>
+                              <button onClick={()=>{setEditTxnId(null);setEditTxnData({});}} style={{padding:"9px 14px",background:"#F0EDE8",color:"#888",border:"none",borderRadius:10,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>Cancel</button>
+                              <button onPointerDown={e=>{e.preventDefault();delTxn(t.id);setEditTxnId(null);}} style={{padding:"9px 14px",background:"#FD9FA2",color:"white",border:"none",borderRadius:10,fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"inherit"}}>Delete</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
                   return(
-                    <div key={t.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 0",borderBottom:i<fTxns.length-1?"1px dashed #EDE8E0":"none"}}>
+                    <div key={t.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 0",borderBottom:i<fTxns.length-1?"1px dashed #EDE8E0":"none",cursor:"pointer"}} onClick={()=>{setEditTxnId(t.id);setEditTxnData({});}}>
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
                           <div style={{width:8,height:8,borderRadius:2,background:ts.accent,flexShrink:0}}/>
@@ -797,7 +827,7 @@ function App(){
                       </div>
                       <div style={{display:"flex",alignItems:"center",gap:8,marginLeft:10,flexShrink:0}}>
                         <span style={{fontSize:15,fontWeight:900,color:t.kind==="income"?"#3A5080":"#2a2a2a",fontVariantNumeric:"tabular-nums"}}>{t.kind==="income"?"+":""}{money(t.amount)}</span>
-                        <button className="xbtn" onPointerDown={e=>{e.preventDefault();delTxn(t.id)}}>×</button>
+                        <span style={{fontSize:11,color:"#C8C6F0",fontWeight:700}}>✎</span>
                       </div>
                     </div>
                   );
