@@ -668,41 +668,38 @@ function App(){
           );
         })()}
 
-        {/* Category + Goals side by side */}
-        <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
-          {/* Category */}
-          <div style={{flex:"0 0 62%",minWidth:0}}>
-            {CatBreakdown({exTxns,allTxns,cats,catTab,setCatTab,year,moneyS})}
-          </div>
-          {/* Goals */}
-          {activeGoals.length>0&&(
-            <div style={{flex:1,background:"linear-gradient(145deg,#EDE8F5,#F5EFE8)",borderRadius:20,padding:"14px 14px",minWidth:0,boxShadow:"0 2px 8px rgba(0,0,0,0.05)",alignSelf:"stretch"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                <div style={{fontSize:11,fontWeight:800,color:"rgba(0,0,0,0.5)",textTransform:"uppercase",letterSpacing:"0.06em"}}>Goals</div>
-                <button className="tbtn" onClick={()=>setView("goals")} style={{fontSize:11,fontWeight:700,color:"#9D5783",background:"none",padding:0}}>All →</button>
-              </div>
-              <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                {activeGoals.slice(0,3).map((g,gi)=>{
-                  const DOTS=["#F0DB7D","#FFB7D5","#9CB071","#B7CEEC","#AEACEB"];
-                  const dot=DOTS[gi%DOTS.length];
-                  const pct=n(g.target)>0?Math.min(g.saved/n(g.target)*100,100):0;
-                  return(
-                    <div key={g.id}>
-                      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
-                        <div style={{width:7,height:7,borderRadius:2,background:dot,flexShrink:0}}/>
-                        <span style={{fontSize:11,fontWeight:700,color:"#1a1a1a",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{g.name}</span>
-                        <span style={{fontSize:11,fontWeight:800,color:"#1a1a1a"}}>{Math.round(pct)}%</span>
-                      </div>
-                      <div style={{background:"rgba(0,0,0,0.08)",borderRadius:99,height:4,overflow:"hidden"}}>
-                        <div style={{width:pct+"%",height:"100%",borderRadius:99,background:dot,transition:"width 0.4s"}}/>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+        {/* Category breakdown */}
+        {CatBreakdown({exTxns,allTxns,cats,catTab,setCatTab,year,moneyS})}
+
+        {/* Goals strip */}
+        {activeGoals.length>0&&(
+          <div style={{background:"linear-gradient(145deg,#EDE8F5,#F5EFE8)",borderRadius:20,padding:"14px 16px",boxShadow:"0 2px 8px rgba(0,0,0,0.05)"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+              <div style={{fontSize:11,fontWeight:800,color:"rgba(0,0,0,0.5)",textTransform:"uppercase",letterSpacing:"0.06em"}}>Goals</div>
+              <button className="tbtn" onClick={()=>setView("goals")} style={{fontSize:11,fontWeight:700,color:"#9D5783",background:"none",padding:0}}>All →</button>
             </div>
-          )}
-        </div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {activeGoals.slice(0,3).map((g,gi)=>{
+                const DOTS=["#F0DB7D","#FFB7D5","#9CB071","#B7CEEC","#AEACEB"];
+                const dot=DOTS[gi%DOTS.length];
+                const pct=n(g.target)>0?Math.min(g.saved/n(g.target)*100,100):0;
+                return(
+                  <div key={g.id}>
+                    <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                      <div style={{width:8,height:8,borderRadius:2,background:dot,flexShrink:0}}/>
+                      <span style={{fontSize:12,fontWeight:600,color:"#555",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{g.name}</span>
+                      <span style={{fontSize:12,fontWeight:800,color:"#1a1a1a"}}>{Math.round(pct)}%</span>
+                      <span style={{fontSize:11,fontWeight:600,color:"#B0B8C0"}}>{moneyS(g.saved)}</span>
+                    </div>
+                    <div style={{background:"#F0EDE8",borderRadius:99,height:4,overflow:"hidden"}}>
+                      <div style={{width:pct+"%",height:"100%",borderRadius:99,background:dot,transition:"width 0.4s"}}/>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Extra income */}
         {inTxns.length>0&&(
