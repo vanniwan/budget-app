@@ -504,7 +504,7 @@ function App(){
     if(!newTxn.amount||!newTxn.desc)return;
     const t={...newTxn,id:Date.now()};
     if(t.catId)t.catId=Number(t.catId);
-    setAllTxns(p=>p.map((arr,i)=>i===mi?[...arr,t]:arr));
+    setAllTxns(p=>{const a=Array.from({length:12},(_,i)=>p[i]||[]);return a.map((arr,i)=>i===mi?[...arr,t]:arr);});
     const mm=String(mi+1).padStart(2,'0');setNewTxn({desc:"",amount:"",txnType:"Need",catId:"",date:`${year}-${mm}-01`,recurring:false,kind:"expense"});
     setShowAdd(false);
   }
