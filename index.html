@@ -505,12 +505,28 @@ function App(){
     const t={...newTxn,id:Date.now()};
     if(t.catId)t.catId=Number(t.catId);
     setAllTxns(p=>{const a=Array.from({length:12},(_,i)=>p[i]||[]);return a.map((arr,i)=>i===mi?[...arr,t]:arr);});
+    // If income transaction, add amount to monthly income
+    if(t.kind==="income"){
+      setIncomes(p=>p.map((v,i)=>i===mi?String(Math.round(n(v)+n(t.amount))):v));
+    }
     const mm=String(mi+1).padStart(2,'0');setNewTxn({desc:"",amount:"",txnType:"Need",catId:"",date:`${year}-${mm}-01`,recurring:false,kind:"expense"});
     setShowAdd(false);
   }
-  function delTxn(id){setAllTxns(p=>p.map((arr,i)=>i===mi?arr.filter(t=>t.id!==id):arr));}
+  function delTxn(id){
+    const t=mTxns.find(t=>t.id===id);
+    if(t&&t.kind==="income"){
+      setIncomes(p=>p.map((v,i)=>i===mi?String(Math.max(Math.round(n(v)-n(t.amount)),0)):v));
+    }
+    setAllTxns(p=>p.map((arr,i)=>i===mi?arr.filter(t=>t.id!==id):arr));
+  }
   function saveEditTxn(){
-    setAllTxns(p=>p.map((arr,i)=>i===mi?arr.map(t=>t.id===editTxnId?{...t,...editTxnData,amount:n(editTxnData.amount)}:t):arr));
+    const orig=mTxns.find(t=>t.id===editTxnId);
+    const newAmt=editTxnData.amount!==undefined?n(editTxnData.amount):(orig?n(orig.amount):0);
+    if(orig&&orig.kind==="income"){
+      const diff=newAmt-n(orig.amount);
+      setIncomes(p=>p.map((v,i)=>i===mi?String(Math.max(Math.round(n(v)+diff),0)):v));
+    }
+    setAllTxns(p=>p.map((arr,i)=>i===mi?arr.map(t=>t.id===editTxnId?{...t,...editTxnData,amount:newAmt}:t):arr));
     setEditTxnId(null);setEditTxnData({});
   }
   function applyRecur(){
@@ -794,7 +810,7 @@ function App(){
                         <div style={{background:"#F8F5FF",borderRadius:14,padding:"12px",border:"1.5px solid #C8C6F0"}}>
                           <div style={{fontSize:10,fontWeight:800,color:"#9D9AC0",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:10}}>Edit Transaction</div>
                           <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                            <input style={{...inp,fontSize:14}} value={editTxnData.desc??t.desc} onChange={e=>setEditTxnData(p=>({...p,desc:e.target.value}))} placeholder="Description"/>
+                            <input style={{...inp,fontSize:14}} value={editTxnData.desc!==undefined?editTxnData.desc:t.desc} onChange={e=>setEditTxnData(p=>({...p,desc:e.target.value}))} placeholder="Description"/>
                             <div style={{display:"flex",gap:8}}>
                               <div style={{position:"relative",flex:1}}><DS/><input style={dInp({fontSize:14})} value={editTxnData.amount??t.amount} onChange={e=>setEditTxnData(p=>({...p,amount:e.target.value}))} placeholder="Amount"/></div>
                               {t.kind==="expense"&&<select style={{...inp,flex:"0 0 90px",fontSize:13,cursor:"pointer"}} value={editTxnData.txnType??t.txnType} onChange={e=>setEditTxnData(p=>({...p,txnType:e.target.value}))}><option>Need</option><option>Want</option><option>Saving</option></select>}
@@ -812,7 +828,7 @@ function App(){
                     );
                   }
                   return(
-                    <div key={t.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 0",borderBottom:i<fTxns.length-1?"1px dashed #EDE8E0":"none",cursor:"pointer"}} onClick={()=>{setEditTxnId(t.id);setEditTxnData({});}}>
+                    <div key={t.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 0",borderBottom:i<fTxns.length-1?"1px dashed #EDE8E0":"none",cursor:"pointer"}} onClick={()=>{setEditTxnId(t.id);setEditTxnData({desc:t.desc,amount:t.amount,txnType:t.txnType,catId:t.catId,date:t.date});}}>
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
                           <div style={{width:8,height:8,borderRadius:2,background:ts.accent,flexShrink:0}}/>
@@ -1039,19 +1055,25 @@ function App(){
         {/* Monthly breakdown rows */}
         <div style={{...S.card,background:"linear-gradient(145deg,#F5F0FF,#EFF5F0)"}}>
           <div style={{fontSize:12,fontWeight:800,color:"#1a1a1a",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:14}}>Monthly Breakdown</div>
-          {activeMonths.map(d=>(
-            <div key={d.m} style={{marginBottom:10}}>
+          {monthlyData.map(d=>{
+            const empty=d.inc===0&&d.out===0;
+            return(
+            <div key={d.m} style={{marginBottom:10,opacity:empty?0.35:1}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
                 <span style={{fontSize:12,fontWeight:700,color:"#555"}}>{d.m}</span>
-                <div style={{display:"flex",gap:12}}>
-                  <span style={{fontSize:12,fontWeight:600,color:"#3A5010"}}>{moneyS(d.inc)}</span>
-                  <span style={{fontSize:12,fontWeight:600,color:"#8A1060"}}>{moneyS(d.out)}</span>
-                  <span style={{fontSize:12,fontWeight:800,color:d.inc>=d.out?"#3A5010":"#c04040"}}>{d.inc>=d.out?"+":"-"}{moneyS(Math.abs(d.inc-d.out))}</span>
-                </div>
+                {empty
+                  ? <span style={{fontSize:11,fontWeight:600,color:"#C0B8B0"}}>—</span>
+                  : <div style={{display:"flex",gap:12}}>
+                      <span style={{fontSize:12,fontWeight:600,color:"#3A5010"}}>{moneyS(d.inc)}</span>
+                      <span style={{fontSize:12,fontWeight:600,color:"#8A1060"}}>{moneyS(d.out)}</span>
+                      <span style={{fontSize:12,fontWeight:800,color:d.inc>=d.out?"#3A5010":"#c04040"}}>{d.inc>=d.out?"+":"-"}{moneyS(Math.abs(d.inc-d.out))}</span>
+                    </div>
+                }
               </div>
               <Bar value={d.out} max={d.inc||1} color={d.out>d.inc?"#FD9FA2":"#9CB071"} h={4}/>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* All years */}
@@ -1658,7 +1680,7 @@ function App(){
                           <div style={{width:7,height:7,borderRadius:2,background:bg,flexShrink:0}}/>
                           <span style={{fontSize:12,fontWeight:600,color:"#2a2a2a"}}>{cat.name}</span>
                         </div>
-                        <button className="xbtn" onPointerDown={e=>{e.preventDefault();setCats(p=>p.filter(x=>x.id!==cat.id))}} style={{fontSize:14,color:"#C0B8B0"}}>×</button>
+                        <button className="xbtn" onPointerDown={e=>{e.preventDefault();if(window.confirm("Delete category "+cat.name+"?"))setCats(p=>p.filter(x=>x.id!==cat.id));}} style={{fontSize:14,color:"#C0B8B0"}}>×</button>
                       </div>
                     ))}
                   </div>
