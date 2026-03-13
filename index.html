@@ -959,8 +959,12 @@ function App(){
     const monthlyData=MONTHS.map((m,i)=>{
       const mt=allTxns[i]||[];
       const monthInc=n(incomes[i]);
+      const pc=n(paychecks[i]||2);
+      const jointAmt=monthInc>0?Math.round(n(alloc.joint)*pc):0;
+      const momAmt=monthInc>0?Math.round(n(alloc.mom)*pc):0;
       const txnOut=mt.filter(t=>t.kind==="expense").reduce((s,t)=>s+n(t.amount),0);
-      return{m,short:m.slice(0,3),inc:monthInc,out:txnOut};
+      const out=txnOut+(monthInc>0?jointAmt+momAmt:0);
+      return{m,short:m.slice(0,3),inc:monthInc,out};
     });
     const totals={
       inc:monthlyData.reduce((s,d)=>s+d.inc,0),
