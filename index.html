@@ -509,7 +509,7 @@ function App(){
     if(t.kind==="income"){
       setIncomes(p=>p.map((v,i)=>i===mi?String(Math.round(n(v)+n(t.amount))):v));
     }
-    const mm=String(mi+1).padStart(2,'0');setNewTxn({desc:"",amount:"",txnType:"Need",catId:"",date:`${year}-${mm}-01`,recurring:false,kind:"expense"});
+    setNewTxn({desc:"",amount:"",txnType:"Need",catId:"",date:new Date().toISOString().slice(0,10),recurring:false,kind:"expense"});
     setShowAdd(false);
   }
   function delTxn(id){
@@ -828,7 +828,7 @@ function App(){
                     );
                   }
                   return(
-                    <div key={t.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 0",borderBottom:i<fTxns.length-1?"1px dashed #EDE8E0":"none",cursor:"pointer"}} onClick={()=>{setEditTxnId(t.id);setEditTxnData({desc:t.desc,amount:t.amount,txnType:t.txnType,catId:t.catId,date:t.date});}}>
+                    <div key={t.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"11px 0",borderBottom:i<fTxns.length-1?"1px dashed #EDE8E0":"none",cursor:"pointer"}} onClick={()=>{setEditTxnId(t.id);setEditTxnData({desc:t.desc,amount:t.amount,txnType:t.txnType,catId:t.catId,date:new Date().toISOString().slice(0,10)});}}>
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
                           <div style={{width:8,height:8,borderRadius:2,background:ts.accent,flexShrink:0}}/>
@@ -859,6 +859,75 @@ function App(){
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── YearlyCatBreakdown ────────────────────────────────────
+  function YearlyCatBreakdown({allTxns,cats,moneyS}){
+    const [tab,setTab]=useState("general");
+    const CAT_PALETTE=["#F0DB7D","#FFB7D5","#9CB071","#B7CEEC","#AEACEB","#FD9FA2","#E8C56A","#C4A8EB","#7BCBB8","#F4A8C0","#A8C870","#9AB8D8"];
+    const TYPE_COLS={Need:"#F0DB7D",Want:"#FFB7D5",Saving:"#9CB071"};
+    const allExp=(allTxns||[]).flat().filter(t=>t.kind==="expense");
+    const generalRows=[
+      {id:"Need",name:"Needs",type:"Need",spent:allExp.filter(t=>t.txnType==="Need").reduce((s,t)=>s+n(t.amount),0)},
+      {id:"Want",name:"Wants",type:"Want",spent:allExp.filter(t=>t.txnType==="Want").reduce((s,t)=>s+n(t.amount),0)},
+      {id:"Saving",name:"Savings",type:"Saving",spent:allExp.filter(t=>t.txnType==="Saving").reduce((s,t)=>s+n(t.amount),0)},
+    ].filter(r=>r.spent>0);
+    const specificRows=cats.map((cat,i)=>({
+      ...cat,spent:allExp.filter(t=>Number(t.catId)===cat.id).reduce((s,t)=>s+n(t.amount),0),
+      color:CAT_PALETTE[i%CAT_PALETTE.length],
+    })).filter(r=>r.spent>0).sort((a,b)=>b.spent-a.spent);
+    if(generalRows.length===0&&specificRows.length===0)return null;
+    const rows=tab==="general"?generalRows:specificRows;
+    const total=rows.reduce((s,r)=>s+r.spent,0);
+    const getColor=(r,i)=>tab==="general"?TYPE_COLS[r.type]:r.color||CAT_PALETTE[i%CAT_PALETTE.length];
+    return(
+      <div style={{background:"linear-gradient(145deg,#FFE8F0,#FFF3E0)",borderRadius:24,padding:"20px 18px",boxShadow:"0 2px 12px rgba(0,0,0,0.06)"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
+          <div>
+            <div style={{fontSize:11,fontWeight:800,color:"rgba(0,0,0,0.5)",textTransform:"uppercase",letterSpacing:"0.08em"}}>Spending by Category</div>
+            <div style={{fontSize:10,fontWeight:600,color:"rgba(0,0,0,0.35)",marginTop:2}}>{moneyS(total)} total · {year}</div>
+          </div>
+          <div style={{display:"flex",gap:3,background:"rgba(255,255,255,0.6)",borderRadius:10,padding:3}}>
+            {[["general","General"],["specific","Specific"]].map(([k,l])=>(
+              <button key={k} onClick={()=>setTab(k)} style={{border:"none",cursor:"pointer",fontFamily:"inherit",borderRadius:8,padding:"4px 12px",fontSize:11,fontWeight:700,background:tab===k?"white":"transparent",color:tab===k?"#1a1a1a":"rgba(0,0,0,0.4)",boxShadow:tab===k?"0 1px 4px rgba(0,0,0,0.1)":"none",transition:"all 0.15s"}}>{l}</button>
+            ))}
+          </div>
+        </div>
+        <div style={{display:"flex",gap:18,alignItems:"center"}}>
+          <div style={{flexShrink:0,width:140,height:140}}>
+            <svg width="140" height="140" viewBox="0 0 140 140">
+              {(()=>{
+                const cx=70,cy=70,r=62;
+                let angle=-Math.PI/2;
+                return rows.map((row,i)=>{
+                  const bg=getColor(row,i);
+                  const slice=total>0?(row.spent/total)*2*Math.PI:0;
+                  const x1=cx+r*Math.cos(angle),y1=cy+r*Math.sin(angle);
+                  angle+=slice;
+                  const x2=cx+r*Math.cos(angle),y2=cy+r*Math.sin(angle);
+                  const large=slice>Math.PI?1:0;
+                  return <path key={i} d={`M${cx},${cy} L${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${large},1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`} fill={bg} stroke="none"/>;
+                });
+              })()}
+            </svg>
+          </div>
+          <div style={{flex:1,display:"flex",flexDirection:"column",gap:7,minWidth:0}}>
+            {rows.map((row,i)=>{
+              const pct=total>0?Math.round(row.spent/total*100):0;
+              const bg=getColor(row,i);
+              return(
+                <div key={row.id} style={{display:"flex",alignItems:"center",gap:8}}>
+                  <div style={{width:10,height:10,borderRadius:3,background:bg,flexShrink:0}}/>
+                  <span style={{fontSize:11,fontWeight:700,color:"#1a1a1a",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{row.name}</span>
+                  <span style={{fontSize:11,fontWeight:600,color:"rgba(0,0,0,0.4)",flexShrink:0,marginRight:4}}>{moneyS(row.spent)}</span>
+                  <span style={{fontSize:11,fontWeight:800,color:"#1a1a1a",flexShrink:0,minWidth:28,textAlign:"right"}}>{pct}%</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -1054,7 +1123,7 @@ function App(){
         </div>
 
         {/* Category breakdown */}
-        {CatBreakdown({exTxns:txns.filter(t=>t.kind==="expense"),allTxns,cats,catTab,setCatTab,year,moneyS})}
+        {YearlyCatBreakdown({allTxns,cats,moneyS})}
 
         {/* Monthly breakdown rows */}
         <div style={{...S.card,background:"linear-gradient(145deg,#F5F0FF,#EFF5F0)"}}>
