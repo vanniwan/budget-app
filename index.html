@@ -1031,15 +1031,18 @@ function App(){
       const pc=n(paychecks[i]||2);
       const jointAmt=monthInc>0?Math.round(n(alloc.joint)*pc):0;
       const momAmt=monthInc>0?Math.round(n(alloc.mom)*pc):0;
-      const txnOut=mt.filter(t=>t.kind==="expense").reduce((s,t)=>s+n(t.amount),0);
-      const out=txnOut+(monthInc>0?jointAmt+momAmt:0);
-      return{m,short:m.slice(0,3),inc:monthInc,out};
+      const txnSpent=mt.filter(t=>t.kind==="expense"&&t.txnType!=="Saving").reduce((s,t)=>s+n(t.amount),0);
+      const txnSaved=mt.filter(t=>t.kind==="expense"&&t.txnType==="Saving").reduce((s,t)=>s+n(t.amount),0);
+      const out=txnSpent+(monthInc>0?jointAmt+momAmt:0);
+      const saved=txnSaved;
+      return{m,short:m.slice(0,3),inc:monthInc,out,saved};
     });
     const totals={
       inc:monthlyData.reduce((s,d)=>s+d.inc,0),
       out:monthlyData.reduce((s,d)=>s+d.out,0),
+      saved:monthlyData.reduce((s,d)=>s+d.saved,0),
     };
-    const net=totals.inc-totals.out;
+    const net=totals.inc-totals.out-totals.saved;
     const activeMonths=monthlyData.filter(d=>d.inc>0||d.out>0);
     const maxVal=Math.max(...monthlyData.map(d=>Math.max(d.inc,d.out)),1);
     const chartH=120;
@@ -1065,11 +1068,11 @@ function App(){
           {/* Top bar: year + stats */}
           <div style={{background:"linear-gradient(135deg,#F0DB7D,#FFB7D5)",padding:"18px 20px 14px"}}>
             <div style={{fontSize:11,fontWeight:800,color:"rgba(0,0,0,0.45)",textTransform:"uppercase",letterSpacing:"0.12em",marginBottom:12}}>{year} at a glance</div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
-              {[{l:"Income",v:totals.inc},{l:"Spent",v:totals.out},{l:"Net",v:net}].map(s=>(
+            <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>
+              {[{l:"Income",v:totals.inc,c:"#1a1a1a"},{l:"Spent",v:totals.out,c:"#1a1a1a"},{l:"Saved",v:totals.saved,c:"#3A5010"},{l:"Net",v:net,c:net>=0?"#3A5010":"#c04040"}].map(s=>(
                 <div key={s.l} style={{background:"rgba(255,255,255,0.55)",borderRadius:14,padding:"10px 10px 8px",backdropFilter:"blur(4px)"}}>
                   <div style={{fontSize:9,fontWeight:700,color:"rgba(0,0,0,0.4)",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:3}}>{s.l}</div>
-                  <div style={{fontSize:mob?14:17,fontWeight:900,color:s.l==="Net"?(net>=0?"#3A5010":"#c04040"):"#1a1a1a",lineHeight:1}}>{s.v<0?"-":""}{moneyS(Math.abs(s.v))}</div>
+                  <div style={{fontSize:mob?14:17,fontWeight:900,color:s.c,lineHeight:1}}>{s.v<0?"-":""}{moneyS(Math.abs(s.v))}</div>
                 </div>
               ))}
             </div>
