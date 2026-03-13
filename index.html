@@ -1628,7 +1628,10 @@ function App(){
                               </div>
                               <div>
                                 <div style={{fontSize:14,fontWeight:700,color:"#1a1a1a",marginBottom:2}}>{r.desc}</div>
-                                <span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:ti.col+"44",color:ti.text,fontWeight:800}}>{t}</span>
+                                <div style={{display:"flex",gap:5,alignItems:"center",flexWrap:"wrap"}}>
+                                  <span style={{fontSize:10,padding:"2px 8px",borderRadius:99,background:ti.col+"44",color:ti.text,fontWeight:800}}>{t}</span>
+                                  {r.catId&&(()=>{const rc=cats.find(c=>String(c.id)===String(r.catId));return rc?<span style={{fontSize:10,color:"#B0A898",fontWeight:600}}>{rc.name}</span>:null;})()}
+                                </div>
                               </div>
                             </div>
                             <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -1651,9 +1654,18 @@ function App(){
                 <input style={{...inp,fontSize:15}} placeholder="Description e.g. Netflix" value={newRecur.desc} onChange={e=>setNewRecur(p=>({...p,desc:e.target.value}))}/>
                 <div style={{display:"flex",gap:8}}>
                   <div style={{position:"relative",flex:1}}><DS/><input style={dInp({fontSize:15})} placeholder="Amount" value={newRecur.amount} onChange={e=>setNewRecur(p=>({...p,amount:e.target.value}))}/></div>
-                  <select style={{...inp,cursor:"pointer",fontSize:14,flex:"0 0 100px"}} value={newRecur.txnType} onChange={e=>setNewRecur(p=>({...p,txnType:e.target.value}))}><option>Need</option><option>Want</option><option>Saving</option></select>
+                  <select style={{...inp,cursor:"pointer",fontSize:14,flex:"0 0 100px"}} value={newRecur.txnType} onChange={e=>setNewRecur(p=>({...p,txnType:e.target.value,catId:""}))}>
+                    <option>Need</option><option>Want</option><option>Saving</option>
+                  </select>
                 </div>
-                <button className="tbtn" onClick={()=>{if(!newRecur.desc||!newRecur.amount)return;setRecur(p=>[...p,{...newRecur,id:Date.now(),recurring:true,kind:"expense"}]);setNewRecur({desc:"",amount:"",txnType:"Need",catId:""}); }} style={{padding:"12px",background:"#C8C6F0",color:"#5A507A",borderRadius:12,fontWeight:800,fontSize:14,width:"100%"}}>+ Add Recurring</button>
+                <select style={{...inp,cursor:"pointer",fontSize:14}} value={newRecur.catId||""} onChange={e=>setNewRecur(p=>({...p,catId:e.target.value}))}>
+                  <option value="">No category</option>
+                  {newRecur.txnType!=="Saving"&&<>
+                    <optgroup label="Needs">{cats.filter(c=>c.type==="Need").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup>
+                    <optgroup label="Wants">{cats.filter(c=>c.type==="Want").map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</optgroup>
+                  </>}
+                </select>
+                <button className="tbtn" onClick={()=>{if(!newRecur.desc||!newRecur.amount)return;setRecur(p=>[...p,{...newRecur,id:Date.now(),catId:newRecur.catId?Number(newRecur.catId):"",recurring:true,kind:"expense"}]);setNewRecur({desc:"",amount:"",txnType:"Need",catId:""}); }} style={{padding:"12px",background:"#C8C6F0",color:"#5A507A",borderRadius:12,fontWeight:800,fontSize:14,width:"100%"}}>+ Add Recurring</button>
               </div>
             </div>
 
