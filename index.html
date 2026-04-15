@@ -345,11 +345,11 @@ function YearlyCatBreakdown({allTxns,cats,moneyS,year}){
   const [tab,setTab]=useState("general");
   const CAT_PALETTE=["#F0DB7D","#FFB7D5","#9CB071","#B7CEEC","#AEACEB","#FD9FA2","#E8C56A","#C4A8EB","#7BCBB8","#F4A8C0","#A8C870","#9AB8D8"];
   const TYPE_COLS={Need:"#F0DB7D",Want:"#FFB7D5",Saving:"#9CB071"};
-  const allExp=(allTxns||[]).flat().filter(t=>t.kind==="expense");
+  const allExp=(allTxns||[]).flat().filter(t=>t&&t.kind==="expense");
   const generalRows=[
-    {id:"Need",name:"Needs",type:"Need",spent:allExp.filter(t=>t.txnType==="Need").reduce((s,t)=>s+n(t.amount),0)},
-    {id:"Want",name:"Wants",type:"Want",spent:allExp.filter(t=>t.txnType==="Want").reduce((s,t)=>s+n(t.amount),0)},
-    {id:"Saving",name:"Savings",type:"Saving",spent:allExp.filter(t=>t.txnType==="Saving").reduce((s,t)=>s+n(t.amount),0)},
+    {id:"Need",name:"Needs",type:"Need",spent:allExp.filter(t=>t&&t.txnType==="Need").reduce((s,t)=>s+n(t.amount),0)},
+    {id:"Want",name:"Wants",type:"Want",spent:allExp.filter(t=>t&&t.txnType==="Want").reduce((s,t)=>s+n(t.amount),0)},
+    {id:"Saving",name:"Savings",type:"Saving",spent:allExp.filter(t=>t&&t.txnType==="Saving").reduce((s,t)=>s+n(t.amount),0)},
   ].filter(r=>r.spent>0);
   const specificRows=cats.map((cat,i)=>({
     ...cat,spent:allExp.filter(t=>Number(t.catId)===cat.id).reduce((s,t)=>s+n(t.amount),0),
@@ -423,7 +423,7 @@ function CatBreakdown({exTxns,allTxns,cats,catTab,setCatTab,year,moneyS}){
     return{...cat,spent};
   }).filter(c=>c.spent>0).sort((a,b)=>b.spent-a.spent);
   const yearCatTotals=cats.map(cat=>{
-    const spent=(allTxns||[]).flat().filter(t=>t.kind==="expense"&&Number(t.catId)===cat.id).reduce((s,t)=>s+n(t.amount),0);
+    const spent=(allTxns||[]).flat().filter(t=>t&&t.kind==="expense"&&Number(t.catId)===cat.id).reduce((s,t)=>s+n(t.amount),0);
     return{...cat,spent};
   }).filter(c=>c.spent>0).sort((a,b)=>b.spent-a.spent);
   if(catTotals.length===0&&yearCatTotals.length===0)return null;
@@ -658,16 +658,16 @@ function App(){
     joint:jointAmt,
     mom:momAmt,
   };
-  const mTxns=allTxns[mi]||[];
-  const inTxns=mTxns.filter(t=>t.kind==="income");
-  const exTxns=mTxns.filter(t=>t.kind==="expense");
+  const mTxns=(allTxns[mi]||[]).filter(Boolean);
+  const inTxns=mTxns.filter(t=>t&&t.kind==="income");
+  const exTxns=mTxns.filter(t=>t&&t.kind==="expense");
   const Sp={
-    needs:exTxns.filter(t=>t.txnType==="Need").reduce((s,t)=>s+n(t.amount),0),
-    wants:exTxns.filter(t=>t.txnType==="Want").reduce((s,t)=>s+n(t.amount),0),
-    savings:exTxns.filter(t=>t.txnType==="Saving").reduce((s,t)=>s+n(t.amount),0),
+    needs:exTxns.filter(t=>t&&t.txnType==="Need").reduce((s,t)=>s+n(t.amount),0),
+    wants:exTxns.filter(t=>t&&t.txnType==="Want").reduce((s,t)=>s+n(t.amount),0),
+    savings:exTxns.filter(t=>t&&t.txnType==="Saving").reduce((s,t)=>s+n(t.amount),0),
     get total(){return this.needs+this.wants+this.savings+B.joint+B.mom;},
   };
-  const fTxns=filter==="all"?mTxns:filter==="recurring"?mTxns.filter(t=>t.recurring):filter==="income"?mTxns.filter(t=>t.kind==="income"):mTxns.filter(t=>t.txnType===filter);
+  const fTxns=filter==="all"?mTxns.filter(Boolean):filter==="recurring"?mTxns.filter(t=>t&&t.recurring):filter==="income"?mTxns.filter(t=>t&&t.kind==="income"):mTxns.filter(t=>t&&t.txnType===filter);
   const recApplied=recurOverrides[mi];
   const activeGoals=goals.filter(g=>!g.archived);
   const safeGoalIdx=Math.min(activeGoalIdx,Math.max(activeGoals.length-1,0));
@@ -733,8 +733,8 @@ function App(){
       if(!inc_&&!txns)continue;
       const totalInc=(inc_||[]).reduce((s,v)=>s+n(v),0);
       const allT=(txns||[]).flat();
-      const totalSpent=allT.filter(t=>t.kind==="expense").reduce((s,t)=>s+n(t.amount),0);
-      const fixed=allT.filter(t=>t.recurring).reduce((s,t)=>s+n(t.amount),0);
+      const totalSpent=allT.filter(t=>t&&t.kind==="expense").reduce((s,t)=>s+n(t.amount),0);
+      const fixed=allT.filter(t=>t&&t.recurring).reduce((s,t)=>s+n(t.amount),0);
       if(totalInc>0||totalSpent>0)yrs.push({year:y,totalInc,totalSpent,fixed,net:totalInc-totalSpent,hasData:true});
     }
     return yrs;
@@ -1032,7 +1032,7 @@ function App(){
               <div style={{background:"rgba(255,255,255,0.92)",padding:"0 18px 16px"}}>
                 <div style={{borderTop:"2px dashed #EDE8E0",paddingTop:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <span style={{fontSize:12,color:"#B0A898",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.06em"}}>Total spent</span>
-                  <span style={{fontSize:18,fontWeight:900,color:"#1a1a1a",fontVariantNumeric:"tabular-nums"}}>{money(fTxns.filter(t=>t.kind==="expense").reduce((s,t)=>s+n(t.amount),0))}</span>
+                  <span style={{fontSize:18,fontWeight:900,color:"#1a1a1a",fontVariantNumeric:"tabular-nums"}}>{money(fTxns.filter(t=>t&&t.kind==="expense").reduce((s,t)=>s+n(t.amount),0))}</span>
                 </div>
               </div>
             )}
@@ -1052,8 +1052,8 @@ function App(){
       const pc=n(paychecks[i]||2);
       const jointAmt=monthInc>0?Math.round(n(alloc.joint)*pc):0;
       const momAmt=monthInc>0?Math.round(n(alloc.mom)*pc):0;
-      const txnSpent=mt.filter(t=>t.kind==="expense"&&t.txnType!=="Saving").reduce((s,t)=>s+n(t.amount),0);
-      const txnSaved=mt.filter(t=>t.kind==="expense"&&t.txnType==="Saving").reduce((s,t)=>s+n(t.amount),0);
+      const txnSpent=mt.filter(t=>t&&t.kind==="expense"&&t.txnType!=="Saving").reduce((s,t)=>s+n(t.amount),0);
+      const txnSaved=mt.filter(t=>t&&t.kind==="expense"&&t.txnType==="Saving").reduce((s,t)=>s+n(t.amount),0);
       const out=txnSpent+(monthInc>0?jointAmt+momAmt:0);
       const saved=txnSaved;
       return{m,short:m.slice(0,3),inc:monthInc,out,saved};
@@ -1210,7 +1210,7 @@ function App(){
   const thisYear=useMemo(()=>{
     const totalInc=incomes.reduce((s,v)=>s+n(v),0);
     const allT=(allTxns||[]).flat();
-    const totalSpent=allT.filter(t=>t.kind==="expense").reduce((s,t)=>s+n(t.amount),0);
+    const totalSpent=allT.filter(t=>t&&t.kind==="expense").reduce((s,t)=>s+n(t.amount),0);
     const net=totalInc-totalSpent;
     return {year,totalInc,totalSpent,net,hasData:totalInc>0||totalSpent>0};
   },[incomes,allTxns,year]);
