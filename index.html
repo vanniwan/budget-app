@@ -1055,7 +1055,9 @@ function App(){
       const txnSpent=mt.filter(t=>t&&t.kind==="expense"&&t.txnType!=="Saving").reduce((s,t)=>s+n(t.amount),0);
       const txnSaved=mt.filter(t=>t&&t.kind==="expense"&&t.txnType==="Saving").reduce((s,t)=>s+n(t.amount),0);
       const out=txnSpent+(monthInc>0?jointAmt+momAmt:0);
-      const saved=txnSaved;
+      // Leftover = income minus everything actually spent/allocated (not yet counted as savings)
+      const leftover=monthInc>0?Math.max(monthInc-out-txnSaved,0):0;
+      const saved=txnSaved+leftover;
       return{m,short:m.slice(0,3),inc:monthInc,out,saved};
     });
     const totals={
@@ -1279,22 +1281,33 @@ function App(){
       </div>
 
       {/* Month tabs — only on month view */}
-      {view==="month"&&(
-        <div style={{marginBottom:0,overflowX:"auto",display:"flex",WebkitOverflowScrolling:"touch"}}>
+      {view==="month"&&(()=>{
+        const stripRef=React.useRef(null);
+        React.useEffect(()=>{
+          if(!stripRef.current)return;
+          const active=stripRef.current.querySelector("[data-active='true']");
+          if(!active)return;
+          const strip=stripRef.current;
+          const tabCenter=active.offsetLeft+active.offsetWidth/2;
+          strip.scrollLeft=tabCenter-strip.clientWidth/2;
+        },[mi]);
+        return(
+        <div ref={stripRef} style={{marginBottom:0,overflowX:"auto",display:"flex",WebkitOverflowScrolling:"touch"}}>
           <div style={{display:"flex",gap:0,minWidth:"max-content"}}>
             {MONTHS.map((m,i)=>{
               const active=i===mi;
               const hasTxns=allTxns[i]&&allTxns[i].length>0;
               const col=MONTH_COLS[i];
               return(
-                <button key={m} onClick={()=>setMi(i)} style={{border:"none",borderBottom:active?"3px solid "+col:"3px solid transparent",cursor:"pointer",borderRadius:"10px 10px 0 0",padding:"8px 13px",fontSize:12,fontFamily:"inherit",background:active?col:"rgba(255,255,255,0.5)",color:active?"#1a1a1a":hasTxns?"#888":"#ccc",fontWeight:active?800:hasTxns?600:400,flexShrink:0,transition:"background 0.15s, color 0.15s",position:"relative",zIndex:active?2:1}}>
+                <button key={m} data-active={active?"true":"false"} onClick={()=>setMi(i)} style={{border:"none",borderBottom:active?"3px solid "+col:"3px solid transparent",cursor:"pointer",borderRadius:"10px 10px 0 0",padding:"8px 13px",fontSize:12,fontFamily:"inherit",background:active?col:"rgba(255,255,255,0.5)",color:active?"#1a1a1a":hasTxns?"#888":"#ccc",fontWeight:active?800:hasTxns?600:400,flexShrink:0,transition:"background 0.15s, color 0.15s",position:"relative",zIndex:active?2:1}}>
                   {m}{hasTxns&&!active?" ·":""}
                 </button>
               );
             })}
           </div>
         </div>
-      )}
+        );
+      })()}
       {view==="month"&&<div style={{height:3,background:"#F0EDE8",marginBottom:16,borderRadius:"0 0 4px 4px"}}/>}
 
       {/* View content */}
@@ -1513,12 +1526,7 @@ function App(){
                         const existing=(i.entries||[]).filter(e=>e.date!==month);
                         return{...i,entries:[...existing,{date:month,value:v}].sort((a,b)=>a.date.localeCompare(b.date))};
                       }));
-                      // Add deposit as a Saving expense in current month
-                      if(deposit>0){
-                        const today=new Date().toISOString().slice(0,10);
-                        const txn={id:Date.now()+Math.random(),desc:"→ "+inv.name,amount:String(deposit),txnType:"Saving",catId:"",date:today,recurring:false,kind:"expense"};
-                        setAllTxns(p=>p.map((arr,i)=>i===mi?[...arr,txn]:arr));
-                      }
+                      // Just record the value — no transaction created
                       setUpdateVals(p=>({...p,[inv.id]:""}));
                     }} style={{padding:"8px 18px",background:"#C8C6F0",color:"#5A507A",borderRadius:10,fontWeight:800,fontSize:12}}>Save</button>
                     <button className="xbtn" style={{fontSize:18,color:"#C0B8B0"}} onPointerDown={e=>{e.preventDefault();setInvestments(p=>p.filter(i=>i.id!==inv.id))}}>×</button>
