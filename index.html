@@ -340,16 +340,54 @@ class ErrorBoundary extends React.Component{
   }
 }
 
+function MonthStrip({mi,setMi,allTxns}){
+  const stripRef=React.useRef(null);
+  React.useEffect(()=>{
+    if(!stripRef.current)return;
+    const active=stripRef.current.querySelector("[data-active='true']");
+    if(!active)return;
+    const strip=stripRef.current;
+    strip.scrollLeft=active.offsetLeft+active.offsetWidth/2-strip.clientWidth/2;
+  },[mi]);
+  return(
+    <div ref={stripRef} style={{overflowX:"auto",display:"flex",WebkitOverflowScrolling:"touch"}}>
+      <div style={{display:"flex",gap:0,minWidth:"max-content"}}>
+        {MONTHS.map((m,i)=>{
+          const active=i===mi;
+          const hasTxns=allTxns[i]&&allTxns[i].length>0;
+          const col=MONTH_COLS[i];
+          return(
+            <button key={m} data-active={String(active)} onClick={()=>setMi(i)} style={{border:"none",borderBottom:active?"3px solid "+col:"3px solid transparent",cursor:"pointer",borderRadius:"10px 10px 0 0",padding:"8px 13px",fontSize:12,fontFamily:"inherit",background:active?col:"rgba(255,255,255,0.5)",color:active?"#1a1a1a":hasTxns?"#888":"#ccc",fontWeight:active?800:hasTxns?600:400,flexShrink:0,transition:"background 0.15s, color 0.15s",position:"relative",zIndex:active?2:1}}>
+              {m}{hasTxns&&!active?" ·":""}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Main App ──────────────────────────────────────────────
-function YearlyCatBreakdown({allTxns,cats,moneyS,year}){
+function YearlyCatBreakdown({allTxns,cats,moneyS,year,incomes,alloc,paychecks}){
   const [tab,setTab]=useState("general");
   const CAT_PALETTE=["#F0DB7D","#FFB7D5","#9CB071","#B7CEEC","#AEACEB","#FD9FA2","#E8C56A","#C4A8EB","#7BCBB8","#F4A8C0","#A8C870","#9AB8D8"];
   const TYPE_COLS={Need:"#F0DB7D",Want:"#FFB7D5",Saving:"#9CB071"};
   const allExp=(allTxns||[]).flat().filter(t=>t&&t.kind==="expense");
+  // Per-month savings allocation total
+  const totalSavingsAlloc=(incomes||[]).reduce((sum,inc,i)=>{
+    const monthInc=n(inc);
+    if(monthInc<=0)return sum;
+    const pc=n((paychecks||[])[i]||2);
+    const jointAmt=Math.round(n((alloc||{}).joint||0)*pc);
+    const momAmt=Math.round(n((alloc||{}).mom||0)*pc);
+    const disc=Math.max(monthInc-jointAmt-momAmt,0);
+    return sum+Math.round(disc*n((alloc||{}).savings||0)/100);
+  },0);
+  const txnSavingsTotal=allExp.filter(t=>t&&t.txnType==="Saving").reduce((s,t)=>s+n(t.amount),0);
   const generalRows=[
     {id:"Need",name:"Needs",type:"Need",spent:allExp.filter(t=>t&&t.txnType==="Need").reduce((s,t)=>s+n(t.amount),0)},
     {id:"Want",name:"Wants",type:"Want",spent:allExp.filter(t=>t&&t.txnType==="Want").reduce((s,t)=>s+n(t.amount),0)},
-    {id:"Saving",name:"Savings",type:"Saving",spent:allExp.filter(t=>t&&t.txnType==="Saving").reduce((s,t)=>s+n(t.amount),0)},
+    {id:"Saving",name:"Savings",type:"Saving",spent:txnSavingsTotal+totalSavingsAlloc},
   ].filter(r=>r.spent>0);
   const specificRows=cats.map((cat,i)=>({
     ...cat,spent:allExp.filter(t=>Number(t.catId)===cat.id).reduce((s,t)=>s+n(t.amount),0),
@@ -761,7 +799,7 @@ function App(){
   }
 
   // ── MonthView ─────────────────────────────────────────────
-  function MonthView(){
+  function MonthViewRender(){
     const tabCol=`linear-gradient(135deg,${MONTH_COLS[mi]},${MONTH_COLS2[mi]})`;
     return(
       <div style={{display:"flex",flexDirection:"column",gap:12}}>
@@ -1043,7 +1081,7 @@ function App(){
   }
 
   // ── YearlyCatBreakdown ────────────────────────────────────
-  function YearlyView(){
+  function YearlyViewRender(){
     const txns=(allTxns||[]).flat();
     // Each month's total out = transactions + joint + mom allocations
     const monthlyData=MONTHS.map((m,i)=>{
@@ -1055,17 +1093,18 @@ function App(){
       const txnSpent=mt.filter(t=>t&&t.kind==="expense"&&t.txnType!=="Saving").reduce((s,t)=>s+n(t.amount),0);
       const txnSaved=mt.filter(t=>t&&t.kind==="expense"&&t.txnType==="Saving").reduce((s,t)=>s+n(t.amount),0);
       const out=txnSpent+(monthInc>0?jointAmt+momAmt:0);
-      // Leftover = income minus everything actually spent/allocated (not yet counted as savings)
-      const leftover=monthInc>0?Math.max(monthInc-out-txnSaved,0):0;
-      const saved=txnSaved+leftover;
-      return{m,short:m.slice(0,3),inc:monthInc,out,saved};
+      // Saved = actual saving transactions logged; net = leftover
+      const saved=txnSaved;
+      const net=monthInc>0?Math.max(monthInc-out-saved,0):0;
+      return{m,short:m.slice(0,3),inc:monthInc,out,saved,net};
     });
     const totals={
       inc:monthlyData.reduce((s,d)=>s+d.inc,0),
       out:monthlyData.reduce((s,d)=>s+d.out,0),
       saved:monthlyData.reduce((s,d)=>s+d.saved,0),
+      net:monthlyData.reduce((s,d)=>s+d.net,0),
     };
-    const net=totals.inc-totals.out-totals.saved;
+    const net=totals.net;
     const activeMonths=monthlyData.filter(d=>d.inc>0||d.out>0);
     const maxVal=Math.max(...monthlyData.map(d=>Math.max(d.inc,d.out)),1);
     const chartH=120;
@@ -1149,7 +1188,7 @@ function App(){
         </div>
 
         {/* Category breakdown */}
-        <YearlyCatBreakdown allTxns={allTxns} cats={cats} moneyS={moneyS} year={year}/>
+        <YearlyCatBreakdown allTxns={allTxns} cats={cats} moneyS={moneyS} year={year} incomes={incomes} alloc={alloc} paychecks={paychecks}/>
 
         {/* Monthly breakdown rows */}
         <div style={{...S.card,background:"linear-gradient(145deg,#F5F0FF,#EFF5F0)"}}>
@@ -1166,7 +1205,7 @@ function App(){
           </div>
           {monthlyData.map(d=>{
             const empty=d.inc===0&&d.out===0&&d.saved===0;
-            const net=d.inc-d.out-d.saved;
+            const net=d.net!==undefined?d.net:Math.max(d.inc-d.out-d.saved,0);
             return(
             <div key={d.m} style={{marginBottom:8,opacity:empty?0.3:1}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
@@ -1216,6 +1255,10 @@ function App(){
     const net=totalInc-totalSpent;
     return {year,totalInc,totalSpent,net,hasData:totalInc>0||totalSpent>0};
   },[incomes,allTxns,year]);
+
+  // Wrapper components so hooks inside sub-components work correctly
+  function MonthViewComp(){ return MonthViewRender(); }
+  function YearlyViewComp(){ return YearlyViewRender(); }
 
   return(
     <div style={{fontFamily:"'Nunito',sans-serif",fontWeight:500,background:"#F3EFE8",minHeight:"100vh",color:"#1a1a1a"}}>
@@ -1281,33 +1324,7 @@ function App(){
       </div>
 
       {/* Month tabs — only on month view */}
-      {view==="month"&&(()=>{
-        const stripRef=React.useRef(null);
-        React.useEffect(()=>{
-          if(!stripRef.current)return;
-          const active=stripRef.current.querySelector("[data-active='true']");
-          if(!active)return;
-          const strip=stripRef.current;
-          const tabCenter=active.offsetLeft+active.offsetWidth/2;
-          strip.scrollLeft=tabCenter-strip.clientWidth/2;
-        },[mi]);
-        return(
-        <div ref={stripRef} style={{marginBottom:0,overflowX:"auto",display:"flex",WebkitOverflowScrolling:"touch"}}>
-          <div style={{display:"flex",gap:0,minWidth:"max-content"}}>
-            {MONTHS.map((m,i)=>{
-              const active=i===mi;
-              const hasTxns=allTxns[i]&&allTxns[i].length>0;
-              const col=MONTH_COLS[i];
-              return(
-                <button key={m} data-active={active?"true":"false"} onClick={()=>setMi(i)} style={{border:"none",borderBottom:active?"3px solid "+col:"3px solid transparent",cursor:"pointer",borderRadius:"10px 10px 0 0",padding:"8px 13px",fontSize:12,fontFamily:"inherit",background:active?col:"rgba(255,255,255,0.5)",color:active?"#1a1a1a":hasTxns?"#888":"#ccc",fontWeight:active?800:hasTxns?600:400,flexShrink:0,transition:"background 0.15s, color 0.15s",position:"relative",zIndex:active?2:1}}>
-                  {m}{hasTxns&&!active?" ·":""}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-        );
-      })()}
+      {view==="month"&&<MonthStrip mi={mi} setMi={setMi} allTxns={allTxns}/>}
       {view==="month"&&<div style={{height:3,background:"#F0EDE8",marginBottom:16,borderRadius:"0 0 4px 4px"}}/>}
 
       {/* View content */}
@@ -1447,8 +1464,8 @@ function App(){
           );
         })()}
 
-        {view==="month"&&MonthView()}
-        {view==="yearly"&&YearlyView()}
+        {view==="month"&&<MonthViewComp/>}
+        {view==="yearly"&&<YearlyViewComp/>}
 
         {/* INVESTMENTS */}
         {view==="investments"&&(
